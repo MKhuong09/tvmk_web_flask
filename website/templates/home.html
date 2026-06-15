@@ -1,0 +1,33 @@
+{% extends "base.html" %} {% block title %}Home{% endblock %}
+
+{% block content %}
+<div align="center">
+    <h1>Squad Guard Duty Roster (Hamlet 27) - Bảng Phân Công Trực Gác (Ấp 27)</h1>
+</div>
+<div align="right">
+    <h4>Xin chào, {{ user.user_name }}!</h4>
+</div>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th scope="col">Ngày</th>
+            <th scope="col">Trực Gác Sáng</th>
+            <th scope="col">Trực Gác Chiều</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for duty in duties %}
+        <tr>
+            <td>{{ duty.date }}</td>
+            <td>{{ duty.morning_duty }}</td>
+            <td>{{ duty.afternoon_duty }}</td>
+            <td>
+                <a href="{{ url_for('edit_duty', duty_id=duty.id) }}" class="btn btn-sm btn-primary">Sửa</a>
+                <a href="{{ url_for('delete_duty', duty_id=duty.id) }}" class="btn btn-sm btn-danger">Xóa</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}
