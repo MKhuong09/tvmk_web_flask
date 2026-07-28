@@ -1,0 +1,57 @@
+{% extends "Shared/client_layout.html" %}
+
+{% block content %}
+<div class="container" style="padding-top: 100px; padding-bottom: 50px;">
+    <h2 class="mb-4">Lịch sử đăng ký</h2>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0" style="color: white;">Lịch trực sắp tới</h5>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr><th>Thứ</th><th>Tuần</th><th>Buổi</th><th>Tình trạng</th></tr>
+                </thead>
+                <tbody>
+                    {% for reg in upcoming_regs %}
+                    <tr>
+                        <td>{{ reg.selected_days }}</td>
+                        <td>Tuần {{ reg.week_number }}</td>
+                        <td>{{ reg.session }}</td>
+                        <td><span class="badge bg-warning text-dark">Chờ duyệt</span></td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="4" class="text-center">Chưa có lịch trực sắp tới</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-secondary text-white">
+            <h5 class="mb-0" style="color: white;">Lịch sử lịch trực</h5>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr><th>Tuần</th><th>Thứ</th><th>Buổi</th><th>Tình trạng</th></tr>
+                </thead>
+                <tbody>
+                    {% for reg in history_regs %}
+                    <tr>
+                        <td>Tuần {{ reg.week_number }}</td>
+                        <td>{{ reg.selected_days }}</td>
+                        <td>{{ reg.session }}</td>
+                        <td><span class="badge bg-success">Đã hoàn thành</span></td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="4" class="text-center">Chưa có lịch sử trực</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
