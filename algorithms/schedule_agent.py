@@ -83,6 +83,7 @@ class ScheduleAgent:
         # Max users per day
         for d in range(n_days):
             model.Add(sum(x[(u, d)] for u in range(n_users)) <= self.NumOfUsersPerDay)
+            model.Add(sum(x[(u, d)] for u in range(n_users)) > 0)  # Ensure at least one user is scheduled per day
 
         # Max days per user
         for u in range(n_users):
