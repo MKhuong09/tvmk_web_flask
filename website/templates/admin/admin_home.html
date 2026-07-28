@@ -1,0 +1,168 @@
+{% extends "Shared/admin_layout.html" %}
+
+{% block content %}
+<style>
+    .page-title {
+        font-size: 1.6rem;
+        font-weight: 600;
+        color: #1a202c;
+        margin-bottom: 25px;
+    }
+    
+    /* Cấu trúc hàng thẻ nằm ngang theo đúng ảnh thực tế */
+    .dashboard-grid {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 25px;
+        flex-wrap: wrap;
+    }
+    .metric-card {
+        flex: 1;
+        min-width: 280px;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 4px;
+        padding: 20px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.01);
+    }
+    .metric-card .card-info {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    .metric-card .card-info h4 {
+        font-size: 0.85rem;
+        color: #718096;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin: 0;
+    }
+    .metric-card .card-info .metric-value {
+        font-size: 1.7rem;
+        font-weight: 700;
+        color: #2d3748;
+    }
+    .metric-card .card-icon i {
+        font-size: 1.8rem;
+        color: #3b82f6; /* Màu xanh biểu tượng theo mẫu */
+    }
+
+    /* Khối chi tiết Đăng ký nằm bên dưới bên trái */
+    .detail-box {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 4px;
+        padding: 25px;
+        max-width: 450px;
+    }
+    .detail-box h3 {
+        font-size: 1rem;
+        color: #1a202c;
+        font-weight: 600;
+        margin-bottom: 15px;
+    }
+    .detail-box h3 small {
+        color: #a0aec0;
+        font-weight: 400;
+        font-size: 0.8rem;
+        margin-left: 5px;
+    }
+    .status-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .status-table td {
+        padding: 12px 16px;
+        border: 1px solid #e2e8f0;
+        font-size: 0.95rem;
+        color: #2d3748;
+    }
+    .status-table tr td:first-child {
+        background-color: #f8fafc;
+        width: 50%;
+        font-weight: 500;
+    }
+    .status-table tr td:last-child {
+        text-align: center;
+        font-weight: 700;
+        font-size: 1.1rem;
+        width: 50%;
+    }
+</style>
+
+<h2 class="page-title">Thống kê</h2>
+
+<div class="dashboard-grid">
+    <div class="metric-card">
+        <div class="card-info">
+            <h4>Tổng số dân quân</h4>
+            <div class="metric-value">{{ total_people }}</div>
+        </div>
+        <div class="card-icon">
+            <i class="mdi mdi-account-box-outline"></i>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="card-info">
+            <h4>TOTAL</h4>
+            <div class="metric-value">{{ total_schedule }}</div>
+        </div>
+        <div class="card-icon">
+            <i class="mdi mdi-account-multiple"></i>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="card-info">
+            <h4>Lịch làm trong tuần</h4>
+            <div class="metric-value">{{ week_schedule }}</div>
+        </div>
+        <div class="card-icon">
+            <i class="mdi mdi-calendar-check-outline"></i>
+        </div>
+    </div>
+</div>
+
+<div class="detail-box">
+    <h3>Số Người Đăng Ký <small id="current-date">(Đang tải...)</small></h3>
+    
+    <table class="status-table">
+        <tr>
+            <td>Đã đăng ký</td>
+            <td class="text-success">{{ registered }}</td>
+        </tr>
+        <tr>
+            <td>Chưa đăng ký</td>
+            <td class="text-danger">{{ not_registered }}</td>
+        </tr>
+    </table>
+</div>
+
+<script>
+    function updateRealTimeClock() {
+        const now = new Date();
+        const day = String(now.getDate()).padStart(2, '0');
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const year = now.getFullYear();
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const seconds = String(now.getSeconds()).padStart(2, '0');
+
+        // Xuất chuỗi thời gian chuẩn động liên tục từng giây (dd/mm/yyyy - hh:mm:ss) [cite: 2026-06-21]
+        const formattedTime = `(${day}/${month}/${year} - ${hours}:${minutes}:${seconds})`;
+        
+        const clockElement = document.getElementById('current-date');
+        if(clockElement) {
+            clockElement.innerText = formattedTime;
+        }
+    }
+    // Chạy đồng hồ ngay lập tức và thiết lập vòng lặp chạy ngầm mỗi 1 giây
+    updateRealTimeClock();
+    setInterval(updateRealTimeClock, 1000);
+</script>
+{% endblock %}

@@ -1,0 +1,218 @@
+{% extends "Shared/client_layout.html" %}
+
+{% block styles %}
+<style>
+    /* Tổng thể khối lịch tuần */
+    .schedule-container {
+        background-color: #ffffff;
+        border: 1px solid #e5e5e5;
+        border-radius: 8px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+        margin-top: 25px;
+        margin-bottom: 25px;
+    }
+
+    /* Bảng hiển thị các Thứ */
+    .schedule-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #fdfdfd;
+    }
+    .schedule-table th {
+        width: 14.28%;
+        text-align: center;
+        padding: 16px 10px;
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #333;
+        border-bottom: 3px solid #A5C422; /* Đồng bộ màu xanh thương hiệu */
+        border-right: 1px solid #e5e5e5;
+    }
+    .schedule-table th:last-child {
+        border-right: none;
+    }
+    
+    /* Thanh phân tách Buổi (Sáng / Chiều) - Chừa khoảng cách thoáng đãng */
+    .session-header {
+        background-color: #ffe082;
+        font-weight: bold;
+        font-size: 1.15rem;
+        padding: 12px 20px;
+        color: #d89714;
+        border-top: 1px solid #e5e5e5;
+        border-bottom: 1px solid #e5e5e5;
+        margin-top: 0;
+    }
+
+    /* Hộp cuộn chứa danh sách tên của mỗi buổi */
+    .scroll-container {
+        height: 170px; /* Giới hạn độ cao hiển thị khoảng 3 hàng */
+        overflow-y: auto; /* Tạo con lăn kéo độc lập */
+        scroll-behavior: smooth; /* Hiệu ứng cuộn trượt êm ái */
+    }
+    
+    /* Thiết lập khoảng cách cho từng dòng tên (Không bị dính liền) */
+    .name-row {
+        display: flex;
+        border-bottom: 1px solid #f2f2f2;
+        background-color: #ffffff;
+    }
+    .name-row:hover {
+        background-color: #f9fbf2; /* Đổi màu nhẹ khi di chuột vào */
+    }
+
+    /* Định dạng ô chứa tên */
+    .name-cell {
+        width: 14.28%;
+        padding: 15px 12px; /* Tạo khoảng trống đệm phía trên và dưới cái tên */
+        font-weight: 600;
+        color: #444;
+        border-right: 1px solid #eee;
+        min-height: 55px; /* Chiều cao tối thiểu cố định cho 1 dòng để JS tính toán */
+        display: flex;
+        align-items: center; /* Đẩy chữ căn giữa ô theo chiều dọc */
+        word-break: break-word;
+    }
+    .name-cell:last-child {
+        border-right: none;
+    }
+    
+    /* Làm đẹp con lăn trình duyệt */
+    .scroll-container::-webkit-scrollbar {
+        width: 6px;
+    }
+    .scroll-container::-webkit-scrollbar-thumb {
+        background-color: #cbd5e1;
+        border-radius: 4px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container" style="margin-top: 40px; margin-bottom: 40px;">
+    <div class="row mb-3">
+        <div class="col-md-12 d-flex justify-content-between align-items-center flex-wrap">
+            <div>
+                <h2 class="wow fadeInUp" data-wow-delay="0.1s" style="font-weight: 800; color: #222; font-size: 2.6rem;">
+                    Bảng Phân Lịch Trực Tuần
+                </h2>
+                <p class="text-muted m-0">Kế hoạch công tác ứng trực - Ban chỉ huy Dân quân tự vệ Ấp 27</p>
+            </div>
+            <div>
+                <a href="{{ url_for('client_views.client_shift') }}" class="btn btn-default smoothScroll" style="background-color: #A5C422; color: #fff; font-weight: bold; padding: 12px 25px; border-radius: 50px;">
+                    Đăng ký trực ngay
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="schedule-container wow fadeInUp" data-wow-delay="0.2s">
+        <table class="schedule-table">
+            <thead>
+                <tr>
+                    <th>Thứ 2</th>
+                    <th>Thứ 3</th>
+                    <th>Thứ 4</th>
+                    <th>Thứ 5</th>
+                    <th>Thứ 6</th>
+                    <th>Thứ 7</th>
+                    <th>Chủ Nhật</th>
+                </tr>
+            </thead>
+        </table>
+
+        <div class="session-header"><i class="fas fa-sun mr-2"></i> Buổi Sáng</div>
+<div class="scroll-container auto-scroll">
+    <div class="name-row">
+        <div class="name-cell" id="name-sang-r1-t2">Nguyễn Văn A</div>
+        <div class="name-cell" id="name-sang-r1-t3">Nguyễn Văn B</div>
+        <div class="name-cell" id="name-sang-r1-t4">Trần Lực</div>
+        <div class="name-cell" id="name-sang-r1-t5">Trần Thị C</div>
+        <div class="name-cell" id="name-sang-r1-t6"></div>
+        <div class="name-cell" id="name-sang-r1-t7">Lê Văn D</div>
+        <div class="name-cell" id="name-sang-r1-cn"></div>
+    </div>
+    <div class="name-row">
+        <div class="name-cell" id="name-sang-r2-t2">Nguyễn Văn B</div>
+        <div class="name-cell" id="name-sang-r2-t3">Nguyễn Văn B</div>
+        <div class="name-cell" id="name-sang-r2-t4">Phạm Văn E</div>
+        <div class="name-cell" id="name-sang-r2-t5"></div>
+        <div class="name-cell" id="name-sang-r2-t6">Hoàng Văn F</div>
+        <div class="name-cell" id="name-sang-r2-t7"></div>
+        <div class="name-cell" id="name-sang-r2-cn"></div>
+    </div>
+    <div class="name-row">
+        <div class="name-cell" id="name-sang-r3-t2">Nguyễn Văn C</div>
+        <div class="name-cell" id="name-sang-r3-t3">Nguyễn Văn D</div>
+        <div class="name-cell" id="name-sang-r3-t4">Đỗ Thị G</div>
+        <div class="name-cell" id="name-sang-r3-t5"></div>
+        <div class="name-cell" id="name-sang-r3-t6"></div>
+        <div class="name-cell" id="name-sang-r3-t7"></div>
+        <div class="name-cell" id="name-sang-r3-cn"></div>
+    </div>
+    <div class="name-row">
+        <div class="name-cell" id="name-sang-r4-t2">Lê Hoàng Nam</div>
+        <div class="name-cell" id="name-sang-r4-t3">Phan Bảo Lộc</div>
+        <div class="name-cell" id="name-sang-r4-t4"></div>
+        <div class="name-cell" id="name-sang-r4-t5"></div>
+        <div class="name-cell" id="name-sang-r4-t6"></div>
+        <div class="name-cell" id="name-sang-r4-t7"></div>
+        <div class="name-cell" id="name-sang-r4-cn"></div>
+    </div>
+</div>
+
+        <div class="session-header"><i class="fas fa-moon mr-2"></i> Buổi Chiều</div>
+<div class="scroll-container auto-scroll">
+    <div class="name-row">
+        <div class="name-cell" id="name-chieu-r1-t2">Nguyễn Văn B</div>
+        <div class="name-cell" id="name-chieu-r1-t3">Nguyễn Văn B</div>
+        <div class="name-cell" id="name-chieu-r1-t4"></div>
+        <div class="name-cell" id="name-chieu-r1-t5"></div>
+        <div class="name-cell" id="name-chieu-r1-t6"></div>
+        <div class="name-cell" id="name-chieu-r1-t7"></div>
+        <div class="name-cell" id="name-chieu-r1-cn"></div>
+    </div>
+    <div class="name-row">
+        <div class="name-cell" id="name-chieu-r2-t2">Lê Văn H</div>
+        <div class="name-cell" id="name-chieu-r2-t3">Nguyễn Văn K</div>
+        <div class="name-cell" id="name-chieu-r2-t4">Thạch Sanh</div>
+        <div class="name-cell" id="name-chieu-r2-t5"></div>
+        <div class="name-cell" id="name-chieu-r2-t6"></div>
+        <div class="name-cell" id="name-chieu-r2-t7"></div>
+        <div class="name-cell" id="name-chieu-r2-cn"></div>
+    </div>
+    <div class="name-row">
+        <div class="name-cell" id="name-chieu-r3-t2">Phan Văn M</div>
+        <div class="name-cell" id="name-chieu-r3-t3">Vũ Thị N</div>
+        <div class="name-cell" id="name-chieu-r3-t4"></div>
+        <div class="name-cell" id="name-chieu-r3-t5"></div>
+        <div class="name-cell" id="name-chieu-r3-t6"></div>
+        <div class="name-cell" id="name-chieu-r3-t7"></div>
+        <div class="name-cell" id="name-chieu-r3-cn"></div>
+    </div>
+</div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Logic JavaScript tự động lăn xuống sau mỗi 5 giây độc lập cho từng buổi
+    document.querySelectorAll('.auto-scroll').forEach(container => {
+        const rowHeight = 55; // Chiều cao khớp hoàn toàn với min-height bên CSS
+        
+        setInterval(() => {
+            let currentScroll = container.scrollTop;
+            let maxScroll = container.scrollHeight - container.clientHeight;
+            
+            // Nếu cuộn chạm đáy, tự động quay ngược về đầu dòng mượt mà
+            if (currentScroll >= maxScroll - 5) {
+                container.scrollTo({ top: 0, behavior: 'smooth' });
+            } else {
+                // Di chuyển tịnh tiến xuống dưới 1 dòng
+                container.scrollBy({ top: rowHeight, behavior: 'smooth' });
+            }
+        }, 5000); /* 5000ms = 5 giây */
+    });
+</script>
+{% endblock %}
