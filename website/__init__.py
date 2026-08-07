@@ -1,4 +1,4 @@
-from flask import Flask,send_from_directory
+from flask import Flask, app,send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from os import path
 from flask_login import LoginManager
@@ -37,11 +37,13 @@ def create_app():
     from .auth import auth
     from .admin_views import admin_views
     from .client_views import client_views
+    from .client_request import client_request
     from .ChatBot.chatbot_views import chatbot_views
     app.register_blueprint(views, url_prefix='/')
     app.register_blueprint(auth, url_prefix='/auth')
     app.register_blueprint(admin_views, url_prefix='/admin')
     app.register_blueprint(client_views, url_prefix='/client')
+    app.register_blueprint(client_request, url_prefix='/client')
     app.register_blueprint(chatbot_views, url_prefix='/chatbot')
     # Import models to create database tables
     from .models import User, Note,Registration
@@ -61,7 +63,7 @@ def create_database(app):
     if not path.exists(path.join(path.dirname(__file__), DB_NAME)):
         with app.app_context():
             from website import db
-            from .models import Role,User
+            from .models import Role,User,Status
             from werkzeug.security import generate_password_hash
 
             # 1. Tạo cấu trúc các bảng vật lý từ cấu trúc đã đăng ký
@@ -100,4 +102,10 @@ def create_database(app):
                 db.session.add(admin2)
                 print("Đã tạo tự động Admin 2 (MKhuong123 / MK: 123)")
 
+            db.session.commit()
+        with app.app_context():
+            if not Status.query.filter_by(name='Chờ xác nhận').first():
+                db.session.add(Status(name='Chờ xác nhận'))
+            if not Status.query.filter_by(name='Đã xác nhận').first():
+                db.session.add(Status(name='Đã xác nhận'))
             db.session.commit()

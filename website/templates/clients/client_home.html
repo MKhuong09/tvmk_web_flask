@@ -33,7 +33,7 @@
         border-right: none;
     }
     
-    /* Thanh phân tách Buổi (Sáng / Chiều) - Chừa khoảng cách thoáng đãng */
+    /* Thanh phân tách Buổi (Sáng / Chiều) */
     .session-header {
         background-color: #ffe082;
         font-weight: bold;
@@ -52,7 +52,7 @@
         scroll-behavior: smooth; /* Hiệu ứng cuộn trượt êm ái */
     }
     
-    /* Thiết lập khoảng cách cho từng dòng tên (Không bị dính liền) */
+    /* Thiết lập khoảng cách cho từng dòng tên */
     .name-row {
         display: flex;
         border-bottom: 1px solid #f2f2f2;
@@ -65,13 +65,13 @@
     /* Định dạng ô chứa tên */
     .name-cell {
         width: 14.28%;
-        padding: 15px 12px; /* Tạo khoảng trống đệm phía trên và dưới cái tên */
+        padding: 15px 12px;
         font-weight: 600;
         color: #444;
         border-right: 1px solid #eee;
-        min-height: 55px; /* Chiều cao tối thiểu cố định cho 1 dòng để JS tính toán */
+        min-height: 55px; /* Chiều cao tối thiểu cố định cho 1 dòng */
         display: flex;
-        align-items: center; /* Đẩy chữ căn giữa ô theo chiều dọc */
+        align-items: center;
         word-break: break-word;
     }
     .name-cell:last-child {
@@ -122,76 +122,74 @@
             </thead>
         </table>
 
+        <!-- ================= BUỔI SÁNG ================= -->
         <div class="session-header"><i class="fas fa-sun mr-2"></i> Buổi Sáng</div>
-<div class="scroll-container auto-scroll">
-    <div class="name-row">
-        <div class="name-cell" id="name-sang-r1-t2">Nguyễn Văn A</div>
-        <div class="name-cell" id="name-sang-r1-t3">Nguyễn Văn B</div>
-        <div class="name-cell" id="name-sang-r1-t4">Trần Lực</div>
-        <div class="name-cell" id="name-sang-r1-t5">Trần Thị C</div>
-        <div class="name-cell" id="name-sang-r1-t6"></div>
-        <div class="name-cell" id="name-sang-r1-t7">Lê Văn D</div>
-        <div class="name-cell" id="name-sang-r1-cn"></div>
-    </div>
-    <div class="name-row">
-        <div class="name-cell" id="name-sang-r2-t2">Nguyễn Văn B</div>
-        <div class="name-cell" id="name-sang-r2-t3">Nguyễn Văn B</div>
-        <div class="name-cell" id="name-sang-r2-t4">Phạm Văn E</div>
-        <div class="name-cell" id="name-sang-r2-t5"></div>
-        <div class="name-cell" id="name-sang-r2-t6">Hoàng Văn F</div>
-        <div class="name-cell" id="name-sang-r2-t7"></div>
-        <div class="name-cell" id="name-sang-r2-cn"></div>
-    </div>
-    <div class="name-row">
-        <div class="name-cell" id="name-sang-r3-t2">Nguyễn Văn C</div>
-        <div class="name-cell" id="name-sang-r3-t3">Nguyễn Văn D</div>
-        <div class="name-cell" id="name-sang-r3-t4">Đỗ Thị G</div>
-        <div class="name-cell" id="name-sang-r3-t5"></div>
-        <div class="name-cell" id="name-sang-r3-t6"></div>
-        <div class="name-cell" id="name-sang-r3-t7"></div>
-        <div class="name-cell" id="name-sang-r3-cn"></div>
-    </div>
-    <div class="name-row">
-        <div class="name-cell" id="name-sang-r4-t2">Lê Hoàng Nam</div>
-        <div class="name-cell" id="name-sang-r4-t3">Phan Bảo Lộc</div>
-        <div class="name-cell" id="name-sang-r4-t4"></div>
-        <div class="name-cell" id="name-sang-r4-t5"></div>
-        <div class="name-cell" id="name-sang-r4-t6"></div>
-        <div class="name-cell" id="name-sang-r4-t7"></div>
-        <div class="name-cell" id="name-sang-r4-cn"></div>
-    </div>
-</div>
+        <div class="scroll-container auto-scroll">
+            {% set max_sang = [
+                schedule_data['Sáng']['T2']|length,
+                schedule_data['Sáng']['T3']|length,
+                schedule_data['Sáng']['T4']|length,
+                schedule_data['Sáng']['T5']|length,
+                schedule_data['Sáng']['T6']|length,
+                schedule_data['Sáng']['T7']|length,
+                schedule_data['Sáng']['CN']|length
+            ]|max %}
+            
+            {% if max_sang == 0 %}
+                <div class="name-row">
+                    <div class="name-cell" style="width: 100%; justify-content: center; color: #888;">
+                        Chưa có lịch trực buổi sáng (Đang chờ Admin phê duyệt và generate)
+                    </div>
+                </div>
+            {% else %}
+                {% for i in range(max_sang) %}
+                <div class="name-row">
+                    <div class="name-cell">{{ schedule_data['Sáng']['T2'][i] if schedule_data['Sáng']['T2'][i] is defined else '' }}</div>
+                    <div class="name-cell">{{ schedule_data['Sáng']['T3'][i] if schedule_data['Sáng']['T3'][i] is defined else '' }}</div>
+                    <div class="name-cell">{{ schedule_data['Sáng']['T4'][i] if schedule_data['Sáng']['T4'][i] is defined else '' }}</div>
+                    <div class="name-cell">{{ schedule_data['Sáng']['T5'][i] if schedule_data['Sáng']['T5'][i] is defined else '' }}</div>
+                    <div class="name-cell">{{ schedule_data['Sáng']['T6'][i] if schedule_data['Sáng']['T6'][i] is defined else '' }}</div>
+                    <div class="name-cell">{{ schedule_data['Sáng']['T7'][i] if schedule_data['Sáng']['T7'][i] is defined else '' }}</div>
+                    <div class="name-cell">{{ schedule_data['Sáng']['CN'][i] if schedule_data['Sáng']['CN'][i] is defined else '' }}</div>
+                </div>
+                {% endfor %}
+            {% endif %}
+        </div>
 
+        <!-- ================= BUỔI CHIỀU ================= -->
         <div class="session-header"><i class="fas fa-moon mr-2"></i> Buổi Chiều</div>
-<div class="scroll-container auto-scroll">
-    <div class="name-row">
-        <div class="name-cell" id="name-chieu-r1-t2">Nguyễn Văn B</div>
-        <div class="name-cell" id="name-chieu-r1-t3">Nguyễn Văn B</div>
-        <div class="name-cell" id="name-chieu-r1-t4"></div>
-        <div class="name-cell" id="name-chieu-r1-t5"></div>
-        <div class="name-cell" id="name-chieu-r1-t6"></div>
-        <div class="name-cell" id="name-chieu-r1-t7"></div>
-        <div class="name-cell" id="name-chieu-r1-cn"></div>
+        <div class="scroll-container auto-scroll">
+            {% set max_chieu = [
+                schedule_data['Chiều']['T2']|length,
+                schedule_data['Chiều']['T3']|length,
+                schedule_data['Chiều']['T4']|length,
+                schedule_data['Chiều']['T5']|length,
+                schedule_data['Chiều']['T6']|length,
+                schedule_data['Chiều']['T7']|length,
+                schedule_data['Chiều']['CN']|length
+            ]|max %}
+            
+            {% if max_chieu == 0 %}
+                <div class="name-row">
+                    <div class="name-cell" style="width: 100%; justify-content: center; color: #888;">
+                        Chưa có lịch trực buổi chiều (Đang chờ Admin phê duyệt và generate)
+                    </div>
+                </div>
+            {% else %}
+                {% for i in range(max_chieu) %}
+                <div class="name-row">
+                    <div class="name-cell">{{ schedule_data['Chiều']['T2'][i] if schedule_data['Chiều']['T2'][i] is defined else '' }}</div>
+                    <div class="name-cell">{{ schedule_data['Chiều']['T3'][i] if schedule_data['Chiều']['T3'][i] is defined else '' }}</div>
+                    <div class="name-cell">{{ schedule_data['Chiều']['T4'][i] if schedule_data['Chiều']['T4'][i] is defined else '' }}</div>
+                    <div class="name-cell">{{ schedule_data['Chiều']['T5'][i] if schedule_data['Chiều']['T5'][i] is defined else '' }}</div>
+                    <div class="name-cell">{{ schedule_data['Chiều']['T6'][i] if schedule_data['Chiều']['T6'][i] is defined else '' }}</div>
+                    <div class="name-cell">{{ schedule_data['Chiều']['T7'][i] if schedule_data['Chiều']['T7'][i] is defined else '' }}</div>
+                    <div class="name-cell">{{ schedule_data['Chiều']['CN'][i] if schedule_data['Chiều']['CN'][i] is defined else '' }}</div>
+                </div>
+                {% endfor %}
+            {% endif %}
+        </div>
     </div>
-    <div class="name-row">
-        <div class="name-cell" id="name-chieu-r2-t2">Lê Văn H</div>
-        <div class="name-cell" id="name-chieu-r2-t3">Nguyễn Văn K</div>
-        <div class="name-cell" id="name-chieu-r2-t4">Thạch Sanh</div>
-        <div class="name-cell" id="name-chieu-r2-t5"></div>
-        <div class="name-cell" id="name-chieu-r2-t6"></div>
-        <div class="name-cell" id="name-chieu-r2-t7"></div>
-        <div class="name-cell" id="name-chieu-r2-cn"></div>
-    </div>
-    <div class="name-row">
-        <div class="name-cell" id="name-chieu-r3-t2">Phan Văn M</div>
-        <div class="name-cell" id="name-chieu-r3-t3">Vũ Thị N</div>
-        <div class="name-cell" id="name-chieu-r3-t4"></div>
-        <div class="name-cell" id="name-chieu-r3-t5"></div>
-        <div class="name-cell" id="name-chieu-r3-t6"></div>
-        <div class="name-cell" id="name-chieu-r3-t7"></div>
-        <div class="name-cell" id="name-chieu-r3-cn"></div>
-    </div>
-</div>
 </div>
 {% endblock %}
 

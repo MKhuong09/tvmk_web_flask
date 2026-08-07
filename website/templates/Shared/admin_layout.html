@@ -61,6 +61,16 @@
                     <i class="mdi mdi-account-group-outline"></i> <span>Dân quân</span>
                 </a>
             </li>
+            <li class="sidebar-item {{ 'active' if 'request' in request.path }}">
+                <a href="{{ url_for('admin_views.admin_request') }}">
+                    <i class="mdi mdi-account-group-outline"></i> <span>Xác thực</span>
+                </a>
+            </li>
+             <li class="sidebar-item {{ 'active' if 'off-days' in request.path }}">
+                <a href="{{ url_for('admin_views.admin_users') }}">
+                    <i class="mdi mdi-account-group-outline"></i> <span>Quản lý ngày nghỉ</span>
+                </a>
+            </li>
         </ul>
     </div>
 
