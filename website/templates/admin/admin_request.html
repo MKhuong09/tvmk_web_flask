@@ -1,0 +1,199 @@
+{% extends 'Shared/admin_layout.html' %}
+
+{% block content %}
+<style>
+    .page-title {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #4e73df;
+        margin-bottom: 25px;
+        position: relative;
+        padding-bottom: 8px;
+    }
+    .page-title::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 50px;
+        height: 3px;
+        background-color: #4e73df;
+        border-radius: 2px;
+    }
+    .custom-card {
+        background: #ffffff;
+        border-radius: 10px !important;
+        border: 1px solid #e3e6f0 !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04) !important;
+        overflow: hidden;
+    }
+    .custom-table-container {
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid #eaecf4;
+    }
+    .custom-table {
+        width: 100%;
+        margin-bottom: 0 !important;
+        vertical-align: middle;
+        border-collapse: collapse;
+        text-align: left !important;
+    }
+    .custom-table thead th {
+        background-color: #f8fafc !important;
+        color: #4e73df !important;
+        font-weight: 600 !important;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        letter-spacing: 0.5px;
+        padding: 16px !important;
+        border-bottom: 2px solid #eaecf4 !important;
+        border-top: none !important;
+    }
+    .custom-table tbody tr td {
+        background-color: #ffffff !important;
+        color: #5a5c69 !important;
+        font-size: 0.9rem;
+        padding: 18px 16px !important;
+        border-bottom: 1px solid #eaecf4 !important;
+        transition: background-color 0.15s ease;
+    }
+    .custom-table tbody tr:hover td {
+        background-color: #f4f7fe !important;
+        color: #2e59d9 !important;
+    }
+    .text-center-col {
+        text-align: center !important;
+    }
+    .custom-table tbody tr td a {
+        color: #4e73df !important;
+        text-decoration: none;
+        font-weight: 500;
+    }
+    .custom-table tbody tr td a:hover {
+        text-decoration: underline !important;
+    }
+    .badge-custom {
+        display: inline-block;
+        font-size: 0.75rem !important;
+        font-weight: 700 !important;
+        padding: 6px 16px !important;
+        border-radius: 20px !important;
+        min-width: 120px;
+        text-align: center;
+        border: none !important;
+    }
+    .badge-status-success {
+        background-color: #d1fae5 !important;
+        color: #069669 !important;
+    }
+    .badge-status-warning {
+        background-color: #fef3c7 !important;
+        color: #d97706 !important;
+    }
+    .btn-action {
+        background-color: #4e73df;
+        color: white;
+        border: none;
+        padding: 6px 14px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+    .btn-action:hover {
+        background-color: #2e59d9;
+    }
+</style>
+
+<div class="page-header mb-3">
+    <h3 class="page-title">Chi tiết lịch đăng ký</h3>
+    <p class="text-muted" style="font-size: 0.9rem; color: #6c757d; margin-top: -15px; margin-bottom: 20px;">Danh sách lịch đã đăng ký của dân quân trong hệ thống</p>
+</div>
+
+<div class="row">
+    <div class="col-lg-12 grid-margin stretch-card">
+        <div class="card custom-card">
+            <div class="card-body p-4">
+                <div class="table-responsive custom-table-container">
+                    <table class="table custom-table">
+                        <thead>
+                            <tr>
+                                <th>Họ và Tên</th>
+                                <th>Gmail</th>
+                                <th>Ngày đăng ký</th>
+                                <th>Thứ đăng ký / nghỉ</th>
+                                <th>Ca trực</th>
+                                <th class="text-center-col">Trạng thái</th>
+                                <th class="text-center-col">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if schedules and schedules|length > 0 %}
+                                {% for item in schedules %}
+                                <tr>
+                                    <td class="font-weight-bold" style="color: #3a3b45 !important;">{{ item.ho_ten }}</td>
+                                    <td>
+                                        <a href="mailto:{{ item.gmail }}">{{ item.gmail }}</a>
+                                    </td>
+                                    <td>{{ item.created_at if item.created_at else '--' }}</td>
+                                    <td>{{ item.selected_days if item.selected_days else '--' }}</td>
+                                    <td><strong>{{ item.session if item.session else '--' }}</strong></td>
+                                    <td class="text-center-col">
+                                        {% if item.status_name == 'Đã xác nhận' %}
+                                            <span class="badge-custom badge-status-success">{{ item.status_name }}</span>
+                                        {% else %}
+                                            <span class="badge-custom badge-status-warning">{{ item.status_name }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center-col">
+                                        {% if item.selected_days and item.status_name == 'Chờ xác nhận' %}
+                                            <button class="btn-action" onclick="approveSchedule('{{ item.id }}')">Xác nhận</button>
+                                        {% elif item.status_name == 'Đã xác nhận' %}
+                                            <span style="color: #069669; font-weight: 600; font-size: 0.85rem;">Đang thực hiện</span>
+                                        {% else %}
+                                            <span style="color: #6c757d; font-style: italic; font-size: 0.85rem;">Chưa có lịch</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="7" style="text-align: center; color: #777; padding: 40px; font-size: 0.95rem;">Chưa có dữ liệu đăng ký lịch nào trong hệ thống.</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function approveSchedule(regId) {
+    if (!confirm("Bạn có chắc chắn muốn xác nhận lịch này không?")) return;
+
+    fetch('/admin/approve-schedule/' + regId, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            alert(data.message);
+            location.reload();
+        } else {
+            alert("Lỗi: " + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Đã xảy ra lỗi kết nối!');
+    });
+}
+</script>
+{% endblock %}

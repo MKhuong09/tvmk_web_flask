@@ -11,7 +11,6 @@
         --yellow-cell: #fff0c2;
         --gray-bg: #e0e0e0;
         --blue-btn: #4ba2f2;
-        /* Màu đỏ tươi nhẹ, nhạt và thanh lịch theo yêu cầu */
         --red-pastel: #ff6b6b; 
     }
 
@@ -22,17 +21,14 @@
         margin: 0 auto;
     }
 
-    /* BANNER THÔNG BÁO XUẤT HIỆN TỪ TỪ - NẰM TRÊN CÙNG */
     .rule-banner {
         background-color: var(--red-pastel);
         color: white;
         width: 100%;
-        text-align: center;      /* Căn giữa chữ */
+        text-align: center;
         font-weight: bold;
         font-size: 16px;
         border-radius: 4px;
-        
-        /* Cấu hình hiệu ứng trượt từ từ và mượt mà */
         max-height: 0;
         opacity: 0;
         padding: 0;
@@ -41,15 +37,13 @@
         transition: max-height 0.4s ease, opacity 0.4s ease, padding 0.4s ease, margin-bottom 0.4s ease;
     }
     
-    /* Trạng thái hiển thị khi kích hoạt */
     .rule-banner.show {
-        max-height: 60px; /* Đảm bảo đủ không gian hiển thị chữ */
+        max-height: 60px;
         opacity: 1;
         padding: 12px 0;
         margin-bottom: 20px;
     }
 
-    /* Tiêu đề & nút đăng ký */
     .header-action {
         display: flex;
         justify-content: space-between;
@@ -73,7 +67,6 @@
         cursor: pointer;
     }
 
-    /* Bộ lọc Tuần */
     .filter-rule-row {
         margin-bottom: 25px;
     }
@@ -87,7 +80,6 @@
         color: #333;
     }
 
-    /* Thanh thao tác nhanh màu xám */
     .quick-action-bar {
         background-color: var(--gray-bg);
         border: 1px solid #999;
@@ -112,15 +104,9 @@
     }
     .checkbox-group.days {
         border-right: 1px solid #b0b0b0;
-        flex-grow: 2;
-        justify-content: space-around;
-        padding: 0 20px;
-    }
-    .checkbox-group.shifts {
-        border-right: 1px solid #b0b0b0;
         flex-grow: 1;
         justify-content: space-around;
-        padding: 0 20px;
+        padding: 0 30px;
     }
     .checkbox-group label {
         display: flex;
@@ -159,7 +145,6 @@
         border-color: #bcd0c7;
     }
 
-    /* Bảng dữ liệu */
     .status-table-container {
         border: 1px solid #222;
         border-radius: 4px;
@@ -211,13 +196,11 @@
 
 {% block content %}
 <div class="schedule-container">
-    <div class="rule-banner" id="dynamic-alert-banner">
-        2 buổi thì 2 ngày,1 buổi thì 4 ngày
-    </div>
-
     <div class="header-action">
         <h1>Lịch đăng ký Tuần</h1>
-        <button class="btn-blue">Đăng ký</button>
+        <div class="alert alert-info" style="background-color: #d1ecf1; color: #0c5460; padding: 10px; margin-bottom: 20px; border-radius: 4px; text-align: center;">
+            Tài khoản của bạn được phép chọn chính xác <strong>{{ allowed_off_days }} ngày nghỉ</strong> trong tuần.
+        </div>   
     </div>
 
     <div class="filter-rule-row">
@@ -232,6 +215,7 @@
         <div class="week-title-box">
             Tuần 1<br>Tháng 6
         </div>
+        <!-- Đã xóa bỏ hoàn toàn cụm chọn buổi (shifts) ở đây -->
         <div class="checkbox-group days">
             <label>T2 <input type="checkbox" name="quick_day" value="T2"></label>
             <label>T3 <input type="checkbox" name="quick_day" value="T3"></label>
@@ -241,11 +225,7 @@
             <label>T7 <input type="checkbox" name="quick_day" value="T7"></label>
             <label>CN <input type="checkbox" name="quick_day" value="CN"></label>
         </div>
-        <div class="checkbox-group shifts">
-            <label>SÁNG <input type="checkbox" name="quick_shift" value="sang"></label>
-            <label>CHIỀU <input type="checkbox" name="quick_shift" value="chieu"></label>
-        </div>
-        <div class="action-buttons">
+        <div class="action-buttons">    
             <button class="btn-green-action" id="btn-quick-submit">Đăng ký</button>
             <button class="btn-green-action cancel" id="btn-quick-clear">Hủy</button>
         </div>
@@ -258,8 +238,7 @@
         <table class="status-table">
             <thead>
                 <tr>
-                    <th style="width: 10%;">Buổi</th>
-                    <th style="width: 15%;">Số lượng đăng ký</th>
+                    <th style="width: 25%;">Trạng thái</th>
                     <th>T2</th>
                     <th>T3</th>
                     <th>T4</th>
@@ -270,32 +249,19 @@
                 </tr>
             </thead>
             <tbody>
-                <tr class="row-sang">
-                    <td class="cell-shift">Sáng</td>
-                    <td class="cell-label">Số lượng đăng ký</td>
-                    <td class="full">4/4</td>
-                    <td class="full">4/4</td>
-                    <td class="full">4/4</td>
-                    <td class="full">4/4</td>
-                    <td>0/4</td>
-                    <td>0/4</td>
-                    <td>0/4</td>
-                </tr>
-                <tr class="row-chieu">
-                    <td class="cell-shift">Chiều</td>
-                    <td class="cell-label">Số lượng đăng ký</td>
-                    <td>3/4</td>
-                    <td>0/4</td>
-                    <td class="full">4/4</td>
-                    <td>0/4</td>
-                    <td>0/4</td>
-                    <td>0/4</td>
-                    <td>0/4</td>
+                <tr>
+                    <td class="cell-label">Số lượng đi làm</td>
+                    <td>{{ working_counts.T2 }}/{{ total_capacity }}</td>
+                    <td>{{ working_counts.T3 }}/{{ total_capacity }}</td>
+                    <td>{{ working_counts.T4 }}/{{ total_capacity }}</td>
+                    <td>{{ working_counts.T5 }}/{{ total_capacity }}</td>
+                    <td>{{ working_counts.T6 }}/{{ total_capacity }}</td>
+                    <td>{{ working_counts.T7 }}/{{ total_capacity }}</td>
+                    <td>{{ working_counts.CN }}/{{ total_capacity }}</td>
                 </tr>
             </tbody>
         </table>
     </div>
-</div>
 {% endblock %}
 
 {% block scripts %}
@@ -309,11 +275,8 @@ document.addEventListener("DOMContentLoaded", function () {
     const btnQuickCancel = document.getElementById('btn-quick-clear');
     const alertBanner = document.getElementById('dynamic-alert-banner');
 
-    let bannerTimeoutId = null; 
-
     function initRealTimeSchedule() {
         const now = new Date();
-        
         const currentDay = now.getDay(); 
         const distanceToMonday = currentDay === 0 ? 6 : currentDay - 1;
         
@@ -344,20 +307,15 @@ document.addEventListener("DOMContentLoaded", function () {
         function updateCountdown() {
             const currentTime = new Date();
             const timeDiff = sundayDeadline.getTime() - currentTime.getTime();
-
-            if (timeDiff <= 0) {
-                const expiredText = `Tuần ${weekOfMonth} - Tháng ${currentMonth} : (${dateRangeStr}) - (Hết hạn đăng ký)`;
-                if (dropdownTimer) dropdownTimer.textContent = expiredText;
-                if (tableHeaderTimer) tableHeaderTimer.textContent = expiredText;
-                
-                if (btnQuickRegister) btnQuickRegister.disabled = true;
-                document.querySelectorAll('.quick-action-bar input[type="checkbox"]').forEach(cb => cb.disabled = true);
-                
-                clearInterval(countdownInterval);
+            const totalSeconds = Math.floor(timeDiff / 1000);
+            
+            if (totalSeconds < 0) {
+                const openText = `Tuần ${weekOfMonth} - Tháng ${currentMonth} : (${dateRangeStr}) - (Đang mở đăng ký tự do)`;
+                if (dropdownTimer) dropdownTimer.textContent = openText;
+                if (tableHeaderTimer) tableHeaderTimer.textContent = openText;
                 return;
             }
 
-            const totalSeconds = Math.floor(timeDiff / 1000);
             const hours = Math.floor(totalSeconds / 3600);
             const minutes = Math.floor((totalSeconds % 3600) / 60);
             const seconds = totalSeconds % 60;
@@ -369,121 +327,91 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         updateCountdown();
-        const countdownInterval = setInterval(updateCountdown, 1000);
+        setInterval(updateCountdown, 1000);
 
-        
+        // Hàm kiểm tra và cập nhật giao diện checkbox
         function checkValidationRules() {
             const allDayInputs = document.querySelectorAll('input[name="quick_day"]');
             const checkedDays = document.querySelectorAll('input[name="quick_day"]:checked');
-            const checkedShifts = document.querySelectorAll('input[name="quick_shift"]:checked');
+            const MAX_OFF_DAYS = parseInt("{{ allowed_off_days }}") || 2; 
 
-            let maxDays = 4; 
-            let shouldShowBanner = false;
-
-            if (checkedShifts.length === 2) {
-                maxDays = 2;
-                if (checkedDays.length > 2) {
-                    shouldShowBanner = true;
-                }
-            } 
-            else if (checkedShifts.length === 1) {
-                maxDays = 4;
-                if (checkedDays.length > 4) {
-                    shouldShowBanner = true;
-                }
-            }
-
-            if (shouldShowBanner) {
-                alertBanner.classList.add('show');
-
-                if (bannerTimeoutId) {
-                    clearTimeout(bannerTimeoutId);
-                }
-
-                // Hẹn giờ tự động ẩn thông báo sau đúng 5 giây
-                bannerTimeoutId = setTimeout(function() {
-                    alertBanner.classList.remove('show');
-                }, 5000);
-            } else {
-                alertBanner.classList.remove('show');
-                if (bannerTimeoutId) {
-                    clearTimeout(bannerTimeoutId);
-                }
-            }
-
-            if (checkedDays.length >= maxDays) {
-                allDayInputs.forEach(cb => {
-                    if (!cb.checked) cb.disabled = true;
-                });
-            } else {
-                allDayInputs.forEach(cb => {
+            // Khóa/mở các ô chưa chọn
+            allDayInputs.forEach(cb => {
+                if (!cb.checked && checkedDays.length >= MAX_OFF_DAYS) {
+                    cb.disabled = true;
+                } else {
                     cb.disabled = false;
-                });
-            }
+                }
+            });
 
-            const isValidOneShift = (checkedShifts.length === 1 && checkedDays.length === 4);
-            const isValidTwoShifts = (checkedShifts.length === 2 && checkedDays.length === 2);
-
-            if (isValidOneShift || isValidTwoShifts) {
-                btnQuickRegister.disabled = false;
-            } else {
-                btnQuickRegister.disabled = true;
+            // Nút đăng ký chỉ bật khi chọn ĐÚNG số lượng do Admin quy định
+            if (btnQuickRegister) {
+                btnQuickRegister.disabled = (checkedDays.length !== MAX_OFF_DAYS);
             }
         }
 
-        document.querySelectorAll('.quick-action-bar input[type="checkbox"]').forEach(cb => {
-            cb.addEventListener('change', checkValidationRules);
-        });
+        // Bắt sự kiện thay đổi trên các checkbox
+        document.querySelectorAll('input[name="quick_day"]').forEach(cb => {
+            cb.addEventListener('change', function(e) {
+                const MAX_OFF_DAYS = parseInt("{{ allowed_off_days }}") || 2;
+                const checkedDays = document.querySelectorAll('input[name="quick_day"]:checked');
 
-        if (btnQuickRegister) {
-    btnQuickRegister.addEventListener('click', function() {
-        const selectedDays = Array.from(document.querySelectorAll('input[name="quick_day"]:checked')).map(cb => cb.value);
-        const selectedShifts = Array.from(document.querySelectorAll('input[name="quick_shift"]:checked')).map(cb => cb.value.toUpperCase());
-        
-       
-        btnQuickRegister.disabled = true;
-
-        fetch('{{ url_for("client_views.register_schedule") }}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                days: selectedDays,       
-                shifts: selectedShifts     
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                // Hiển thị thông báo thành công chính xác như giao diện em muốn
-                const ngay = data['days'] || "Chưa chọn ngày";
-                const buoi = data['shifts'] || "Chưa chọn buổi";
-                alert(`Đăng ký thành công!\nNgày: ${ngay}\nBuổi: ${buoi }`);
+                if (checkedDays.length > MAX_OFF_DAYS) {
+                    this.checked = false; 
+                    alert(`Tài khoản của bạn chỉ được phép chọn tối đa ${MAX_OFF_DAYS} ngày nghỉ!`);
+                }
                 
-                // Tải lại trang sau khi người dùng bấm OK để cập nhật bảng hoặc danh sách ghi chú mới
-                window.location.reload();
-            } else {
-                alert("Đăng ký thất bại: " + data.message);
-                btnQuickRegister.disabled = false; // Mở lại nút nếu có lỗi
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert("Có lỗi kết nối hệ thống!");
-            btnQuickRegister.disabled = false;
+                checkValidationRules();
+            });
         });
-    });
-}
 
+        // Xử lý sự kiện khi bấm nút ĐĂNG KÝ
+        if (btnQuickRegister) {
+            btnQuickRegister.addEventListener('click', function() {
+                const selectedOffDays = Array.from(document.querySelectorAll('input[name="quick_day"]:checked')).map(cb => cb.value);
+                const MAX_OFF_DAYS = parseInt("{{ allowed_off_days }}") || 2;
+
+                if (selectedOffDays.length !== MAX_OFF_DAYS) {
+                    alert(`Vui lòng chọn đúng ${MAX_OFF_DAYS} ngày nghỉ trước khi đăng ký!`);
+                    return;
+                }
+
+                btnQuickRegister.disabled = true;
+
+                fetch('{{ url_for("client_views.register_schedule") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        days: selectedOffDays
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        alert(`Đăng ký thành công! Hệ thống đã ghi nhận ${MAX_OFF_DAYS} ngày nghỉ của bạn.`);
+                        window.location.reload();
+                    } else {
+                        alert("Đăng ký thất bại: " + data.message);
+                        btnQuickRegister.disabled = false;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert("Có lỗi kết nối hệ thống!");
+                    btnQuickRegister.disabled = false;
+                });
+            });
+        }
+
+        // Xử lý sự kiện khi bấm nút HỦY
         if (btnQuickCancel) {
             btnQuickCancel.addEventListener('click', function() {
-                document.querySelectorAll('.quick-action-bar input[type="checkbox"]').forEach(cb => {
+                document.querySelectorAll('input[name="quick_day"]').forEach(cb => {
                     cb.checked = false;
                     cb.disabled = false;
                 });
-                if (alertBanner) alertBanner.classList.remove('show');
-                if (bannerTimeoutId) clearTimeout(bannerTimeoutId);
                 checkValidationRules();
             });
         }

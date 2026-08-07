@@ -1,4 +1,4 @@
-from flask import Flask,send_from_directory
+from flask import Flask, app,send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from os import path
 from flask_login import LoginManager
@@ -61,7 +61,7 @@ def create_database(app):
     if not path.exists(path.join(path.dirname(__file__), DB_NAME)):
         with app.app_context():
             from website import db
-            from .models import Role,User
+            from .models import Role,User,Status
             from werkzeug.security import generate_password_hash
 
             # 1. Tạo cấu trúc các bảng vật lý từ cấu trúc đã đăng ký
@@ -100,4 +100,10 @@ def create_database(app):
                 db.session.add(admin2)
                 print("Đã tạo tự động Admin 2 (MKhuong123 / MK: 123)")
 
+            db.session.commit()
+        with app.app_context():
+            if not Status.query.filter_by(name='Chờ xác nhận').first():
+                db.session.add(Status(name='Chờ xác nhận'))
+            if not Status.query.filter_by(name='Đã xác nhận').first():
+                db.session.add(Status(name='Đã xác nhận'))
             db.session.commit()
