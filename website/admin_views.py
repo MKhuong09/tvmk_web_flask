@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template
 from flask_login import login_required, current_user
 from .models import User, Registration
+from algorithms.schedule_agent import DayOfWeek, ScheduleAgent, UserData, convert_day_to_numeric
 
 
 admin_views = Blueprint('admin_views', __name__)
@@ -72,3 +73,40 @@ def admin_scheduleList():
         schedules=schedules_data, 
         user=current_user
     )
+    
+def get_user_registration_days(user_id: int) -> list:
+    """
+    Lấy danh sách các ngày mà người dùng đã đăng ký.
+    
+    Args:
+        user_id (int): ID của người dùng.
+        
+    Returns:
+        list: Danh sách các ngày đã đăng ký (dạng số nguyên).
+    """
+    reg = Registration.query.filter_by(user_id=user_id).first()
+    registration_days = []
+    if reg and reg.selected_days:
+        for day in reg.selected_days.split(','):
+            numeric_day = convert_day_to_numeric(day)
+            if numeric_day >= DayOfWeek.MONDAY.value and numeric_day <= DayOfWeek.SUNDAY.value:
+                registration_days.append(numeric_day)
+    return registration_days
+
+def get_users_data() -> list:
+    users_data = []
+    for user in User.query.all():
+        users_data.append(UserData(
+            name=user.user_name,
+            email=user.email,
+            role_id=user.role_id,
+            userID=user.id,
+            unavailable_days=get_user_registration_days(user.id)
+        ))
+    return users_data
+
+def generate_schedule(num_days: int, num_users_per_day: int) -> dict:
+    users_data = get_users_data()
+    schedule_agent = ScheduleAgent(users=users_data, NumOfSchedDays=num_days, NumOfUsersPerDay=num_users_per_day)
+    schedule = schedule_agent.create_schedule(max_days_per_user=2)
+    return schedule

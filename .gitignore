@@ -1,1 +1,4 @@
 venv/
+algorithms/__pycache__/
+website/__pycache__/
+schedule.xlsx
