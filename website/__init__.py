@@ -38,13 +38,11 @@ def create_app():
     from .admin_views import admin_views
     from .client_views import client_views
     from .client_request import client_request
-    from .ChatBot.chatbot_views import chatbot_views
     app.register_blueprint(views, url_prefix='/')
     app.register_blueprint(auth, url_prefix='/auth')
     app.register_blueprint(admin_views, url_prefix='/admin')
     app.register_blueprint(client_views, url_prefix='/client')
     app.register_blueprint(client_request, url_prefix='/client')
-    app.register_blueprint(chatbot_views, url_prefix='/chatbot')
     # Import models to create database tables
     from .models import User, Note,Registration
     create_database(app)

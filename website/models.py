@@ -48,3 +48,8 @@ class Notification(db.Model):
     status = db.Column(db.String(50), default='pending')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     is_read = db.Column(db.Boolean, default=False)
+    
+class ScheduleOutput(db.Model):
+    date = db.Column(db.String(20), primary_key=True)
+    userlist = db.Column(db.String(500), nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True), default=func.now())

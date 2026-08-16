@@ -1,7 +1,9 @@
 from flask import Blueprint, render_template, redirect, request, url_for, flash, jsonify
 from flask_login import login_required, current_user
+from .models import ScheduleOutput, User, Registration, Status, db
+from algorithms.schedule_agent import DayOfWeek, ScheduleAgent, UserData, convert_day_to_numeric
+
 from sqlalchemy import func
-from .models import db, User, Registration, Status
 from datetime import datetime
 import pytz
 
@@ -83,6 +85,43 @@ def admin_scheduleList():
         schedules=schedules_data, 
         user=current_user
     )
+    
+def get_user_registration_days(user_id: int) -> list:
+    """
+    Lấy danh sách các ngày mà người dùng đã đăng ký.
+    
+    Args:
+        user_id (int): ID của người dùng.
+        
+    Returns:
+        list: Danh sách các ngày đã đăng ký (dạng số nguyên).
+    """
+    reg = Registration.query.filter_by(user_id=user_id).first()
+    registration_days = []
+    if reg and reg.selected_days:
+        for day in reg.selected_days.split(','):
+            numeric_day = convert_day_to_numeric(day)
+            if numeric_day >= DayOfWeek.MONDAY.value and numeric_day <= DayOfWeek.SUNDAY.value:
+                registration_days.append(numeric_day)
+    return registration_days
+
+def get_users_data() -> list:
+    users_data = []
+    for user in User.query.all():
+        users_data.append(UserData(
+            name=user.user_name,
+            email=user.email,
+            role_id=user.role_id,
+            userID=user.id,
+            unavailable_days=get_user_registration_days(user.id)
+        ))
+    return users_data
+
+def RunScheduleAgent(num_days: int, num_users_per_day: int) -> ScheduleAgent:
+    users_data = get_users_data()
+    schedule_agent = ScheduleAgent(users=users_data, NumOfSchedDays=num_days, NumOfUsersPerDay=num_users_per_day)
+    schedule_agent.create_schedule(max_days_per_user=2)
+    return schedule_agent
 
 
 @admin_views.route('/approve-schedule/<int:reg_id>', methods=['POST'])
@@ -144,7 +183,15 @@ def generate_schedule():
         # Tiến hành chuyển tất cả lịch từ 'Đã duyệt' sang 'Đã xác nhận' (Hiển thị lên client)
         for reg in approved_regs:
             reg.status_id = confirmed_status.id
+            db.session.add(reg) # Update trạng thái của từng registration
             
+        db.session.commit()
+        ScheduleAgent = RunScheduleAgent(num_days=7, num_users_per_day=2)
+        ScheResult = ScheduleAgent.get_schedule()
+        # Lưu kết quả lịch trực vào cơ sở dữ liệu ScheduleOutput (nếu cần)
+        for date, userlist in ScheResult.items():
+            schedule_output = ScheduleOutput(date=date, userlist=userlist)
+            db.session.add(schedule_output)
         db.session.commit()
         flash(f'Generate thành công {len(approved_regs)} lịch trực tuần {current_week} lên trang client!', 'success')
         

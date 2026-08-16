@@ -2,7 +2,6 @@ from flask import Blueprint, render_template, request, jsonify, url_for, flash, 
 from flask_login import login_required, current_user 
 from datetime import datetime, timedelta
 import pytz
-from website.ChatBot.chatbot_service import get_bot_response
 from website.models import Registration, Status , User, db ,Notification  
 # 1. Định nghĩa Blueprint với tên duy nhất
 client_views = Blueprint('client_views', __name__)

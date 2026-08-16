@@ -1,4 +1,9 @@
 flask
 flask-login
 flask-sqlalchemy
+flask_migrate
+ortools
+gunicorn
+openpyxl
+pytz
 gunicorn
