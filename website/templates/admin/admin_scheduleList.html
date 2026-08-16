@@ -1,0 +1,127 @@
+{% extends 'Shared/admin_layout.html' %}
+
+{% block content %}
+<style>
+    .admin-schedule-wrapper {
+        padding: 20px;
+        font-family: Arial, sans-serif;
+    }
+    .admin-schedule-title {
+        font-size: 22px;
+        font-weight: bold;
+        color: #4e73df;
+        margin-bottom: 5px;
+        border-bottom: 2px solid #4e73df;
+        display: inline-block;
+        padding-bottom: 4px;
+    }
+    .admin-schedule-desc {
+        color: #666;
+        font-size: 14px;
+        margin-bottom: 20px;
+    }
+    .schedule-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #fff;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .schedule-table th {
+        background-color: #f8f9fa;
+        color: #4e73df;
+        font-weight: bold;
+        text-transform: uppercase;
+        font-size: 12px;
+        padding: 14px 16px;
+        border-bottom: 2px solid #dee2e6;
+        text-align: left;
+    }
+    .schedule-table td {
+        padding: 14px 16px;
+        border-bottom: 1px solid #eee;
+        vertical-align: middle;
+        font-size: 14px;
+        color: #333;
+    }
+    .schedule-table tr:hover {
+        background-color: #f8f9fc;
+    }
+    .schedule-table a {
+        color: #4e73df;
+        text-decoration: none;
+    }
+    .schedule-table a:hover {
+        text-decoration: underline;
+    }
+    .text-center-col {
+        text-align: center !important;
+    }
+    .badge-custom {
+        display: inline-block;
+        font-size: 11px;
+        font-weight: bold;
+        padding: 5px 12px;
+        border-radius: 20px;
+        text-align: center;
+        min-width: 110px;
+    }
+    .badge-status-success {
+        background-color: #d1fae5;
+        color: #069669;
+    }
+    .badge-status-warning {
+        background-color: #fef3c7;
+        color: #d97706;
+    }
+</style>
+
+<div class="admin-schedule-wrapper">
+    <div>
+        <h2 class="admin-schedule-title">Chi tiết lịch đăng ký</h2>
+        <div class="admin-schedule-desc">Danh sách lịch đã đăng ký của dân quân trong hệ thống</div>
+    </div>
+
+    <table class="schedule-table">
+        <thead>
+            <tr>
+                <th>HỌ VÀ TÊN</th>
+                <th>GMAIL</th>
+                <th>NGÀY ĐĂNG KÝ</th>
+                <th>NGÀY LÀM VIỆC THỰC TẾ</th>
+                <th>CA TRỰC</th>
+                <th class="text-center-col">TRẠNG THÁI</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if schedules %}
+                {% for item in schedules %}
+                <tr>
+                    <td><strong>{{ item.ho_ten }}</strong></td>
+                    <td>
+                        <a href="mailto:{{ item.gmail }}">{{ item.gmail }}</a>
+                    </td>
+                    <td>{{ item.created_at if item.created_at else '--' }}</td>
+                    <td>{{ item.selected_days if item.selected_days else '--' }}</td>
+                    <td>{{ item.session if item.session else '--' }}</td>
+                    <td class="text-center-col">
+                        {% if item.status_name == 'Đã xác nhận' %}
+                            <span class="badge-custom badge-status-success">Đã xác nhận</span>
+                        {% else %}
+                            <span class="badge-custom badge-status-warning">{{ item.status_name }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            {% else %}
+            <tr>
+                <td colspan="6" style="text-align: center; color: #777; padding: 40px;">
+                    Chưa có dữ liệu đăng ký lịch nào trong hệ thống.
+                </td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

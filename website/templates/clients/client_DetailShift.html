@@ -1,0 +1,95 @@
+{% extends "Shared/client_layout.html" %}
+
+{% block content %}
+<div class="container" style="padding-top: 100px; padding-bottom: 50px;">
+    <h2 class="mb-4">Lịch sử đăng ký</h2>
+
+    <!-- Bảng 1: Lịch trực sắp tới (Thường là đang chờ duyệt) -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0" style="color: white;">Lịch trực sắp tới</h5>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Thứ</th>
+                        <th>Tuần</th>
+                        <th>Buổi</th>
+                        <th>Tình trạng</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for reg in upcoming_regs %}
+                    <tr>
+                        <td>{{ ", ".join(reg.working_days) }}</td>
+                        <td>Tuần {{ reg.week_number }}</td>
+                        <td>{{ reg.session }}</td>
+                        <td>
+                            {% if reg.status_obj %}
+                                {% if reg.status_obj.name == 'Đã xác nhận' %}
+                                    <span class="badge bg-success">Đã xác nhận</span>
+                                {% else %}
+                                    <span class="badge bg-warning text-dark">{{ reg.status_obj.name }}</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="badge bg-secondary">Chờ duyệt</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <!-- Nếu đang chờ duyệt thì cho phép sửa trực tiếp -->
+                            <a href="{{ url_for('client_views.edit_shift', id=reg.id) }}" class="btn btn-sm btn-warning">Sửa lịch</a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center">Chưa có lịch trực sắp tới</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Bảng 2: Lịch sử lịch trực (Thường là đã xác nhận / hoàn thành) -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-secondary text-white">
+            <h5 class="mb-0" style="color: white;">Lịch sử lịch trực</h5>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Thứ</th>
+                        <th>Tuần</th>
+                        <th>Buổi</th>
+                        <th>Tình trạng</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                   {% for reg in history_regs %}
+<tr>
+    <td>{{ ", ".join(reg.working_days) }}</td>
+    <td>Tuần {{ reg.week_number }}</td>            
+    <td>{{ reg.session }}</td>
+    <td>
+        <span class="badge bg-success">{{ reg.status_obj.name if reg.status_obj else 'Đã hoàn thành' }}</span>
+    </td>
+    <td>
+        <!-- Chuyển thành thẻ a dẫn tới trang phiếu điều chỉnh -->
+        <a href="{{ url_for('client_request.request_shift_change_form', id=reg.id) }}" class="btn btn-sm btn-outline-primary">
+            Gửi phiếu thay đổi
+        </a>
+    </td>
+</tr>
+{% else %}
+<tr><td colspan="5" class="text-center">Chưa có lịch sử trực</td></tr>
+{% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

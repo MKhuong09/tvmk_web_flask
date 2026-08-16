@@ -1,0 +1,48 @@
+{% extends "Shared/client_layout.html" %}
+
+{% block content %}
+<div class="container" style="padding-top: 100px; padding-bottom: 50px;">
+    <h2 class="mb-4">Chỉnh sửa lịch trực (Tuần {{ reg.week_number }})</h2>
+
+    <div class="card shadow-sm p-4">
+        <form method="POST">
+            <!-- Buổi trực cố định -->
+            <input type="hidden" name="session" value="Cả tuần">
+
+            <!-- Tách chuỗi selected_days từ database thành danh sách (VD: ['T5', 'T6']) -->
+            {% set saved_days = reg.selected_days.split(', ') if reg.selected_days else [] %}
+            {% set day1 = saved_days[0] if saved_days|length > 0 else '' %}
+            {% set day2 = saved_days[1] if saved_days|length > 1 else '' %}
+
+            {% set days_options = [('T2', 'Thứ 2'), ('T3', 'Thứ 3'), ('T4', 'Thứ 4'), ('T5', 'Thứ 5'), ('T6', 'Thứ 6'), ('T7', 'Thứ 7'), ('CN', 'Chủ nhật')] %}
+
+            <div class="row mb-3">
+                <!-- Ngày nghỉ thứ nhất -->
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">Ngày nghỉ / Không trực thứ 1:</label>
+                    <select class="form-select" name="day_1">
+                        <option value="">-- Chọn ngày nghỉ --</option>
+                        {% for code, label in days_options %}
+                            <option value="{{ code }}" {% if day1 == code %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Ngày nghỉ thứ hai -->
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">Ngày nghỉ / Không trực thứ 2:</label>
+                    <select class="form-select" name="day_2">
+                        <option value="">-- Chọn ngày nghỉ --</option>
+                        {% for code, label in days_options %}
+                            <option value="{{ code }}" {% if day2 == code %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+            <a href="{{ url_for('client_views.client_detailshift') }}" class="btn btn-secondary">Quay lại</a>
+        </form>
+    </div>
+</div>
+{% endblock %}
