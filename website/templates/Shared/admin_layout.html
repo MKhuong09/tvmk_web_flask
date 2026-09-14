@@ -81,6 +81,7 @@
             </button>
             <div class="header-right-info">
                 <span class="role-badge">Quản trị viên</span>
+                <a href="{{ url_for('admin_views.admin_registration') }}" class="btn btn-primary">Đăng ký lịch nghỉ</a>
                 <a href="{{ url_for('auth.logout') }}" class="logout-btn">Đăng xuất</a>
             </div>
         </div>
@@ -117,5 +118,7 @@
             }
         });
     </script>
+
+    {% block scripts %}{% endblock %}
 </body>
 </html>

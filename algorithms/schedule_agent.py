@@ -60,7 +60,7 @@ class ScheduleAgent:
         self.schedule: Dict[int, List[UserData]] = {day: [] for day in range(1, NumOfSchedDays + 1)}
         self.last_week_schedule = last_week_schedule or {}
 
-    def create_schedule(self, solve_time_seconds: int = 5):
+    def create_schedule(self, solve_time_seconds: int = 20):
         if cp_model is None:
             return self._create_schedule_greedy()
 
@@ -201,6 +201,46 @@ class ScheduleAgent:
                 if sum(1 for d in schedule if user.userID in schedule[d]) > user.max_days_per_week:
                     return False
         return True
+    
+    def calculate_allusers_available_days_filled(self):
+        # Use bitmask to represent days of the week (1-7)
+        # if a day is filled at least one user, set the corresponding bit to 1
+        filled_days_mask = 0
+        for user in self.users:
+            for day in range(1, self.NumOfSchedDays + 1):
+                if day not in user.unavailable_days:
+                    filled_days_mask |= (1 << (day - 1))
+        return filled_days_mask
+    
+    def check_the_most_available_day(self):
+        # check the filled days mask to see which day has the most available users
+        filled_days_mask = self.calculate_allusers_available_days_filled()
+        most_available_day = None
+        most_available_count = 0
+        for day in range(1, self.NumOfSchedDays + 1):
+            if filled_days_mask & (1 << (day - 1)):
+                available_count = sum(1 for user in self.users if day not in user.unavailable_days)
+                if available_count > most_available_count:
+                    most_available_count = available_count
+                    most_available_day = day
+        return most_available_day, most_available_count
+    
+    def check_filled_days(self):
+        # check the filled days mask to see if any day is empty (no available users)
+        empty_days = []
+        filled_days_mask = self.calculate_allusers_available_days_filled()
+        for day in range(1, self.NumOfSchedDays + 1):
+            if not (filled_days_mask & (1 << (day - 1))):
+                print(f"Warning: Day {convert_numeric_to_day(day)} has no available users to schedule.")
+                empty_days.append(day)
+        if len(empty_days) > 0:   
+            return False
+        return True
+    
+    def print_available_users_per_day(self):
+        for day in range(1, self.NumOfSchedDays + 1):
+            available_users = [u.name for u in self.users if day not in u.unavailable_days]
+            print(f"Day {convert_numeric_to_day(day)}: Available Users: {available_users}")
 
 def convert_day_to_numeric(day_str: str) -> int:
     day_str = day_str.strip().lower()
@@ -231,19 +271,19 @@ if __name__ == "__main__":
     # Quick local example (run after installing ortools or will fall back to greedy)
     users = [
         UserData(name="Vinh", email="a@example.com", userID=1, 
-                 unavailable_days=[DayOfWeek.MONDAY.value, DayOfWeek.WEDNESDAY.value,DayOfWeek.FRIDAY.value,DayOfWeek.SUNDAY.value], 
+                 unavailable_days=[DayOfWeek.MONDAY.value,DayOfWeek.WEDNESDAY.value,DayOfWeek.THURSDAY.value, DayOfWeek.SATURDAY.value], 
                  max_days_per_week=3),
         
         UserData(name="Nhan", email="b@example.com", userID=2,
-                 unavailable_days=[DayOfWeek.THURSDAY.value, DayOfWeek.FRIDAY.value,DayOfWeek.SATURDAY.value,DayOfWeek.SUNDAY.value]
+                 unavailable_days=[DayOfWeek.WEDNESDAY.value,DayOfWeek.FRIDAY.value, DayOfWeek.SATURDAY.value,DayOfWeek.SUNDAY.value]
                  , max_days_per_week=3),
         
         UserData(name="Nam", email="c@example.com", userID=3,
-                 unavailable_days=[DayOfWeek.MONDAY.value,DayOfWeek.FRIDAY.value],
+                 unavailable_days=[],
                  max_days_per_week=1),
         
         UserData(name="Son", email="d@example.com", userID=4,
-                 unavailable_days=[DayOfWeek.THURSDAY.value, DayOfWeek.FRIDAY.value,DayOfWeek.SATURDAY.value,DayOfWeek.SUNDAY.value],
+                 unavailable_days=[DayOfWeek.MONDAY.value,DayOfWeek.TUESDAY.value,DayOfWeek.THURSDAY.value, DayOfWeek.SATURDAY.value],
                  max_days_per_week=3),
         
         UserData(name="Huy", email="e@example.com", userID=5,
@@ -252,19 +292,19 @@ if __name__ == "__main__":
         
         UserData(name="Giang", email="f@example.com", userID=6,
                  unavailable_days=[],
-                 max_days_per_week=2),
+                 max_days_per_week=1),
         
         UserData(name="Khoa", email="g@example.com", userID=7,
-                 unavailable_days=[],
-                 max_days_per_week=2),
+                 unavailable_days=[DayOfWeek.MONDAY.value],
+                 max_days_per_week=1),
         
         UserData(name="Khuong", email="k@example.com", userID=8,
-                 unavailable_days=[DayOfWeek.WEDNESDAY.value,DayOfWeek.THURSDAY.value, DayOfWeek.FRIDAY.value,DayOfWeek.SATURDAY.value,DayOfWeek.SUNDAY.value],
+                 unavailable_days=[DayOfWeek.SATURDAY.value,DayOfWeek.SUNDAY.value],
                  max_days_per_week=2),
     ]
     # last week scheduled user IDs for weekend days
     last_week = {}
-    agent = ScheduleAgent(users, NumOfSchedDays=7, NumOfUsersPerDay=4, last_week_schedule=last_week)
+    agent = ScheduleAgent(users, NumOfSchedDays=7, NumOfUsersPerDay=3, last_week_schedule=last_week)
     sched = agent.create_schedule()
     for day, us in sched.items():
         day_name = convert_numeric_to_day(day)
@@ -280,4 +320,6 @@ if __name__ == "__main__":
     df_T.to_excel('schedule.xlsx', index=False)
 
     print(agent.validating_schedule_result(schedule=sched))
-    
+    print(f'All days have been filled ?: {agent.check_filled_days()}')
+    print(f'Most available day: {agent.check_the_most_available_day()}')
+    agent.print_available_users_per_day()

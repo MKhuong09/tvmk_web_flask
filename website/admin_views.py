@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, request, url_for, flash, jsonify
+from flask import Blueprint, render_template, redirect, request, url_for, flash, jsonify, session
 from flask_login import login_required, current_user
 from .models import ScheduleOutput, User, Registration, Status, db
 from algorithms.schedule_agent import DayOfWeek, ScheduleAgent, UserData, convert_day_to_numeric
@@ -98,9 +98,14 @@ def get_user_registration_days(user_id: int) -> list:
     """
     reg = Registration.query.filter_by(user_id=user_id).first()
     registration_days = []
+    day_names = {
+        'T2': 'monday', 'T3': 'tuesday', 'T4': 'wednesday',
+        'T5': 'thursday', 'T6': 'friday', 'T7': 'saturday', 'CN': 'sunday'
+    }
     if reg and reg.selected_days:
         for day in reg.selected_days.split(','):
-            numeric_day = convert_day_to_numeric(day)
+            normalized_day = day_names.get(day.strip().upper(), day)
+            numeric_day = convert_day_to_numeric(normalized_day)
             if numeric_day >= DayOfWeek.MONDAY.value and numeric_day <= DayOfWeek.SUNDAY.value:
                 registration_days.append(numeric_day)
     return registration_days
@@ -111,9 +116,9 @@ def get_users_data() -> list:
         users_data.append(UserData(
             name=user.user_name,
             email=user.email,
-            role_id=user.role_id,
             userID=user.id,
-            unavailable_days=get_user_registration_days(user.id)
+            unavailable_days=get_user_registration_days(user.id),
+            max_days_per_week=2
         ))
     return users_data
 
@@ -153,53 +158,81 @@ def generate_schedule():
         flash('Bạn không có quyền thực hiện chức năng này!', 'danger')
         return redirect(url_for('admin_views.admin_home'))
 
+    num_days = request.form.get('num_days', default=7, type=int)
+    num_users_per_day = request.form.get('num_users_per_day', default=2, type=int)
+
+    if num_days is None or num_days < 1:
+        num_days = 7
+    if num_users_per_day is None or num_users_per_day < 1:
+        num_users_per_day = 2
+
+    action = request.form.get('action_generate') or request.form.get('action_confirm') or request.form.get('action_cancel')
+    print(f'generate_schedule action={action!r}, form={request.form.to_dict()}')
+
     try:
         vietnam_tz = pytz.timezone('Asia/Ho_Chi_Minh')
         current_week = datetime.now(vietnam_tz).isocalendar()[1]
 
-        # Lấy trạng thái 'Đã duyệt' và trạng thái hiển thị cuối cùng 'Đã xác nhận'
         approved_status = Status.query.filter_by(name='Đã duyệt').first()
-        confirmed_status = Status.query.filter_by(name='Đã xác nhận').first()
-        
-        if not confirmed_status:
-            confirmed_status = Status(name='Đã xác nhận')
-            db.session.add(confirmed_status)
+        if action == 'generate':
+            if not approved_status:
+                flash('Không tìm thấy trạng thái "Đã duyệt"!', 'warning')
+                return redirect(url_for('admin_views.admin_home'))
+
+            approved_regs = Registration.query.filter_by(
+                status_id=approved_status.id, week_number=current_week
+            ).all()
+            if not approved_regs:
+                flash('Không có lịch nào đã duyệt của tuần này để generate!', 'warning')
+                return redirect(url_for('admin_views.admin_home'))
+
+            schedule = RunScheduleAgent(num_days, num_users_per_day).get_schedule()
+            session['pending_schedule'] = {
+                'week': current_week,
+                'registrations': [reg.id for reg in approved_regs],
+                'items': {
+                    str(date): [user.userID for user in users]
+                    for date, users in schedule.items()
+                }
+            }
+            session.modified = True
+            flash(f'Đã generate lịch tuần {current_week}. Nhấn OK để lưu hoặc Hủy để bỏ.', 'info')
+
+        elif action == 'confirm':
+            pending = session.get('pending_schedule')
+            if not pending:
+                flash('Không có kết quả lịch để lưu. Vui lòng generate trước.', 'warning')
+                return redirect(url_for('admin_views.admin_home'))
+
+            confirmed_status = Status.query.filter_by(name='Đã xác nhận').first()
+            if not confirmed_status:
+                confirmed_status = Status(name='Đã xác nhận')
+                db.session.add(confirmed_status)
+                db.session.flush()
+
+            for date, user_ids in pending['items'].items():
+                db.session.merge(ScheduleOutput(
+                    date=date, userlist=','.join(map(str, user_ids))
+                ))
+            Registration.query.filter(Registration.id.in_(pending['registrations'])).update(
+                {'status_id': confirmed_status.id}, synchronize_session=False
+            )
             db.session.commit()
+            session.pop('pending_schedule', None)
+            flash(f'Đã lưu lịch tuần {pending["week"]} và xác nhận đăng ký.', 'success')
 
-        if not approved_status:
-            flash('Không tìm thấy danh sách nào ở trạng thái "Đã duyệt" để generate!', 'warning')
-            return redirect(url_for('admin_views.admin_scheduleList'))
-
-        # 👉 QUAN TRỌNG: Chỉ lấy những lịch CỦA TUẦN NÀY và ĐÃ ĐƯỢC ADMIN DUYỆT trước đó
-        approved_regs = Registration.query.filter_by(
-            status_id=approved_status.id,
-            week_number=current_week
-        ).all()
+        elif action == 'cancel':
+            session.pop('pending_schedule', None)
+            flash('Đã hủy generate lịch.', 'warning')
+        else:
+            flash('Hành động không hợp lệ!', 'danger')
         
-        if not approved_regs:
-            flash('Không có lịch nào đã duyệt của tuần này để generate!', 'warning')
-            return redirect(url_for('admin_views.admin_scheduleList'))
-
-        # Tiến hành chuyển tất cả lịch từ 'Đã duyệt' sang 'Đã xác nhận' (Hiển thị lên client)
-        for reg in approved_regs:
-            reg.status_id = confirmed_status.id
-            db.session.add(reg) # Update trạng thái của từng registration
-            
-        db.session.commit()
-        ScheduleAgent = RunScheduleAgent(num_days=7, num_users_per_day=2)
-        ScheResult = ScheduleAgent.get_schedule()
-        # Lưu kết quả lịch trực vào cơ sở dữ liệu ScheduleOutput (nếu cần)
-        for date, userlist in ScheResult.items():
-            schedule_output = ScheduleOutput(date=date, userlist=userlist)
-            db.session.add(schedule_output)
-        db.session.commit()
-        flash(f'Generate thành công {len(approved_regs)} lịch trực tuần {current_week} lên trang client!', 'success')
         
     except Exception as e:
         db.session.rollback()
         flash(f'Lỗi khi generate lịch: {str(e)}', 'danger')
 
-    return redirect(url_for('admin_views.admin_scheduleList'))
+    return redirect(url_for('admin_views.admin_home'))
 
 
 @admin_views.route('/request')
@@ -229,6 +262,47 @@ def admin_request():
         schedules=schedules_data, 
         user=current_user
     )
+    
+@admin_views.route('/my-registration')
+@login_required
+def admin_registration():
+    vietnam_tz = pytz.timezone('Asia/Ho_Chi_Minh')
+    current_week = datetime.now(vietnam_tz).isocalendar()[1]
+    
+    confirmed_status = Status.query.filter_by(name='Đã xác nhận').first()
+    
+    registrations = []
+    if confirmed_status:
+        registrations = Registration.query.filter_by(
+            week_number=current_week,
+            status_id=confirmed_status.id
+        ).all()
+
+    all_days_in_week = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"]
+    
+    # Khởi tạo bộ đếm số lượng đi làm cho từng ngày
+    working_counts = {day: 0 for day in all_days_in_week}
+    total_capacity = 4  
+
+    for reg in registrations:
+        raw_off_days = reg.selected_days  
+        off_days_list = [d.strip().replace('Thứ ', 'T').replace('Chủ Nhật', 'CN') for d in raw_off_days.split(",")] if raw_off_days else []
+        
+        # Những ngày không nằm trong danh sách nghỉ là ngày đi làm
+        working_days = [d for d in all_days_in_week if d not in off_days_list]
+
+        for day in working_days:
+            if day in working_counts:
+                working_counts[day] += 1
+    allowed_off_days = getattr(current_user, 'allowed_off_days', 2)
+    return render_template(
+        'admin/admin_registration.html',
+        user=current_user,
+        working_counts=working_counts,
+        total_capacity=total_capacity,
+        allowed_off_days=allowed_off_days
+    )
+
 @admin_views.route('/user-detail/<int:id>')
 @login_required
 def admin_user_detail(id):

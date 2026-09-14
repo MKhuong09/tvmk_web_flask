@@ -92,17 +92,100 @@
         font-size: 1.1rem;
         width: 50%;
     }
+
+    .schedule-modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.45);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    }
+    .schedule-modal-content {
+        width: min(420px, 90vw);
+        background: #ffffff;
+        border-radius: 10px;
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.18);
+        border: 1px solid #e2e8f0;
+        padding: 20px;
+    }
+    .schedule-modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 18px;
+    }
+    .schedule-modal-header h3 {
+        margin: 0;
+        font-size: 1.2rem;
+        color: #1a202c;
+    }
+    .close-modal {
+        border: none;
+        background: transparent;
+        font-size: 1.8rem;
+        line-height: 1;
+        cursor: pointer;
+        color: #4a5568;
+    }
+    .schedule-form-row {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 16px;
+    }
+    .schedule-form-row label {
+        font-weight: 600;
+        color: #2d3748;
+    }
+    .schedule-form-row input {
+        padding: 10px 12px;
+        border: 1px solid #cbd5e0;
+        border-radius: 6px;
+        font-size: 0.95rem;
+    }
+    .schedule-modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 12px;
+    }
 </style>
 
 <div class="page-header-container">
     <h2 class="page-title">Thống kê</h2>
-    
-    <!-- Form kích hoạt tiến trình xếp lịch -->
-    <form action="{{ url_for('admin_views.generate_schedule') }}" method="POST">
-        <button type="submit" class="btn btn-primary" onclick="return confirm('Bạn có chắc chắn muốn chạy thuật toán xếp lịch trực cuối tuần không?');">
-            <i class="mdi mdi-calendar-clock"></i> Generate Weekend Schedule
-        </button>
-    </form>
+
+    <button type="button" class="btn btn-primary" id="openScheduleModalBtn">
+        <i class="mdi mdi-calendar-clock"></i> Generate Weekend Schedule
+    </button>
+</div>
+
+<div id="scheduleModal" class="schedule-modal" style="display: none;">
+    <div class="schedule-modal-content">
+        <div class="schedule-modal-header">
+            <h3>Thông số sắp xếp lịch</h3>
+            <button type="button" class="close-modal" id="closeScheduleModalBtn" aria-label="Close">&times;</button>
+        </div>
+
+        <form action="{{ url_for('admin_views.generate_schedule') }}" method="POST" id="generateScheduleForm">
+            <div class="schedule-form-row">
+                <label for="num_days">Số ngày trực</label>
+                <input type="number" id="num_days" name="num_days" min="1" max="7" value="7" required>
+            </div>
+
+            <div class="schedule-form-row">
+                <label for="num_users_per_day">Quân số tối đa trong 1 ngày</label>
+                <input type="number" id="num_users_per_day" name="num_users_per_day" min="1" max="20" value="2" required>
+            </div>
+
+            <div class="schedule-modal-actions">
+                <button type="submit" name="action_generate" value="generate" class="btn btn-primary" id="createScheduleBtn">Tạo Lịch</button>
+                <button type="submit" name="action_confirm" value="confirm" class="btn btn-primary" id="confirmScheduleBtn">OK</button>
+                <button type="submit" name="action_cancel" value="cancel" class="btn btn-primary" id="cancelScheduleModalBtn">Hủy</button>
+            </div>
+        </form>
+    </div>
 </div>
 
 <div class="dashboard-grid">
@@ -173,5 +256,52 @@
     // Chạy đồng hồ ngay lập tức và thiết lập vòng lặp chạy ngầm mỗi 1 giây
     updateRealTimeClock();
     setInterval(updateRealTimeClock, 1000);
+
+    const scheduleModal = document.getElementById('scheduleModal');
+    const openScheduleModalBtn = document.getElementById('openScheduleModalBtn');
+    const closeScheduleModalBtn = document.getElementById('closeScheduleModalBtn');
+    const cancelScheduleModalBtn = document.getElementById('cancelScheduleModalBtn');
+    const scheduleForm = document.getElementById('generateScheduleForm');
+
+    function openScheduleModal() {
+        if (scheduleModal) {
+            scheduleModal.style.display = 'flex';
+        }
+    }
+
+    function closeScheduleModal() {
+        if (scheduleModal) {
+            scheduleModal.style.display = 'none';
+        }
+    }
+
+    if (openScheduleModalBtn) {
+        openScheduleModalBtn.addEventListener('click', openScheduleModal);
+    }
+
+    if (closeScheduleModalBtn) {
+        closeScheduleModalBtn.addEventListener('click', closeScheduleModal);
+    }
+
+    if (cancelScheduleModalBtn) {
+        cancelScheduleModalBtn.addEventListener('click', closeScheduleModal);
+    }
+
+    if (scheduleModal) {
+        scheduleModal.addEventListener('click', function (event) {
+            if (event.target === scheduleModal) {
+                closeScheduleModal();
+            }
+        });
+    }
+
+    if (scheduleForm) {
+        scheduleForm.addEventListener('reset', function () {
+            setTimeout(function () {
+                document.getElementById('num_days').value = 7;
+                document.getElementById('num_users_per_day').value = 2;
+            }, 0);
+        });
+    }
 </script>
 {% endblock %}
