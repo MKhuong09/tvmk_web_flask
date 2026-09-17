@@ -9,6 +9,16 @@ import pytz
 
 admin_views = Blueprint('admin_views', __name__)
 
+DEFAULT_WEEKLY_SCHEDULE = [
+    {"day": "Monday",    "label": "Thứ Hai",  "icon": "mdi-briefcase-outline",   "staff": ["Son", "Khuong"], "weekend": False},
+    {"day": "Tuesday",   "label": "Thứ Ba",   "icon": "mdi-briefcase-outline",   "staff": ["Nhan", "Khuong"], "weekend": False},
+    {"day": "Wednesday", "label": "Thứ Tư",   "icon": "mdi-briefcase-outline",   "staff": ["Nhan", "Son"], "weekend": False},
+    {"day": "Thursday",  "label": "Thứ Năm",  "icon": "mdi-briefcase-outline",   "staff": ["Vinh", "Huy"], "weekend": False},
+    {"day": "Friday",    "label": "Thứ Sáu",  "icon": "mdi-briefcase-outline",   "staff": ["Giang"], "weekend": False},
+    {"day": "Saturday",  "label": "Thứ Bảy",  "icon": "mdi-white-balance-sunny", "staff": ["Vinh", "Nam", "Khoa"], "weekend": True},
+    {"day": "Sunday",    "label": "Chủ Nhật", "icon": "mdi-white-balance-sunny", "staff": ["Huy", "Giang", "Khoa"], "weekend": True},
+]
+
 # Hàm phụ trợ: Chuyển đổi danh sách ngày nghỉ thành danh sách ngày đi làm thực tế
 def get_working_days(selected_days_str):
     if not selected_days_str or selected_days_str == "--":
@@ -44,8 +54,10 @@ def admin_home():
         else:
             not_registered += 1
 
-    total_schedule = total_people  
-    week_schedule = total_people   
+    total_schedule = total_people
+    week_schedule = total_people
+    # weekly_schedule = get_weekly_schedule_from_db() or DEFAULT_WEEKLY_SCHEDULE
+    weekly_schedule =  DEFAULT_WEEKLY_SCHEDULE
 
     return render_template(
         'admin/admin_home.html', 
@@ -54,9 +66,14 @@ def admin_home():
         total_schedule=total_schedule,
         week_schedule=week_schedule,
         registered=registered,
-        not_registered=not_registered
+        not_registered=not_registered,
+        weekly_schedule=weekly_schedule,
     )
 
+@admin_views.route('/update-schedule', methods=['POST'])
+def update_schedule():  # <--- Must match the endpoint name!
+    # your logic here
+    pass
 
 @admin_views.route('/scheduleList')
 @login_required
@@ -246,11 +263,12 @@ def update_off_days(user_id):
     
     new_limit = request.form.get('allowed_off_days', type=int)
     
-    if new_limit is not None and new_limit >= 2:
+    if new_limit is not None and 2 <= new_limit <= 7:
         user.allowed_off_days = new_limit
         db.session.commit()
         flash(f'Đã cập nhật số ngày nghỉ cho {user.user_name} thành {new_limit} ngày.', 'success')
     else:
+        user.allowed_off_days = 2
         flash('Giá trị ngày nghỉ không hợp lệ!', 'danger')
         
     # Sửa lại đoạn redirect về đúng tên trang hiển thị danh sách admin_usershift của em (Ví dụ: admin_users hoặc tên route tương ứng)

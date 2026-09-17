@@ -8,7 +8,7 @@
         color: #1a202c;
         margin-bottom: 25px;
     }
-    
+
     /* Cấu trúc hàng thẻ nằm ngang theo đúng ảnh thực tế */
     .dashboard-grid {
         display: flex;
@@ -48,7 +48,7 @@
     }
     .metric-card .card-icon i {
         font-size: 1.8rem;
-        color: #3b82f6; /* Màu xanh biểu tượng theo mẫu */
+        color: #3b82f6;
     }
 
     /* Khối chi tiết Đăng ký nằm bên dưới bên trái */
@@ -58,6 +58,7 @@
         border-radius: 4px;
         padding: 25px;
         max-width: 450px;
+        margin-bottom: 25px;
     }
     .detail-box h3 {
         font-size: 1rem;
@@ -92,11 +93,155 @@
         font-size: 1.1rem;
         width: 50%;
     }
+
+    /* ===== Lịch Làm Trong Tuần — board ngang / dọc ===== */
+    .schedule-section-title {
+        font-size: 1rem;
+        color: #1a202c;
+        font-weight: 600;
+        margin-bottom: 12px;
+    }
+    .schedule-hint {
+        font-size: 0.8rem;
+        color: #a0aec0;
+        margin-bottom: 14px;
+    }
+    .schedule-hint i { color: #3b82f6; margin-right: 4px; }
+
+    .schedule-board {
+        display: flex;
+        flex-direction: row;
+        gap: 16px;
+        overflow-x: auto;
+        padding-bottom: 8px;
+    }
+    .day-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 4px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.01);
+        padding: 18px 18px 16px;
+        flex: 1 1 0;
+        min-width: 170px;
+        display: flex;
+        flex-direction: column;
+    }
+    .day-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+    }
+    .day-name {
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        color: #718096;
+        text-transform: uppercase;
+    }
+    .day-sublabel {
+        font-size: 0.72rem;
+        color: #a0aec0;
+    }
+    .day-icon i {
+        font-size: 1.3rem;
+        color: #3b82f6;
+    }
+    .day-count {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #2d3748;
+        margin-bottom: 8px;
+    }
+    .weekend-flag {
+        font-size: 0.62rem;
+        font-weight: 700;
+        color: #b7791f;
+        background: #fefcbf;
+        padding: 2px 8px;
+        border-radius: 20px;
+        display: inline-block;
+        margin-bottom: 10px;
+        width: fit-content;
+    }
+
+    .staff-list {
+        list-style: none;
+        margin: 0; padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        min-height: 56px;
+        border-radius: 4px;
+        transition: background-color .12s ease;
+    }
+    .staff-list.drag-over,
+    .staff-list.sortable-drag-over {
+        background: #ebf4ff;
+        outline: 2px dashed #3b82f6;
+        outline-offset: 2px;
+    }
+
+    .staff-box {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.87rem;
+        color: #2d3748;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 4px;
+        padding: 7px 10px;
+        cursor: grab;
+        transition: box-shadow .15s ease, border-color .15s ease;
+        user-select: none;
+    }
+    .staff-box:hover {
+        border-color: #bcd4f7;
+        box-shadow: 0 3px 8px rgba(59,130,246,0.12);
+    }
+    .staff-box:active { cursor: grabbing; }
+    .staff-box.sortable-ghost { opacity: .35; }
+    .staff-box.sortable-chosen { box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+
+    .avatar-dot {
+        width: 24px; height: 24px;
+        border-radius: 50%;
+        background: #3b82f6;
+        color: #fff;
+        font-size: 0.65rem;
+        font-weight: 700;
+        display: flex; align-items: center; justify-content: center;
+        flex-shrink: 0;
+    }
+    .drag-handle {
+        color: #cbd5e0;
+        font-size: 0.9rem;
+        margin-left: auto;
+    }
+    .empty-note {
+        font-size: 0.8rem;
+        color: #a0aec0;
+        font-style: italic;
+        padding: 6px 2px;
+    }
+
+    /* Mobile: xếp dọc, full width */
+    @media (max-width: 768px) {
+        .schedule-board {
+            flex-direction: column;
+            overflow-x: visible;
+        }
+        .day-card {
+            min-width: 0;
+            width: 100%;
+        }
+    }
 </style>
 
 <div class="page-header-container">
     <h2 class="page-title">Thống kê</h2>
-    
+
     <!-- Form kích hoạt tiến trình xếp lịch -->
     <form action="{{ url_for('admin_views.generate_schedule') }}" method="POST">
         <button type="submit" class="btn btn-primary" onclick="return confirm('Bạn có chắc chắn muốn chạy thuật toán xếp lịch trực cuối tuần không?');">
@@ -104,6 +249,13 @@
         </button>
     </form>
 </div>
+
+<!-- ===== Lịch Làm Trong Tuần ===== -->
+<h3 class="schedule-section-title">Lịch Làm Trong Tuần</h3>
+<div class="schedule-hint"><i class="mdi mdi-cursor-move"></i>Kéo tên nhân viên sang ngày khác để đổi lịch.</div>
+
+<div class="schedule-board" id="scheduleBoard"></div>
+
 
 <div class="dashboard-grid">
     <div class="metric-card">
@@ -139,7 +291,7 @@
 
 <div class="detail-box">
     <h3>Số Người Đăng Ký <small id="current-date">(Đang tải...)</small></h3>
-    
+
     <table class="status-table">
         <tr>
             <td>Đã đăng ký</td>
@@ -152,6 +304,7 @@
     </table>
 </div>
 
+
 <script>
     function updateRealTimeClock() {
         const now = new Date();
@@ -161,17 +314,117 @@
         const hours = String(now.getHours()).padStart(2, '0');
         const minutes = String(now.getMinutes()).padStart(2, '0');
         const seconds = String(now.getSeconds()).padStart(2, '0');
-
-        // Xuất chuỗi thời gian chuẩn động liên tục từng giây (dd/mm/yyyy - hh:mm:ss) [cite: 2026-06-21]
         const formattedTime = `(${day}/${month}/${year} - ${hours}:${minutes}:${seconds})`;
-        
         const clockElement = document.getElementById('current-date');
-        if(clockElement) {
+        if (clockElement) {
             clockElement.innerText = formattedTime;
         }
     }
-    // Chạy đồng hồ ngay lập tức và thiết lập vòng lặp chạy ngầm mỗi 1 giây
     updateRealTimeClock();
     setInterval(updateRealTimeClock, 1000);
+</script>
+
+<!-- SortableJS: kéo-thả nhân viên giữa các ngày -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
+<script>
+    // Dữ liệu lịch tuần lấy từ backend (Flask truyền qua context, ví dụ `weekly_schedule`)
+    // Mỗi phần tử: { day, label, icon, staff: [...], weekend: true/false }
+    const schedule = JSON.parse('{{ weekly_schedule | tojson | safe }}');
+
+    let sortables = [];
+
+    function initials(name) {
+        return name.trim().slice(0, 2).toUpperCase();
+    }
+
+    function staffBoxHtml(name) {
+        return `
+            <li class="staff-box" data-name="${name}">
+                <span class="avatar-dot">${initials(name)}</span>
+                <span>${name}</span>
+                <i class="mdi mdi-drag-vertical drag-handle"></i>
+            </li>`;
+    }
+
+    function renderBoard() {
+        const board = document.getElementById('scheduleBoard');
+        board.innerHTML = '';
+
+        schedule.forEach(d => {
+            const col = document.createElement('div');
+            col.className = 'day-card';
+            col.innerHTML = `
+                <div class="day-head">
+                    <div>
+                        <div class="day-name">${d.day}</div>
+                        <div class="day-sublabel">${d.label}</div>
+                    </div>
+                    <div class="day-icon"><i class="mdi ${d.icon}"></i></div>
+                </div>
+                <div class="day-count" data-count="${d.day}">${d.staff.length}</div>
+                ${d.weekend ? `<span class="weekend-flag">CUỐI TUẦN</span>` : ''}
+                <ul class="staff-list" data-day="${d.day}"></ul>
+            `;
+            board.appendChild(col);
+
+            const list = col.querySelector('.staff-list');
+            d.staff.forEach(name => list.insertAdjacentHTML('beforeend', staffBoxHtml(name)));
+            if (d.staff.length === 0) {
+                list.insertAdjacentHTML('beforeend', `<div class="empty-note">Chưa phân công</div>`);
+            }
+        });
+
+        initDragAndDrop();
+    }
+
+    function initDragAndDrop() {
+        sortables.forEach(s => s.destroy());
+        sortables = [];
+
+        document.querySelectorAll('.staff-list').forEach(list => {
+            const s = new Sortable(list, {
+                group: 'roster',
+                animation: 150,
+                ghostClass: 'sortable-ghost',
+                chosenClass: 'sortable-chosen',
+                filter: '.empty-note',
+                onAdd: syncFromDOM,
+                onRemove: syncFromDOM,
+                onSort: syncFromDOM
+            });
+            sortables.push(s);
+        });
+    }
+
+    // Đồng bộ lại dữ liệu + đếm số người sau khi kéo-thả,
+    // và gọi API lưu thay đổi xuống backend.
+    function syncFromDOM() {
+        const payload = [];
+
+        document.querySelectorAll('.staff-list').forEach(list => {
+            const day = list.dataset.day;
+            const names = [...list.querySelectorAll('.staff-box')].map(el => el.dataset.name);
+
+            document.querySelector(`[data-count="${day}"]`).textContent = names.length;
+
+            const emptyNote = list.querySelector('.empty-note');
+            if (names.length === 0 && !emptyNote) {
+                list.insertAdjacentHTML('beforeend', `<div class="empty-note">Chưa phân công</div>`);
+            } else if (names.length > 0 && emptyNote) {
+                emptyNote.remove();
+            }
+
+            payload.push({ day, staff: names });
+        });
+
+        // TODO: gọi API lưu lịch mới, ví dụ:
+        // fetch("{{ url_for('admin_views.update_schedule') }}", {
+        //     method: "POST",
+        //     headers: { "Content-Type": "application/json" },
+        //     body: JSON.stringify({ schedule: payload })
+        // });
+    }
+
+    renderBoard();
 </script>
 {% endblock %}
