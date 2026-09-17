@@ -74,47 +74,99 @@ class ScheduleAgent:
             for d in range(n_days):
                 x[(u, d)] = model.NewBoolVar(f"x_{u}_{d}")
 
-        # Availability constraints
+        # 1. Availability constraints
         for u, user in enumerate(self.users):
             for d in range(n_days):
                 daynum = d + 1
                 if daynum in user.unavailable_days:
                     model.Add(x[(u, d)] == 0)
 
-        # Max users per day
+        # 2. Hard day limits
         for d in range(n_days):
             model.Add(sum(x[(u, d)] for u in range(n_users)) <= self.NumOfUsersPerDay)
-            model.Add(sum(x[(u, d)] for u in range(n_users)) > 0)  # Ensure at least one user is scheduled per day
+            model.Add(sum(x[(u, d)] for u in range(n_users)) >= 1)  # Ensure at least 1 user
 
-        # Max days per user
+        # 3. Max days per user
         for u, user in enumerate(self.users):
-            model.Add(sum(x[(u, d)] for d in range(n_days)) == user.max_days_per_week)
+            model.Add(sum(x[(u, d)] for d in range(n_days)) <= user.max_days_per_week)
 
-        # Fairness: avoid scheduling users on weekend if they were scheduled on weekend last week
-        last_week_weekend_ids = set()
-        for daynum, users_on_day in (self.last_week_schedule or {}).items():
+        # 4. Daily Balancing Penalties (Smooth out daily counts)
+        TARGET_MIN = 2  # Target at least 2 users/day (e.g., Friday)
+        TARGET_MAX = self.NumOfUsersPerDay  # Target at most 3 users/day (e.g., Tuesday)
+        
+        WEEKEND_MIN_TARGET = self.NumOfUsersPerDay   # Aim for at least 3 users on Sat/Sun
+        WEEKDAY_MAX_TARGET = 2   # Aim for at most 2 users on Mon-Fri
+
+        UNDER_PENALTY = 500  # Penalty weight for having < min users
+        OVER_PENALTY = 300   # Penalty weight for having > max users
+
+        penalty_terms = []
+
+        for d in range(n_days):
+            daily_total = sum(x[(u, d)] for u in range(n_users))
+            daynum = d + 1
+            
             if daynum in (DayOfWeek.SATURDAY.value, DayOfWeek.SUNDAY.value):
-                for itm in users_on_day:
-                    try:
-                        last_week_weekend_ids.add(int(getattr(itm, "userID", itm)))
-                    except Exception:
-                        pass
-
-        if last_week_weekend_ids:
-            for u, user in enumerate(self.users):
-                if user.userID in last_week_weekend_ids:
-                    for d in range(n_days):
-                        daynum = d + 1
-                        if daynum in (DayOfWeek.SATURDAY.value, DayOfWeek.SUNDAY.value):
-                            model.Add(x[(u, d)] == 0)
-
-        # Objective: randomize selection to avoid bias (maximize random weights)
+            # Weekend: Penalize if fewer than 3 users
+                under_target = model.NewIntVar(0, self.NumOfUsersPerDay, f"under_{d}")
+                model.Add(under_target >= WEEKEND_MIN_TARGET - daily_total)
+                penalty_terms.append(UNDER_PENALTY * under_target)
+            else:
+                # Weekday: Penalize if more than 2 users
+                over_target = model.NewIntVar(0, self.NumOfUsersPerDay, f"over_{d}")
+                model.Add(over_target >= daily_total - WEEKDAY_MAX_TARGET)
+                penalty_terms.append(OVER_PENALTY * over_target)
+            
+            # Track shortfall below TARGET_MIN
+            under_target = model.NewIntVar(0, TARGET_MIN, f"under_{d}")
+            model.Add(under_target >= TARGET_MIN - daily_total)
+            
+            # Track excess above TARGET_MAX
+            over_target = model.NewIntVar(0, self.NumOfUsersPerDay, f"over_{d}")
+            model.Add(over_target >= daily_total - TARGET_MAX)
+            
+            penalty_terms.append(UNDER_PENALTY * under_target + OVER_PENALTY * over_target)
+        
+        # 5. Objective: Maximize random preferences MINUS balancing penalties + Random preferences + Weekend Bonus - Target Penalties
         weights = {}
+        objective_terms = []
+        WEEKEND_BONUS = 200  # Extra reward per user assigned to weekend
+        
         for u in range(n_users):
             for d in range(n_days):
-                weights[(u, d)] = int(random.random() * 1000)
-        model.Maximize(sum(weights[(u, d)] * x[(u, d)] for u in range(n_users) for d in range(n_days)))
+                daynum = d + 1
+                base_weight = int(random.random() * 100)
+                
+                weights[(u, d)] = int(random.random() * 100)  # Reduced range so penalties take priority
+                
+                # Add bonus score for Saturday and Sunday assignments
+                if daynum in (DayOfWeek.SATURDAY.value, DayOfWeek.SUNDAY.value):
+                    base_weight += WEEKEND_BONUS
+                    
+                objective_terms.append(base_weight * x[(u, d)])
 
+        preference_score = sum(weights[(u, d)] * x[(u, d)] for u in range(n_users) for d in range(n_days))
+
+        # model.Maximize(preference_score + sum(objective_terms) - sum(penalty_terms))
+        model.Maximize(preference_score - sum(penalty_terms))
+        
+        # Fairness: avoid scheduling users on weekend if they were scheduled on weekend last week
+        # last_week_weekend_ids = set()
+        # for daynum, users_on_day in (self.last_week_schedule or {}).items():
+        #     if daynum in (DayOfWeek.SATURDAY.value, DayOfWeek.SUNDAY.value):
+        #         for itm in users_on_day:
+        #             try:
+        #                 last_week_weekend_ids.add(int(getattr(itm, "userID", itm)))
+        #             except Exception:
+        #                 pass
+
+        # if last_week_weekend_ids:
+        #     for u, user in enumerate(self.users):
+        #         if user.userID in last_week_weekend_ids:
+        #             for d in range(n_days):
+        #                 daynum = d + 1
+        #                 if daynum in (DayOfWeek.SATURDAY.value, DayOfWeek.SUNDAY.value):
+        #                     model.Add(x[(u, d)] == 0)
         solver = cp_model.CpSolver()
         solver.parameters.max_time_in_seconds = float(solve_time_seconds)
         solver.parameters.random_seed = random.randrange(1, 1_000_000)
@@ -262,9 +314,10 @@ if __name__ == "__main__":
                  unavailable_days=[DayOfWeek.WEDNESDAY.value,DayOfWeek.THURSDAY.value, DayOfWeek.FRIDAY.value,DayOfWeek.SATURDAY.value,DayOfWeek.SUNDAY.value],
                  max_days_per_week=2),
     ]
+    
     # last week scheduled user IDs for weekend days
     last_week = {}
-    agent = ScheduleAgent(users, NumOfSchedDays=7, NumOfUsersPerDay=4, last_week_schedule=last_week)
+    agent = ScheduleAgent(users, NumOfSchedDays=7, NumOfUsersPerDay=3, last_week_schedule=last_week)
     sched = agent.create_schedule()
     for day, us in sched.items():
         day_name = convert_numeric_to_day(day)

@@ -1,4 +1,10 @@
-venv/
-algorithms/__pycache__/
-website/__pycache__/
+# Virtual environment
+.venv/
+
+# Python byte-compiled / cache files
+**/__pycache__/
+*.pyc
+
+# Excel files
 schedule.xlsx
+~$*.xlsx
