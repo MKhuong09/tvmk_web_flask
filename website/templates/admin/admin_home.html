@@ -469,6 +469,7 @@
 
 
 <script>
+
     function updateRealTimeClock() {
         const now = new Date();
         const day = String(now.getDate()).padStart(2, '0');
@@ -490,7 +491,7 @@
 <script>
     // Dữ liệu lịch tuần lấy từ backend (Flask truyền qua context, biến `weekly_schedule`).
     // Mỗi phần tử: { day, label, icon, staff: [...], weekend: true/false }
-    const schedule = JSON.parse('{{ weekly_schedule | tojson | safe }}');
+    const schedule = JSON.parse('{{ schedule | tojson | safe }}');
 
     // Người đang được chọn để chuyển ngày: { day, name } hoặc null
     let selected = null;
@@ -499,15 +500,15 @@
         return name.trim().slice(0, 2).toUpperCase();
     }
 
+    console.log(schedule);
+
+
     function getRosterNames() {
-        // Danh sách tất cả tên duy nhất đang có trong lịch tuần, dùng cho panel "+"
-        const set = new Set();
-        schedule.forEach(d => d.staff.forEach(n => set.add(n)));
-        return [...set].sort();
+        return [...new Set(Object.values(schedule).flat())].sort();
     }
 
     function findDay(day) {
-        return schedule.find(d => d.day === day);
+        return schedule[day] || [];
     }
 
     function staffBoxHtml(day, name) {

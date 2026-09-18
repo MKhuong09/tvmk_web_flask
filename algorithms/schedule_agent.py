@@ -25,7 +25,7 @@ import random
 from typing import List, Dict, Any
 import pandas as pd
 import openpyxl
-from ..website.models import User
+from website.models import User
 
 from ortools.sat.python import cp_model
 
@@ -60,6 +60,24 @@ class ScheduleAgent:
         self.NumOfUsersPerDay = NumOfUsersPerDay
         self.schedule: Dict[int, List[User]] = {day: [] for day in range(1, NumOfSchedDays + 1)}
         self.last_week_schedule = last_week_schedule or {}
+        
+    def to_json_dict(self) -> Dict[str, List[Dict[str, Any]]]:
+        """
+        Converts internal integer-keyed schedule into a JSON-serializable 
+        dictionary with readable day names and user dictionaries/strings.
+        """
+        formatted_schedule = {}
+        for day_num, staff_list in self.schedule.items():
+            day_name = self.DAY_NAMES.get(day_num, f"Day {day_num}")
+            formatted_schedule[day_name] = [
+                {
+                    "id": u.id,
+                    "name": u.fullname or u.user_name,
+                    "email": u.email
+                } if hasattr(u, "id") else str(u)
+                for u in staff_list
+            ]
+        return formatted_schedule
 
     def create_schedule(self, solve_time_seconds: int = 5):
         if cp_model is None:

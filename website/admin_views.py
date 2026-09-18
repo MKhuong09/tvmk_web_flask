@@ -45,6 +45,7 @@ def admin_home():
     all_users = User.query.all()
     registered = 0
     not_registered = 0
+    schedule = {}
 
     for user in all_users:
         reg = Registration.query.filter_by(user_id=user.id).order_by(Registration.id.desc()).first()
@@ -56,18 +57,41 @@ def admin_home():
 
     total_schedule = total_people
     week_schedule = total_people
-    # weekly_schedule = get_weekly_schedule_from_db() or DEFAULT_WEEKLY_SCHEDULE
-    weekly_schedule =  DEFAULT_WEEKLY_SCHEDULE
+    agent = ScheduleAgent(all_users, NumOfSchedDays=7, NumOfUsersPerDay=3, last_week_schedule=None)
+    DAY_NAMES = {1: "Monday", 2: "Tuesday", 3: "Wednesday", 4: "Thursday", 5: "Friday", 6: "Saturday", 7: "Sunday"}
 
+    # raw_schedule = agent.get_schedule()
+
+    # # Check if schedule contains assigned staff
+    # has_data = raw_schedule and any(
+    #     any(u for u in users if u is not None) 
+    #     for users in raw_schedule.items()
+    # )    
+    # print(has_data)
+
+    # if has_data:
+    #     schedule = {
+    #         DAY_NAMES.get(day, f"Day {day}"): [
+    #             u.fullname or u.user_name if hasattr(u, "fullname") else str(u)
+    #             for u in users
+    #         ]
+    #         for day, users in raw_schedule.items()
+    #     }
+    # else:
+    # schedule = agent.create_schedule() or DEFAULT_WEEKLY_SCHEDULE
+    schedule = DEFAULT_WEEKLY_SCHEDULE
+        
+    print(schedule)
+        
     return render_template(
-        'admin/admin_home.html', 
+        'admin/admin_home.html',
         user=current_user,
         total_people=total_people,
         total_schedule=total_schedule,
         week_schedule=week_schedule,
         registered=registered,
         not_registered=not_registered,
-        weekly_schedule=weekly_schedule,
+        schedule=schedule,
     )
 
 @admin_views.route('/update-schedule', methods=['POST'])
@@ -86,7 +110,7 @@ def admin_scheduleList():
         
         # Tự động quy đổi từ ngày nghỉ sang ngày đi làm thực tế
         actual_days = get_working_days(reg.selected_days)
-        
+
         schedules_data.append({
             "id": reg.id,
             "ho_ten": user_info.user_name if user_info else "Không rõ",

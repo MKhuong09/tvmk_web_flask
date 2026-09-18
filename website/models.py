@@ -1,7 +1,6 @@
 from datetime import datetime
 from flask_login import UserMixin
 from sqlalchemy.sql import func
-from sqlalchemy import ARRAY
 from enum import Enum
 from . import db  # Hoặc cách import db tương ứng của dự án
 
@@ -18,7 +17,7 @@ class Role(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), unique=True, nullable=False)
     users = db.relationship('User', backref='role', lazy=True)
-
+    
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(150), unique=True)
@@ -29,8 +28,20 @@ class User(db.Model, UserMixin):
     registrations = db.relationship('Registration', backref='user_account', lazy=True)
     role_id = db.Column(db.Integer, db.ForeignKey('role.id'), nullable=False, default=2)
     allowed_off_days = db.Column(db.Integer, default=2)
-    unavailable_days = db.Column(ARRAY(db.Integer), default=[])
+    unavailable_days = db.Column(db.JSON, default=[])
     max_days_per_week = db.Column(db.Integer, default=3)
+
+    # def to_dict(self):
+    #     return {
+    #         "id": self.id,
+    #         "user_name": self.user_name,
+    #         "fullname": self.fullname,
+    #         "email": self.email,
+    #         "role_id": self.role_id,
+    #         "allowed_off_days": self.allowed_off_days,
+    #         "unavailable_days": self.unavailable_days or [],
+    #         "max_days_per_week": self.max_days_per_week
+    #     }
 
 class Note(db.Model):
     id = db.Column(db.Integer, primary_key=True)
