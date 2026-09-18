@@ -25,6 +25,7 @@ import random
 from typing import List, Dict, Any
 import pandas as pd
 import openpyxl
+from ..website.models import User
 
 from ortools.sat.python import cp_model
 
@@ -53,11 +54,11 @@ class UserData:
 class ScheduleAgent:
     """Schedule generator using CP-SAT (OR-Tools). Falls back to simple greedy if OR-Tools not installed."""
 
-    def __init__(self, users: List[UserData], NumOfSchedDays: int, NumOfUsersPerDay: int, last_week_schedule: Dict[int, List[Any]] | None = None):
+    def __init__(self, users: List[User], NumOfSchedDays: int, NumOfUsersPerDay: int, last_week_schedule: Dict[int, List[Any]] | None = None):
         self.users = users
         self.NumOfSchedDays = NumOfSchedDays
         self.NumOfUsersPerDay = NumOfUsersPerDay
-        self.schedule: Dict[int, List[UserData]] = {day: [] for day in range(1, NumOfSchedDays + 1)}
+        self.schedule: Dict[int, List[User]] = {day: [] for day in range(1, NumOfSchedDays + 1)}
         self.last_week_schedule = last_week_schedule or {}
 
     def create_schedule(self, solve_time_seconds: int = 5):
@@ -282,35 +283,35 @@ def convert_numeric_to_day(day_num: int) -> str:
 if __name__ == "__main__":
     # Quick local example (run after installing ortools or will fall back to greedy)
     users = [
-        UserData(name="Vinh", email="a@example.com", userID=1, 
+        UserData(fullname="Vinh", email="a@example.com", id=1,
                  unavailable_days=[DayOfWeek.MONDAY.value, DayOfWeek.WEDNESDAY.value,DayOfWeek.FRIDAY.value,DayOfWeek.SUNDAY.value], 
                  max_days_per_week=3),
         
-        UserData(name="Nhan", email="b@example.com", userID=2,
+        UserData(fullname="Nhan", email="b@example.com", id=2,
                  unavailable_days=[DayOfWeek.THURSDAY.value, DayOfWeek.FRIDAY.value,DayOfWeek.SATURDAY.value,DayOfWeek.SUNDAY.value]
                  , max_days_per_week=3),
         
-        UserData(name="Nam", email="c@example.com", userID=3,
+        UserData(fullname="Nam", email="c@example.com", id=3,
                  unavailable_days=[DayOfWeek.MONDAY.value,DayOfWeek.FRIDAY.value],
                  max_days_per_week=1),
         
-        UserData(name="Son", email="d@example.com", userID=4,
+        UserData(fullname="Son", email="d@example.com", id=4,
                  unavailable_days=[DayOfWeek.THURSDAY.value, DayOfWeek.FRIDAY.value,DayOfWeek.SATURDAY.value,DayOfWeek.SUNDAY.value],
                  max_days_per_week=3),
         
-        UserData(name="Huy", email="e@example.com", userID=5,
+        UserData(fullname="Huy", email="e@example.com", id=5,
                  unavailable_days=[],
                  max_days_per_week=2),
         
-        UserData(name="Giang", email="f@example.com", userID=6,
+        UserData(fullname="Giang", email="f@example.com", id=6,
                  unavailable_days=[],
                  max_days_per_week=2),
         
-        UserData(name="Khoa", email="g@example.com", userID=7,
+        UserData(fullname="Khoa", email="g@example.com", id=7,
                  unavailable_days=[],
                  max_days_per_week=2),
         
-        UserData(name="Khuong", email="k@example.com", userID=8,
+        UserData(fullname="Khuong", email="k@example.com", id=8,
                  unavailable_days=[DayOfWeek.WEDNESDAY.value,DayOfWeek.THURSDAY.value, DayOfWeek.FRIDAY.value,DayOfWeek.SATURDAY.value,DayOfWeek.SUNDAY.value],
                  max_days_per_week=2),
     ]

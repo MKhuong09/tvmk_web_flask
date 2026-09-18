@@ -16,6 +16,7 @@
         margin-bottom: 25px;
         flex-wrap: wrap;
     }
+
     .metric-card {
         flex: 1;
         min-width: 280px;
@@ -26,13 +27,15 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.01);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.01);
     }
+
     .metric-card .card-info {
         display: flex;
         flex-direction: column;
         gap: 8px;
     }
+
     .metric-card .card-info h4 {
         font-size: 0.85rem;
         color: #718096;
@@ -41,11 +44,13 @@
         letter-spacing: 0.5px;
         margin: 0;
     }
+
     .metric-card .card-info .metric-value {
         font-size: 1.7rem;
         font-weight: 700;
         color: #2d3748;
     }
+
     .metric-card .card-icon i {
         font-size: 1.8rem;
         color: #3b82f6;
@@ -60,33 +65,39 @@
         max-width: 450px;
         margin-bottom: 25px;
     }
+
     .detail-box h3 {
         font-size: 1rem;
         color: #1a202c;
         font-weight: 600;
         margin-bottom: 15px;
     }
+
     .detail-box h3 small {
         color: #a0aec0;
         font-weight: 400;
         font-size: 0.8rem;
         margin-left: 5px;
     }
+
     .status-table {
         width: 100%;
         border-collapse: collapse;
     }
+
     .status-table td {
         padding: 12px 16px;
         border: 1px solid #e2e8f0;
         font-size: 0.95rem;
         color: #2d3748;
     }
+
     .status-table tr td:first-child {
         background-color: #f8fafc;
         width: 50%;
         font-weight: 500;
     }
+
     .status-table tr td:last-child {
         text-align: center;
         font-weight: 700;
@@ -101,12 +112,31 @@
         font-weight: 600;
         margin-bottom: 12px;
     }
+
     .schedule-hint {
         font-size: 0.8rem;
         color: #a0aec0;
         margin-bottom: 14px;
+        min-height: 18px;
     }
-    .schedule-hint i { color: #3b82f6; margin-right: 4px; }
+
+    .schedule-hint i {
+        color: #3b82f6;
+        margin-right: 4px;
+    }
+
+    .schedule-hint.is-active {
+        color: #2b6cb0;
+        font-weight: 600;
+    }
+
+    .schedule-hint .cancel-link {
+        margin-left: 8px;
+        color: #e53e3e;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: underline;
+    }
 
     .schedule-board {
         display: flex;
@@ -115,23 +145,40 @@
         overflow-x: auto;
         padding-bottom: 8px;
     }
+
     .day-card {
         background: #ffffff;
         border: 1px solid #e2e8f0;
         border-radius: 4px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.01);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.01);
         padding: 18px 18px 16px;
         flex: 1 1 0;
-        min-width: 170px;
+        min-width: 190px;
         display: flex;
         flex-direction: column;
+        transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease;
     }
+
+    /* Highlighted as a valid drop target while a staff member is selected */
+    .day-card.drop-target {
+        border-color: #3b82f6;
+        border-style: dashed;
+        background: #f7faff;
+        cursor: pointer;
+    }
+
+    .day-card.drop-target:hover {
+        background: #ebf4ff;
+        box-shadow: 0 4px 10px rgba(59, 130, 246, 0.15);
+    }
+
     .day-head {
         display: flex;
         align-items: center;
         justify-content: space-between;
         margin-bottom: 12px;
     }
+
     .day-name {
         font-size: 0.75rem;
         font-weight: 600;
@@ -139,20 +186,50 @@
         color: #718096;
         text-transform: uppercase;
     }
+
     .day-sublabel {
         font-size: 0.72rem;
         color: #a0aec0;
     }
+
+    .day-head-right {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
     .day-icon i {
         font-size: 1.3rem;
         color: #3b82f6;
     }
+
+    .day-add-btn {
+        width: 26px;
+        height: 26px;
+        border-radius: 4px;
+        border: 1px solid #cbd5e0;
+        background: #f8fafc;
+        color: #3b82f6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: background-color .12s ease, border-color .12s ease;
+    }
+
+    .day-add-btn:hover {
+        background: #ebf4ff;
+        border-color: #3b82f6;
+    }
+
     .day-count {
         font-size: 1.5rem;
         font-weight: 700;
         color: #2d3748;
         margin-bottom: 8px;
     }
+
     .weekend-flag {
         font-size: 0.62rem;
         font-weight: 700;
@@ -167,19 +244,12 @@
 
     .staff-list {
         list-style: none;
-        margin: 0; padding: 0;
+        margin: 0;
+        padding: 0;
         display: flex;
         flex-direction: column;
         gap: 8px;
-        min-height: 56px;
-        border-radius: 4px;
-        transition: background-color .12s ease;
-    }
-    .staff-list.drag-over,
-    .staff-list.sortable-drag-over {
-        background: #ebf4ff;
-        outline: 2px dashed #3b82f6;
-        outline-offset: 2px;
+        min-height: 40px;
     }
 
     .staff-box {
@@ -192,38 +262,127 @@
         border: 1px solid #e2e8f0;
         border-radius: 4px;
         padding: 7px 10px;
-        cursor: grab;
-        transition: box-shadow .15s ease, border-color .15s ease;
+        cursor: pointer;
+        transition: box-shadow .15s ease, border-color .15s ease, background-color .15s ease, transform .1s ease;
         user-select: none;
     }
+
     .staff-box:hover {
         border-color: #bcd4f7;
-        box-shadow: 0 3px 8px rgba(59,130,246,0.12);
+        box-shadow: 0 3px 8px rgba(59, 130, 246, 0.12);
     }
-    .staff-box:active { cursor: grabbing; }
-    .staff-box.sortable-ghost { opacity: .35; }
-    .staff-box.sortable-chosen { box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+
+    /* Currently picked staff member, waiting for a destination day */
+    .staff-box.selected {
+        background: #3b82f6;
+        border-color: #3b82f6;
+        color: #fff;
+        box-shadow: 0 4px 10px rgba(59, 130, 246, 0.35);
+        transform: scale(1.02);
+    }
+
+    .staff-box.selected .avatar-dot {
+        background: #fff;
+        color: #3b82f6;
+    }
+
+    .staff-box.selected .remove-x {
+        color: #fff;
+    }
 
     .avatar-dot {
-        width: 24px; height: 24px;
+        width: 24px;
+        height: 24px;
         border-radius: 50%;
         background: #3b82f6;
         color: #fff;
         font-size: 0.65rem;
         font-weight: 700;
-        display: flex; align-items: center; justify-content: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         flex-shrink: 0;
     }
-    .drag-handle {
-        color: #cbd5e0;
-        font-size: 0.9rem;
+
+    .remove-x {
         margin-left: auto;
+        color: #cbd5e0;
+        font-size: 0.85rem;
+        cursor: pointer;
+        padding: 2px 4px;
     }
+
+    .remove-x:hover {
+        color: #e53e3e;
+    }
+
     .empty-note {
         font-size: 0.8rem;
         color: #a0aec0;
         font-style: italic;
         padding: 6px 2px;
+    }
+
+    /* Add-person panel that opens under a day when "+" is clicked */
+    .add-panel {
+        margin-top: 10px;
+        border-top: 1px dashed #e2e8f0;
+        padding-top: 10px;
+        display: none;
+    }
+
+    .add-panel.open {
+        display: block;
+    }
+
+    .add-panel .add-chip-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-bottom: 8px;
+    }
+
+    .add-chip {
+        font-size: 0.78rem;
+        color: #2d3748;
+        background: #eef2f7;
+        border: 1px solid #e2e8f0;
+        border-radius: 20px;
+        padding: 4px 10px;
+        cursor: pointer;
+    }
+
+    .add-chip:hover {
+        background: #ebf4ff;
+        border-color: #3b82f6;
+    }
+
+    .add-input-row {
+        display: flex;
+        gap: 6px;
+    }
+
+    .add-input-row input {
+        flex: 1;
+        min-width: 0;
+        font-size: 0.8rem;
+        padding: 5px 8px;
+        border: 1px solid #e2e8f0;
+        border-radius: 4px;
+    }
+
+    .add-input-row button {
+        font-size: 0.78rem;
+        padding: 5px 10px;
+        border: none;
+        border-radius: 4px;
+        background: #3b82f6;
+        color: #fff;
+        cursor: pointer;
+    }
+
+    .add-input-row button:hover {
+        background: #2b6cb0;
     }
 
     /* Mobile: xếp dọc, full width */
@@ -232,6 +391,7 @@
             flex-direction: column;
             overflow-x: visible;
         }
+
         .day-card {
             min-width: 0;
             width: 100%;
@@ -244,7 +404,8 @@
 
     <!-- Form kích hoạt tiến trình xếp lịch -->
     <form action="{{ url_for('admin_views.generate_schedule') }}" method="POST">
-        <button type="submit" class="btn btn-primary" onclick="return confirm('Bạn có chắc chắn muốn chạy thuật toán xếp lịch trực cuối tuần không?');">
+        <button type="submit" class="btn btn-primary"
+            onclick="return confirm('Bạn có chắc chắn muốn chạy thuật toán xếp lịch trực cuối tuần không?');">
             <i class="mdi mdi-calendar-clock"></i> Generate Weekend Schedule
         </button>
     </form>
@@ -252,7 +413,9 @@
 
 <!-- ===== Lịch Làm Trong Tuần ===== -->
 <h3 class="schedule-section-title">Lịch Làm Trong Tuần</h3>
-<div class="schedule-hint"><i class="mdi mdi-cursor-move"></i>Kéo tên nhân viên sang ngày khác để đổi lịch.</div>
+<div class="schedule-hint" id="scheduleHint">
+    <i class="mdi mdi-cursor-default-click-outline"></i>Bấm chọn một người, rồi bấm vào ngày muốn chuyển tới.
+</div>
 
 <div class="schedule-board" id="scheduleBoard"></div>
 
@@ -324,25 +487,38 @@
     setInterval(updateRealTimeClock, 1000);
 </script>
 
-<!-- SortableJS: kéo-thả nhân viên giữa các ngày -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
 <script>
-    // Dữ liệu lịch tuần lấy từ backend (Flask truyền qua context, ví dụ `weekly_schedule`)
+    // Dữ liệu lịch tuần lấy từ backend (Flask truyền qua context, biến `weekly_schedule`).
     // Mỗi phần tử: { day, label, icon, staff: [...], weekend: true/false }
     const schedule = JSON.parse('{{ weekly_schedule | tojson | safe }}');
 
-    let sortables = [];
+    // Người đang được chọn để chuyển ngày: { day, name } hoặc null
+    let selected = null;
 
     function initials(name) {
         return name.trim().slice(0, 2).toUpperCase();
     }
 
-    function staffBoxHtml(name) {
+    function getRosterNames() {
+        // Danh sách tất cả tên duy nhất đang có trong lịch tuần, dùng cho panel "+"
+        const set = new Set();
+        schedule.forEach(d => d.staff.forEach(n => set.add(n)));
+        return [...set].sort();
+    }
+
+    function findDay(day) {
+        return schedule.find(d => d.day === day);
+    }
+
+    function staffBoxHtml(day, name) {
+        const isSelected = selected && selected.day === day && selected.name === name;
         return `
-            <li class="staff-box" data-name="${name}">
+            <li class="staff-box${isSelected ? ' selected' : ''}"
+                data-name="${name}"
+                onclick="onStaffClick(event, '${day}', '${name}')">
                 <span class="avatar-dot">${initials(name)}</span>
                 <span>${name}</span>
-                <i class="mdi mdi-drag-vertical drag-handle"></i>
+                <i class="mdi mdi-close remove-x" onclick="onRemoveClick(event, '${day}', '${name}')" title="Xoá khỏi ngày này"></i>
             </li>`;
     }
 
@@ -353,69 +529,171 @@
         schedule.forEach(d => {
             const col = document.createElement('div');
             col.className = 'day-card';
+            col.dataset.day = d.day;
+            // Nếu đang có người được chọn và đây không phải ngày gốc -> đánh dấu là điểm đến hợp lệ
+            if (selected && selected.day !== d.day) {
+                col.classList.add('drop-target');
+            }
+            col.onclick = (e) => onDayClick(e, d.day, d.label);
+
             col.innerHTML = `
                 <div class="day-head">
                     <div>
                         <div class="day-name">${d.day}</div>
                         <div class="day-sublabel">${d.label}</div>
                     </div>
-                    <div class="day-icon"><i class="mdi ${d.icon}"></i></div>
+                    <div class="day-head-right">
+                        <div class="day-icon"><i class="mdi ${d.icon}"></i></div>
+                        <div class="day-add-btn" title="Thêm người cho ngày này" onclick="toggleAddPanel(event, '${d.day}')">
+                            <i class="mdi mdi-plus"></i>
+                        </div>
+                    </div>
                 </div>
                 <div class="day-count" data-count="${d.day}">${d.staff.length}</div>
                 ${d.weekend ? `<span class="weekend-flag">CUỐI TUẦN</span>` : ''}
                 <ul class="staff-list" data-day="${d.day}"></ul>
+                <div class="add-panel" id="add-panel-${d.day}"></div>
             `;
             board.appendChild(col);
 
             const list = col.querySelector('.staff-list');
-            d.staff.forEach(name => list.insertAdjacentHTML('beforeend', staffBoxHtml(name)));
             if (d.staff.length === 0) {
                 list.insertAdjacentHTML('beforeend', `<div class="empty-note">Chưa phân công</div>`);
+            } else {
+                d.staff.forEach(name => list.insertAdjacentHTML('beforeend', staffBoxHtml(d.day, name)));
             }
         });
 
-        initDragAndDrop();
+        updateHint();
     }
 
-    function initDragAndDrop() {
-        sortables.forEach(s => s.destroy());
-        sortables = [];
-
-        document.querySelectorAll('.staff-list').forEach(list => {
-            const s = new Sortable(list, {
-                group: 'roster',
-                animation: 150,
-                ghostClass: 'sortable-ghost',
-                chosenClass: 'sortable-chosen',
-                filter: '.empty-note',
-                onAdd: syncFromDOM,
-                onRemove: syncFromDOM,
-                onSort: syncFromDOM
-            });
-            sortables.push(s);
-        });
+    // Bấm vào một người -> chọn (hoặc bấm lại -> bỏ chọn)
+    function onStaffClick(event, day, name) {
+        event.stopPropagation();
+        if (selected && selected.day === day && selected.name === name) {
+            selected = null;
+        } else {
+            selected = { day, name };
+        }
+        renderBoard();
     }
 
-    // Đồng bộ lại dữ liệu + đếm số người sau khi kéo-thả,
-    // và gọi API lưu thay đổi xuống backend.
-    function syncFromDOM() {
-        const payload = [];
+    // Bấm nút "x" trên một người -> xoá khỏi ngày đó
+    function onRemoveClick(event, day, name) {
+        event.stopPropagation();
+        const entry = findDay(day);
+        entry.staff = entry.staff.filter(n => n !== name);
+        if (selected && selected.day === day && selected.name === name) {
+            selected = null;
+        }
+        renderBoard();
+        syncSchedule();
+    }
 
-        document.querySelectorAll('.staff-list').forEach(list => {
-            const day = list.dataset.day;
-            const names = [...list.querySelectorAll('.staff-box')].map(el => el.dataset.name);
+    // Bấm vào một ngày (khoảng trống của thẻ) -> nếu đang có người được chọn thì chuyển họ tới đây
+    function onDayClick(event, day, label) {
+        // Bỏ qua nếu click đến từ nút/panel bên trong thẻ (đã stopPropagation ở các handler riêng)
+        if (!selected) return;
+        if (selected.day === day) {
+            // Bấm lại ngày gốc -> huỷ chọn
+            selected = null;
+            renderBoard();
+            return;
+        }
 
-            document.querySelector(`[data-count="${day}"]`).textContent = names.length;
+        const fromDay = findDay(selected.day);
+        const toDay = findDay(day);
 
-            const emptyNote = list.querySelector('.empty-note');
-            if (names.length === 0 && !emptyNote) {
-                list.insertAdjacentHTML('beforeend', `<div class="empty-note">Chưa phân công</div>`);
-            } else if (names.length > 0 && emptyNote) {
-                emptyNote.remove();
-            }
+        if (toDay.staff.includes(selected.name)) {
+            // Người này đã có ở ngày đích rồi -> chỉ huỷ chọn, không cần thêm trùng
+            alert(selected.name + " đã có lịch trực ngày " + label)
+            selected = null;
+            renderBoard();
+            return;
+        }
 
-            payload.push({ day, staff: names });
-        });
+        fromDay.staff = fromDay.staff.filter(n => n !== selected.name);
+        toDay.staff.push(selected.name);
+        selected = null;
+
+        renderBoard();
+        syncSchedule();
+    }
+
+    // Mở/đóng panel "+" để thêm người vào một ngày cụ thể
+    function toggleAddPanel(event, day) {
+        event.stopPropagation();
+        const panel = document.getElementById(`add-panel-${day}`);
+        const wasOpen = panel.classList.contains('open');
+
+        // Đóng hết các panel khác trước
+        document.querySelectorAll('.add-panel').forEach(p => p.classList.remove('open'));
+
+        if (wasOpen) return;
+
+        const entry = findDay(day);
+        const roster = getRosterNames().filter(n => !entry.staff.includes(n));
+
+        panel.innerHTML = `
+            <div class="add-chip-row">
+                ${roster.length
+                ? roster.map(n => `<span class="add-chip" onclick="addToDay(event, '${day}', '${n}')">${n}</span>`).join('')
+                : `<span class="empty-note">Không còn ai khác trong danh sách</span>`}
+            </div>
+            <div class="add-input-row">
+                <input type="text" placeholder="Tên nhân viên mới..." id="add-input-${day}"
+                       onclick="event.stopPropagation()"
+                       onkeydown="if(event.key==='Enter'){ addNewNameToDay(event, '${day}'); }">
+                <button onclick="addNewNameToDay(event, '${day}')">Thêm</button>
+            </div>
+        `;
+        panel.classList.add('open');
+    }
+
+    function addToDay(event, day, name) {
+        event.stopPropagation();
+        const entry = findDay(day);
+        if (!entry.staff.includes(name)) {
+            entry.staff.push(name);
+        }
+        document.getElementById(`add-panel-${day}`).classList.remove('open');
+        renderBoard();
+        syncSchedule();
+    }
+
+    function addNewNameToDay(event, day) {
+        event.stopPropagation();
+        const input = document.getElementById(`add-input-${day}`);
+        const name = input.value.trim();
+        if (!name) return;
+        addToDay(event, day, name);
+    }
+
+    function updateHint() {
+        const hint = document.getElementById('scheduleHint');
+        if (selected) {
+            hint.classList.add('is-active');
+            hint.innerHTML = `<i class="mdi mdi-account-arrow-right"></i>Đang chọn <b>${selected.name}</b> — bấm vào ngày muốn chuyển tới.
+                <span class="cancel-link" onclick="cancelSelection()">Huỷ chọn</span>`;
+        } else {
+            hint.classList.remove('is-active');
+            hint.innerHTML = `<i class="mdi mdi-cursor-default-click-outline"></i>Bấm chọn một người, rồi bấm vào ngày muốn chuyển tới.`;
+        }
+    }
+
+    function cancelSelection() {
+        selected = null;
+        renderBoard();
+    }
+
+    // Đóng panel "+" nếu bấm ra ngoài
+    document.addEventListener('click', () => {
+        document.querySelectorAll('.add-panel').forEach(p => p.classList.remove('open'));
+    });
+
+    // Gửi lịch mới xuống backend sau mỗi thay đổi (chuyển ngày / thêm / xoá)
+    function syncSchedule() {
+        const payload = schedule.map(d => ({ day: d.day, staff: d.staff }));
 
         // TODO: gọi API lưu lịch mới, ví dụ:
         // fetch("{{ url_for('admin_views.update_schedule') }}", {

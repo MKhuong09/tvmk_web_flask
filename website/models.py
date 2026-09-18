@@ -1,8 +1,19 @@
 from datetime import datetime
 from flask_login import UserMixin
 from sqlalchemy.sql import func
+from sqlalchemy import ARRAY
+from enum import Enum
 from . import db  # Hoặc cách import db tương ứng của dự án
 
+class DayOfWeek(Enum):
+    MONDAY = 1
+    TUESDAY = 2
+    WEDNESDAY = 3
+    THURSDAY = 4
+    FRIDAY = 5
+    SATURDAY = 6
+    SUNDAY = 7
+    
 class Role(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), unique=True, nullable=False)
@@ -13,10 +24,13 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(150), unique=True)
     password = db.Column(db.String(150))
     user_name = db.Column(db.String(150), unique=True)
+    fullname = db.Column(db.String(150))
     notes = db.relationship('Note')
     registrations = db.relationship('Registration', backref='user_account', lazy=True)
     role_id = db.Column(db.Integer, db.ForeignKey('role.id'), nullable=False, default=2)
     allowed_off_days = db.Column(db.Integer, default=2)
+    unavailable_days = db.Column(ARRAY(db.Integer), default=[])
+    max_days_per_week = db.Column(db.Integer, default=3)
 
 class Note(db.Model):
     id = db.Column(db.Integer, primary_key=True)
