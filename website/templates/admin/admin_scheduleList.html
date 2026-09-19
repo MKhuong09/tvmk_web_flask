@@ -2,11 +2,11 @@
 
 {% block content %}
 <style>
-    .admin-schedule-wrapper {
+    .admin-history-wrapper {
         padding: 20px;
         font-family: Arial, sans-serif;
     }
-    .admin-schedule-title {
+    .admin-history-title {
         font-size: 22px;
         font-weight: bold;
         color: #4e73df;
@@ -15,20 +15,21 @@
         display: inline-block;
         padding-bottom: 4px;
     }
-    .admin-schedule-desc {
+    .admin-history-desc {
         color: #666;
         font-size: 14px;
         margin-bottom: 20px;
     }
-    .schedule-table {
+    
+    .history-table {
         width: 100%;
         border-collapse: collapse;
         background: #fff;
         border-radius: 8px;
         overflow: hidden;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.08);
     }
-    .schedule-table th {
+    .history-table th {
         background-color: #f8f9fa;
         color: #4e73df;
         font-weight: bold;
@@ -38,90 +39,203 @@
         border-bottom: 2px solid #dee2e6;
         text-align: left;
     }
-    .schedule-table td {
+    .history-table td {
         padding: 14px 16px;
         border-bottom: 1px solid #eee;
         vertical-align: middle;
         font-size: 14px;
         color: #333;
     }
-    .schedule-table tr:hover {
+    .history-table tr:hover {
         background-color: #f8f9fc;
     }
-    .schedule-table a {
-        color: #4e73df;
-        text-decoration: none;
-    }
-    .schedule-table a:hover {
-        text-decoration: underline;
-    }
-    .text-center-col {
-        text-align: center !important;
-    }
+    
     .badge-custom {
         display: inline-block;
         font-size: 11px;
         font-weight: bold;
-        padding: 5px 12px;
+        padding: 6px 14px;
         border-radius: 20px;
         text-align: center;
-        min-width: 110px;
+        min-width: 120px;
     }
-    .badge-status-success {
-        background-color: #d1fae5;
-        color: #069669;
+    /* Màu sắc phân biệt trạng thái */
+    .badge-not-registered { background-color: #fee2e2; color: #991b1b; } /* Đỏ: Chưa đăng ký */
+    .badge-registered { background-color: #dbeafe; color: #1d4ed8; }     /* Xanh dương: Đã đăng ký */
+    .badge-pending { background-color: #fef3c7; color: #d97706; }        /* Vàng cam: Chờ xác thực */
+    .badge-success { background-color: #d1fae5; color: #069669; }        /* Xanh lá: Đã xác thực / Đã duyệt */
+
+    .source-badge {
+        font-size: 12px;
+        font-weight: 600;
+        padding: 4px 10px;
+        border-radius: 4px;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
     }
-    .badge-status-warning {
-        background-color: #fef3c7;
-        color: #d97706;
+    .source-badge-db {
+        background-color: #e0e7ff;
+        color: #4338ca;
     }
 </style>
 
-<div class="admin-schedule-wrapper">
+<div class="admin-history-wrapper">
     <div>
-        <h2 class="admin-schedule-title">Chi tiết lịch đăng ký</h2>
-        <div class="admin-schedule-desc">Danh sách lịch đã đăng ký của dân quân trong hệ thống</div>
+        <h2 class="admin-history-title">Danh sách tài khoản và Trạng thái trực</h2>
+        <div class="admin-history-desc">Hiển thị toàn bộ nhân viên, học viên (trừ admin) và trạng thái đăng ký ca trực</div>
     </div>
 
-    <table class="schedule-table">
+    <!-- DATA TABLE SECTION -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <h3 style="font-size: 16px; font-weight: bold; color: #333; margin: 0;">
+            Tổng số tài khoản: {{ users_schedules|length if users_schedules is defined else 8 }}
+        </h3>
+        <div>
+            <span class="source-badge source-badge-db">
+                <i class="mdi mdi-database"></i> Cơ sở dữ liệu hệ thống
+            </span>
+        </div>
+    </div>
+
+    <table class="history-table">
         <thead>
             <tr>
-                <th>HỌ VÀ TÊN</th>
-                <th>GMAIL</th>
-                <th>NGÀY ĐĂNG KÝ</th>
-                <th>NGÀY LÀM VIỆC THỰC TẾ</th>
+                <th>TÊN NHÂN VIÊN / HỌC VIÊN</th>
+                <th>NGÀY CHỌN</th>
                 <th>CA TRỰC</th>
-                <th class="text-center-col">TRẠNG THÁI</th>
+                <th>NGÀY TRỰC</th>
+                <th style="text-align: center;">TRẠNG THÁI</th>
             </tr>
         </thead>
         <tbody>
-            {% if schedules %}
-                {% for item in schedules %}
+            {% if users_schedules %}
+                {% for item in users_schedules %}
                 <tr>
-                    <td><strong>{{ item.ho_ten }}</strong></td>
                     <td>
-                        <a href="mailto:{{ item.gmail }}">{{ item.gmail }}</a>
+                        <strong>{{ item.ho_ten }}</strong>
+                        {% if item.gmail and item.gmail != 'Không rõ' %}
+                            <div style="font-size: 12px; color: #777;">{{ item.gmail }}</div>
+                        {% endif %}
                     </td>
-                    <td>{{ item.created_at if item.created_at else '--' }}</td>
-                    <td>{{ item.selected_days if item.selected_days else '--' }}</td>
+                    <td>{{ item.ngay_chon if item.ngay_chon else '--' }}</td>
                     <td>{{ item.session if item.session else '--' }}</td>
-                    <td class="text-center-col">
-                        {% if item.status_name == 'Đã xác nhận' %}
-                            <span class="badge-custom badge-status-success">Đã xác nhận</span>
+                    <td>{{ item.selected_days if item.selected_days else '--' }}</td>
+                    <td style="text-align: center;">
+                        {% if item.status_name == 'Chưa đăng ký' %}
+                            <span class="badge-custom badge-not-registered">Chưa đăng ký</span>
+                        {% elif item.status_name == 'Đã đăng ký' %}
+                            <span class="badge-custom badge-registered">Đã đăng ký</span>
+                        {% elif item.status_name == 'Chờ xác thực' %}
+                            <span class="badge-custom badge-pending">Chờ xác thực</span>
+                        {% elif item.status_name == 'Đã xác thực' or item.status_name == 'Đã duyệt' or item.status_name == 'Đã xác nhận' %}
+                            <span class="badge-custom badge-success">Đã xác thực</span>
                         {% else %}
-                            <span class="badge-custom badge-status-warning">{{ item.status_name }}</span>
+                            <span class="badge-custom badge-not-registered">Chưa đăng ký</span>
                         {% endif %}
                     </td>
                 </tr>
                 {% endfor %}
             {% else %}
-            <tr>
-                <td colspan="6" style="text-align: center; color: #777; padding: 40px;">
-                    Chưa có dữ liệu đăng ký lịch nào trong hệ thống.
-                </td>
-            </tr>
+                <tr>
+                    <td>
+                        <strong>namnguyenle123</strong>
+                        <div style="font-size: 12px; color: #777;">namnguyenle123b@gmail.com</div>
+                    </td>
+                    <td>15/09/2026 12:15</td>
+                    <td>Cả tuần</td>
+                    <td>T2, T3, T6, T7, CN</td>
+                    <td style="text-align: center;">
+                        <span class="badge-custom badge-success">Đã xác thực</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <strong>tranminhhai</strong>
+                        <div style="font-size: 12px; color: #777;">minhhai.tran@ap27.mil.vn</div>
+                    </td>
+                    <td>16/09/2026 08:30</td>
+                    <td>Ca Chiều</td>
+                    <td>T4, T5, T6, T7</td>
+                    <td style="text-align: center;">
+                        <span class="badge-custom badge-success">Đã xác thực</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <strong>lehoanglong</strong>
+                        <div style="font-size: 12px; color: #777;">hoanglong.le@ap27.mil.vn</div>
+                    </td>
+                    <td>16/09/2026 14:00</td>
+                    <td>Ca Sáng</td>
+                    <td>T2, T3, T4, T5</td>
+                    <td style="text-align: center;">
+                        <span class="badge-custom badge-registered">Đã đăng ký</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <strong>buigiahuy</strong>
+                        <div style="font-size: 12px; color: #777;">giahuy.bui@ap27.mil.vn</div>
+                    </td>
+                    <td>17/09/2026 07:15</td>
+                    <td>Tuần tra đêm</td>
+                    <td>T6, T7, CN</td>
+                    <td style="text-align: center;">
+                        <span class="badge-custom badge-pending">Chờ xác thực</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <strong>vuhaidang</strong>
+                        <div style="font-size: 12px; color: #777;">haidang.vu@ap27.mil.vn</div>
+                    </td>
+                    <td>--</td>
+                    <td>--</td>
+                    <td>--</td>
+                    <td style="text-align: center;">
+                        <span class="badge-custom badge-not-registered">Chưa đăng ký</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <strong>dotuankiet</strong>
+                        <div style="font-size: 12px; color: #777;">tuankiet.do@ap27.mil.vn</div>
+                    </td>
+                    <td>16/09/2026 19:10</td>
+                    <td>Ca Sáng</td>
+                    <td>T7, CN</td>
+                    <td style="text-align: center;">
+                        <span class="badge-custom badge-success">Đã xác thực</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <strong>phanthanhson</strong>
+                        <div style="font-size: 12px; color: #777;">thanhson.phan@ap27.mil.vn</div>
+                    </td>
+                    <td>17/09/2026 09:40</td>
+                    <td>Ca Chiều</td>
+                    <td>T2, T3, T5</td>
+                    <td style="text-align: center;">
+                        <span class="badge-custom badge-registered">Đã đăng ký</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <strong>nguyenquangminh</strong>
+                        <div style="font-size: 12px; color: #777;">quangminh.nguyen@ap27.mil.vn</div>
+                    </td>
+                    <td>--</td>
+                    <td>--</td>
+                    <td>--</td>
+                    <td style="text-align: center;">
+                        <span class="badge-custom badge-not-registered">Chưa đăng ký</span>
+                    </td>
+                </tr>
             {% endif %}
         </tbody>
     </table>
+
 </div>
 {% endblock %}

@@ -1,0 +1,692 @@
+{% extends 'Shared/admin_layout.html' %}
+
+{% block title %}Lịch sử đăng ký trực theo tuần - SCHEDULE Hamlet{% endblock %}
+
+{% block content %}
+<style>
+    /* ==========================================================
+       SCHEDULE Hamlet - Giao Diện Lịch Sử Trực Ma Trận Theo Tuần
+       - Dòng đen đậm: Tên gọi ngắn
+       - Dòng xám: Họ và tên đầy đủ
+       - Bản thô đăng ký của tuần bên dưới
+       ========================================================== */
+    .admin-history-wrapper {
+        font-family: inherit;
+    }
+    
+    .admin-history-header {
+        margin-bottom: 22px;
+    }
+    .admin-history-title {
+        font-size: 22px;
+        font-weight: 700;
+        color: #1e3a8a;
+        margin-bottom: 4px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .admin-history-desc {
+        color: #64748b;
+        font-size: 13.5px;
+    }
+    
+    /* Box bộ lọc Tháng / Năm */
+    .filter-card {
+        background: #ffffff;
+        border-radius: 10px;
+        padding: 18px 22px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        margin-bottom: 22px;
+        border: 1px solid #e2e8f0;
+    }
+    .filter-card-title {
+        font-size: 14.5px;
+        font-weight: 700;
+        color: #2e59d9;
+        margin-bottom: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .filter-card-title span {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .form-label-custom {
+        display: block;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        margin-bottom: 6px;
+        color: #475569;
+    }
+    .form-select-custom {
+        border-radius: 6px;
+        border: 1px solid #cbd5e1;
+        padding: 8px 12px;
+        font-size: 13.5px;
+        background-color: #ffffff;
+        color: #1e293b;
+        width: 100%;
+        transition: border-color 0.15s ease;
+    }
+    .form-select-custom:focus {
+        border-color: #2563eb;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+    
+    /* Nút bấm thao tác */
+    .btn-action-group {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    .btn-custom {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 13.5px;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+    .btn-custom-primary {
+        background-color: #4e73df;
+        color: #ffffff;
+    }
+    .btn-custom-primary:hover {
+        background-color: #2e59d9;
+        color: #ffffff;
+    }
+    .btn-custom-success {
+        background-color: #1cc88a;
+        color: #ffffff;
+    }
+    .btn-custom-success:hover {
+        background-color: #17a673;
+        color: #ffffff;
+    }
+    .btn-custom-warning {
+        background-color: #f6c23e;
+        color: #2d3748;
+    }
+    .btn-custom-warning:hover {
+        background-color: #dfa71e;
+        color: #1a202c;
+    }
+
+    /* Thống kê nhanh */
+    .stats-bar {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 22px;
+        flex-wrap: wrap;
+    }
+    .stat-pill {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 8px 16px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 13px;
+        color: #475569;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+    }
+    .stat-pill strong {
+        color: #0f172a;
+        font-size: 15px;
+        font-weight: 700;
+    }
+
+    /* ================= KHỐI TUẦN (WEEK CARD) ================= */
+    .week-block {
+        background: #ffffff;
+        border-radius: 10px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+        margin-bottom: 26px;
+        overflow: hidden;
+    }
+    
+    .week-header {
+        background: #ffffff;
+        padding: 14px 18px;
+        border-bottom: 1px solid #e2e8f0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    .week-title-area {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .week-badge {
+        background-color: #eff6ff;
+        color: #1e40af;
+        font-weight: 700;
+        font-size: 13px;
+        padding: 5px 12px;
+        border-radius: 6px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border: 1px solid #dbeafe;
+    }
+    .week-range {
+        font-size: 13.5px;
+        font-weight: 600;
+        color: #334155;
+    }
+    .week-stats-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+    }
+    .chip-metric {
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+    .chip-metric-info { background-color: #eff6ff; color: #1d4ed8; }
+    .chip-metric-warning { background-color: #fef3c7; color: #b45309; }
+    .chip-metric-success { background-color: #ecfdf5; color: #047857; }
+
+    /* ================= BẢNG MA TRẬN 7 NGÀY (T2 -> CN) ================= */
+    .schedule-matrix-table {
+        width: 100%;
+        table-layout: fixed;
+        border-collapse: collapse;
+    }
+    .schedule-matrix-table th {
+        background-color: #f8fafc;
+        border-right: 1px solid #e2e8f0;
+        border-bottom: 2px solid #cbd5e1;
+        padding: 10px 8px;
+        text-align: center;
+        vertical-align: middle;
+        font-size: 13px;
+        font-weight: 700;
+        color: #334155;
+    }
+    .schedule-matrix-table th:last-child {
+        border-right: none;
+    }
+    .schedule-matrix-table th.is-weekend {
+        background-color: #fff1f2;
+        color: #be123c;
+    }
+    .schedule-matrix-table th.is-today {
+        background-color: #e0f2fe;
+        color: #0369a1;
+        border-bottom-color: #0284c7;
+    }
+    .th-day-name {
+        display: block;
+        font-size: 13px;
+        font-weight: 700;
+    }
+    .th-day-date {
+        display: block;
+        font-size: 11px;
+        font-weight: 500;
+        opacity: 0.85;
+        margin-top: 2px;
+    }
+
+    .schedule-matrix-table td {
+        border-right: 1px solid #e2e8f0;
+        padding: 10px 8px;
+        vertical-align: top;
+        background-color: #ffffff;
+        min-height: 160px;
+        height: 100%;
+    }
+    .schedule-matrix-table td:last-child {
+        border-right: none;
+    }
+    .schedule-matrix-table td.is-other-month {
+        background-color: #f8fafc;
+        opacity: 0.65;
+    }
+
+    /* Thẻ nhân sự trực */
+    .personnel-list {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+    .personnel-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        padding: 7px 8px;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+        transition: border-color 0.15s ease;
+    }
+    .personnel-card:hover {
+        border-color: #3b82f6;
+    }
+    /* Dòng chữ đen đậm: Tên gọi */
+    .personnel-name {
+        font-size: 12.5px;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    /* Dòng chữ xám: Họ và tên đầy đủ */
+    .personnel-gmail {
+        font-size: 10.5px;
+        color: #64748b;
+        margin-bottom: 4px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .personnel-meta {
+        display: flex;
+        align-items: center;
+    }
+
+    /* Badge trạng thái */
+    .badge-status {
+        font-size: 9.5px;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 12px;
+        display: inline-block;
+        white-space: nowrap;
+    }
+    .badge-status-success {
+        background-color: #d1fae5;
+        color: #065f46;
+    }
+    .badge-status-primary {
+        background-color: #dbeafe;
+        color: #1e40af;
+    }
+    .badge-status-warning {
+        background-color: #fef3c7;
+        color: #92400e;
+    }
+    .badge-status-danger {
+        background-color: #fee2e2;
+        color: #991b1b;
+    }
+
+    /* Trạng thái trống lịch */
+    .empty-day-state {
+        text-align: center;
+        padding: 24px 4px;
+        color: #94a3b8;
+    }
+    .empty-day-icon {
+        font-size: 20px;
+        display: block;
+        margin-bottom: 2px;
+        opacity: 0.6;
+    }
+    .empty-day-text {
+        font-size: 11px;
+        font-weight: 500;
+        background-color: #f1f5f9;
+        padding: 2px 6px;
+        border-radius: 4px;
+        display: inline-block;
+    }
+
+    .matrix-responsive-container {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    @media (max-width: 992px) {
+        .schedule-matrix-table {
+            min-width: 820px;
+        }
+    }
+
+    /* ================= BẢNG BẢN THÔ ĐĂNG KÝ PHÍA DƯỚI TUẦN ================= */
+    .week-raw-section {
+        border-top: 1px solid #e2e8f0;
+        background-color: #f8fafc;
+    }
+    .week-raw-header {
+        padding: 9px 16px;
+        background-color: #f1f5f9;
+        border-bottom: 1px solid #e2e8f0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .week-raw-title {
+        font-size: 12px;
+        font-weight: 700;
+        color: #334155;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .week-raw-count-badge {
+        background-color: #dbeafe;
+        color: #1e40af;
+        font-size: 10.5px;
+        font-weight: 700;
+        padding: 1px 7px;
+        border-radius: 12px;
+    }
+    .week-raw-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+        background-color: #ffffff;
+    }
+    .week-raw-table th {
+        background-color: #ffffff;
+        color: #475569;
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 10px;
+        letter-spacing: 0.5px;
+        padding: 8px 16px;
+        border-bottom: 1px solid #e2e8f0;
+        text-align: left;
+    }
+    .week-raw-table td {
+        padding: 8px 16px;
+        border-bottom: 1px solid #f1f5f9;
+        vertical-align: middle;
+        color: #334155;
+    }
+    .week-raw-table tr:hover td {
+        background-color: #f8fafc;
+    }
+</style>
+
+<div class="admin-history-wrapper">
+    <!-- TIÊU ĐỀ TRANG -->
+    <div class="admin-history-header">
+        <h2 class="admin-history-title">
+            <i class="mdi mdi-calendar-multiselect text-primary"></i>
+            Lịch sử đăng ký trực
+        </h2>
+        <div class="admin-history-desc">
+            Tra cứu và theo dõi lịch trực của nhân sự theo từng tuần trong tháng từ Thứ 2 đến Chủ Nhật.
+        </div>
+    </div>
+
+    <!-- HỘP LỌC THÁNG VÀ NĂM -->
+    <div class="filter-card">
+        <div class="filter-card-title">
+            <span><i class="mdi mdi-filter-variant"></i> Lọc Lịch Sử Theo Tháng & Năm</span>
+            <span class="text-muted" style="font-size: 12.5px; font-weight: 500;">
+                Đang xem: <strong>Tháng {{ selected_month }}/{{ selected_year }}</strong>
+            </span>
+        </div>
+
+        <form action="{{ url_for('admin_views.admin_history') if url_for else '#' }}" method="GET" style="display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end;">
+            <div style="flex: 1; min-width: 140px;">
+                <label class="form-label-custom">Tháng:</label>
+                <select id="select-month" name="month" class="form-select-custom">
+                    {% for m in range(1, 13) %}
+                    <option value="{{ m }}" {% if m == selected_month %}selected{% endif %}>
+                        Tháng {{ m }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div style="flex: 1; min-width: 140px;">
+                <label class="form-label-custom">Năm:</label>
+                <select id="select-year" name="year" class="form-select-custom">
+                    {% for y in range(2024, 2029) %}
+                    <option value="{{ y }}" {% if y == selected_year %}selected{% endif %}>
+                        Năm {{ y }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="btn-action-group">
+                <button type="submit" class="btn-custom btn-custom-primary">
+                    <i class="mdi mdi-magnify"></i> Lọc dữ liệu
+                </button>
+
+                <button type="button" class="btn-custom btn-custom-success" onclick="exportExcelScheduleMatrix()">
+                    <i class="mdi mdi-file-excel"></i> Xuất Excel
+                </button>
+
+                <a href="{{ url_for('admin_views.admin_history') if url_for else '?' }}" class="btn-custom btn-custom-warning">
+                    <i class="mdi mdi-refresh"></i> Mặc định
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <div class="stats-bar">
+        <div class="stat-pill">
+            <i class="mdi mdi-calendar-range text-primary" style="font-size: 18px;"></i>
+            <div>Tổng số tuần: <strong>{{ weeks_data|length }} tuần</strong></div>
+        </div>
+        <div class="stat-pill">
+            <i class="mdi mdi-account-group text-success" style="font-size: 18px;"></i>
+            <div>Tổng lượt trực: <strong>{{ total_active_personnel }} lượt</strong></div>
+        </div>
+        <div class="stat-pill">
+            <i class="mdi mdi-file-document-check text-info" style="font-size: 18px;"></i>
+            <div>Bản ghi đăng ký: <strong>{{ total_registrations }} hồ sơ</strong></div>
+        </div>
+    </div>
+
+    {% if weeks_data %}
+        {% for week in weeks_data %}
+        <div class="week-block" id="week-{{ week.week_number }}">
+            <!-- Header của Tuần -->
+            <div class="week-header">
+                <div class="week-title-area">
+                    <span class="week-badge">
+                        <i class="mdi mdi-calendar-week"></i> Tuần {{ week.week_number }}
+                    </span>
+                    <span class="week-range">
+                        {{ week.date_range_label }} ({{ week.start_date }} - {{ week.end_date }})
+                    </span>
+                </div>
+
+                <div class="week-stats-group">
+                    <span class="chip-metric chip-metric-info">
+                        <i class="mdi mdi-account-check"></i> {{ week.total_slots }} lượt trực
+                    </span>
+                    {% if week.empty_days_count > 0 %}
+                    <span class="chip-metric chip-metric-warning">
+                        <i class="mdi mdi-alert-circle-outline"></i> {{ week.empty_days_count }} ngày trống
+                    </span>
+                    {% else %}
+                    <span class="chip-metric chip-metric-success">
+                        <i class="mdi mdi-check-circle"></i> Đủ quân số
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="matrix-responsive-container">
+                <table class="schedule-matrix-table">
+                    <thead>
+                        <tr>
+                            {% for day in week.days %}
+                            <th class="{% if day.day_code in ['T7', 'CN'] %}is-weekend{% endif %} {% if day.is_today %}is-today{% endif %}">
+                                <span class="th-day-name">{{ day.day_name }}</span>
+                                <span class="th-day-date">({{ day.date_str }})</span>
+                            </th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            {% for day in week.days %}
+                            <td class="{% if not day.is_current_month %}is-other-month{% endif %}">
+                                {% if day.personnel and day.personnel|length > 0 %}
+                                    <div class="personnel-list">
+                                        {% for person in day.personnel %}
+                                        <div class="personnel-card">
+                                            <div class="personnel-name" title="Tên: {{ person.ten_rut_gon or person.ho_ten }}">
+                                                {{ person.ten_rut_gon or person.ho_ten }}
+                                            </div>                               
+                                            <div class="personnel-gmail" title="Họ và tên: {{ person.ho_ten }}">
+                                                {{ person.ho_ten }}
+                                            </div>
+                                            <div class="personnel-meta">
+                                                <span class="badge-status {{ person.status_badge_class }}">
+                                                    {{ person.status_name }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <div class="empty-day-state">
+                                        <i class="mdi mdi-calendar-blank-outline empty-day-icon"></i>
+                                        <div class="empty-day-text">Trống lịch</div>
+                                    </div>
+                                {% endif %}
+                            </td>
+                            {% endfor %}
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="week-raw-section">
+                <div class="week-raw-header">
+                    <div class="week-raw-title">
+                        <i class="mdi mdi-table-large text-primary"></i>
+                        <span>Đăng ký tuần {{ week.week_number }}</span>
+                        <span class="week-raw-count-badge">{{ week.raw_registrations|length }} lượt đăng ký</span>
+                    </div>
+                    <span class="text-muted" style="font-size: 11px;">Hồ sơ đăng ký gốc của nhân sự trong tuần</span>
+                </div>
+
+                {% if week.raw_registrations and week.raw_registrations|length > 0 %}
+                <div class="table-responsive" style="margin: 0;">
+                    <table class="week-raw-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 50px; text-align: center;">STT</th>
+                                <th>Họ và tên</th>
+                                <th>Ngày gửi đăng ký</th>
+                                <th>Các ngày đăng ký trực</th>
+                                <th style="text-align: center;">Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for reg in week.raw_registrations %}
+                            <tr>
+                                <td style="text-align: center; color: #94a3b8; font-weight: 600;">{{ loop.index }}</td>
+                                <td>
+                                    <div style="font-weight: 700; color: #0f172a;">{{ reg.ho_ten }}</div>
+                                    {% if reg.ten_rut_gon and reg.ten_rut_gon != reg.ho_ten %}
+                                    <div style="font-size: 11px; color: #64748b;">Tên gọi: {{ reg.ten_rut_gon }}</div>
+                                    {% endif %}
+                                </td>
+                                <td style="color: #475569;">{{ reg.created_at }}</td>
+                                <td>
+                                    <span style="font-weight: 600; color: #2563eb; background-color: #eff6ff; padding: 2px 8px; border-radius: 4px; border: 1px solid #dbeafe;">
+                                        {{ reg.selected_days }}
+                                    </span>
+                                </td>
+                                <td style="text-align: center;">
+                                    <span class="badge-status {{ reg.status_badge_class }}">
+                                        {{ reg.status_name }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div style="padding: 12px; text-align: center; color: #94a3b8; font-size: 12px; font-style: italic;">
+                    Chưa có bản ghi đăng ký cho tuần này.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="filter-card text-center py-5">
+            <i class="mdi mdi-calendar-remove" style="font-size: 44px; color: #94a3b8;"></i>
+            <h5 class="mt-3 text-muted">Không tìm thấy dữ liệu trực trong tháng {{ selected_month }}/{{ selected_year }}</h5>
+            <p class="text-secondary" style="font-size: 13px;">Hãy chọn tháng khác hoặc tiến hành phân lịch trực cho nhân sự.</p>
+        </div>
+    {% endif %}
+
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function exportExcelScheduleMatrix() {
+    const month = document.getElementById('select-month').value;
+    const year = document.getElementById('select-year').value;
+    
+    const headers = ["TUẦN", "THỨ", "NGÀY TRỰC", "TÊN GỌI", "HỌ VÀ TÊN", "TRẠNG THÁI"];
+    const rows = [];
+
+    document.querySelectorAll('.week-block').forEach((weekBlock) => {
+        const weekBadge = weekBlock.querySelector('.week-badge') ? weekBlock.querySelector('.week-badge').innerText.trim() : 'Tuần';
+        const headersTh = weekBlock.querySelectorAll('.schedule-matrix-table th');
+        const cellsTd = weekBlock.querySelectorAll('.schedule-matrix-table td');
+
+        headersTh.forEach((th, idx) => {
+            const dayName = th.querySelector('.th-day-name') ? th.querySelector('.th-day-name').innerText.trim() : '';
+            const dayDate = th.querySelector('.th-day-date') ? th.querySelector('.th-day-date').innerText.trim().replace(/[()]/g, '') : '';
+            const td = cellsTd[idx];
+            
+            if (td) {
+                const cards = td.querySelectorAll('.personnel-card');
+                if (cards.length > 0) {
+                    cards.forEach(card => {
+                        const shortName = card.querySelector('.personnel-name') ? card.querySelector('.personnel-name').innerText.trim() : '';
+                        const fullName = card.querySelector('.personnel-gmail') ? card.querySelector('.personnel-gmail').innerText.trim() : '';
+                        const status = card.querySelector('.badge-status') ? card.querySelector('.badge-status').innerText.trim() : '';
+                        rows.push([weekBadge, dayName, dayDate, shortName, fullName, status]);
+                    });
+                } else {
+                    rows.push([weekBadge, dayName, dayDate, "(Trống lịch)", "--", "--"]);
+                }
+            }
+        });
+    });
+
+    let csvContent = "\uFEFF" + headers.join(",") + "\n" + rows.map(r => r.map(c => `"${c}"`).join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `Lich_truc_ma_tran_T${month}_${year}.csv`;
+    link.click();
+}
+</script>
+{% endblock %}

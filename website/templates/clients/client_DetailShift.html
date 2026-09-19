@@ -4,7 +4,7 @@
 <div class="container" style="padding-top: 100px; padding-bottom: 50px;">
     <h2 class="mb-4">Lịch sử đăng ký</h2>
 
-    <!-- Bảng 1: Lịch trực sắp tới (Thường là đang chờ duyệt) -->
+    <!--Lịch trực sắp tới  -->
     <div class="card shadow-sm mb-4">
         <div class="card-header bg-success text-white">
             <h5 class="mb-0" style="color: white;">Lịch trực sắp tới</h5>
@@ -38,7 +38,7 @@
                             {% endif %}
                         </td>
                         <td>
-                            <!-- Nếu đang chờ duyệt thì cho phép sửa trực tiếp -->
+                            
                             <a href="{{ url_for('client_views.edit_shift', id=reg.id) }}" class="btn btn-sm btn-warning">Sửa lịch</a>
                         </td>
                     </tr>
@@ -52,7 +52,7 @@
         </div>
     </div>
 
-    <!-- Bảng 2: Lịch sử lịch trực (Thường là đã xác nhận / hoàn thành) -->
+    <!-- Lịch sử lịch trực ( -->
     <div class="card shadow-sm">
         <div class="card-header bg-secondary text-white">
             <h5 class="mb-0" style="color: white;">Lịch sử lịch trực</h5>
@@ -78,7 +78,7 @@
         <span class="badge bg-success">{{ reg.status_obj.name if reg.status_obj else 'Đã hoàn thành' }}</span>
     </td>
     <td>
-        <!-- Chuyển thành thẻ a dẫn tới trang phiếu điều chỉnh -->
+       
         <a href="{{ url_for('client_request.request_shift_change_form', id=reg.id) }}" class="btn btn-sm btn-outline-primary">
             Gửi phiếu thay đổi
         </a>

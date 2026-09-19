@@ -1,26 +1,718 @@
-{% extends "base.html" %} {% block title %}Sign Up{% endblock %}
+<!doctype html>
+<html lang="vi" class="h-full">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Đăng Ký - Hệ Thống Trực Ban</title>
+    <meta name="description" content="Màn hình đăng ký hệ thống trực ban Ngôi Nhà Tranh - Ấp 15 với chuyển động mượt mà và chế độ sáng tối." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+            }
+          }
+        }
+      }
+    </script>
+    <!-- Canvas Confetti for victory celebration -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.4/dist/confetti.browser.min.js"></script>
 
-{% block content %}
-<h1>Sign Up</h1>
-<form method="POST">
-    <h3 align="center">Create an account</h3>
-    <div class="form-group">
-        <label for="email">Email</label>
-        <input type="email" class="form-control" id="email" name="email" placeholder="Enter your email"/>
+    <style>
+      @keyframes sunSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+      @keyframes sunPulse { 0%, 100% { transform: scale(1); filter: drop-shadow(0 0 25px rgba(251, 191, 36, 0.7)); } 50% { transform: scale(1.06); filter: drop-shadow(0 0 45px rgba(251, 191, 36, 0.95)); } }
+      @keyframes cloudDriftSlow { 0% { transform: translateX(-180px); } 100% { transform: translateX(100vw); } }
+      @keyframes cloudDriftMedium { 0% { transform: translateX(-240px); } 100% { transform: translateX(100vw); } }
+      @keyframes moonFloat { 0%, 100% { transform: translateY(0px) rotate(0deg); } 50% { transform: translateY(-8px) rotate(2deg); } }
+      @keyframes moonAura { 0%, 100% { transform: scale(1); opacity: 0.75; } 50% { transform: scale(1.1); opacity: 0.95; } }
+      @keyframes shootingStar { 0% { transform: translateX(120px) translateY(-80px) rotate(-35deg) scale(0); opacity: 0; } 30% { opacity: 1; transform: translateX(0px) translateY(0px) rotate(-35deg) scale(1); } 60% { transform: translateX(-200px) translateY(120px) rotate(-35deg) scale(0.6); opacity: 0.8; } 100% { transform: translateX(-350px) translateY(220px) rotate(-35deg) scale(0); opacity: 0; } }
+      @keyframes starTwinkle { 0%, 100% { transform: scale(0.85); opacity: 0.4; } 50% { transform: scale(1.25); opacity: 1; } }
+      @keyframes bambooLeftSway { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(1.2deg); } }
+      @keyframes bambooRightSway { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-1.2deg); } }
+      @keyframes leafRustle { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(4deg); } }
+      @keyframes chimneySmoke { 0% { transform: translateY(0) scale(0.6); opacity: 0.8; } 50% { transform: translateY(-24px) translateX(10px) scale(1.1); opacity: 0.45; } 100% { transform: translateY(-48px) translateX(22px) scale(1.5); opacity: 0; } }
+      @keyframes lanternSway { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg); } }
+      @keyframes windowGlow { 0%, 100% { filter: drop-shadow(0 0 6px rgba(254, 240, 138, 0.5)); } 50% { filter: drop-shadow(0 0 16px rgba(254, 240, 138, 0.95)); } }
+      @keyframes starGlow { 0%, 100% { filter: drop-shadow(0 0 8px rgba(250, 204, 21, 0.6)); } 50% { filter: drop-shadow(0 0 20px rgba(250, 204, 21, 0.95)); } }
+      @keyframes candleFlicker { 0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.9; } 25% { transform: scale(1.1, 0.9) rotate(2deg); opacity: 1; } 50% { transform: scale(0.9, 1.1) rotate(-2deg); opacity: 0.85; } 75% { transform: scale(1.05) rotate(1deg); opacity: 0.95; } }
+      @keyframes fireflyPulse { 0%, 100% { transform: translateY(0) scale(0.8); opacity: 0.2; } 50% { transform: translateY(-16px) translateX(8px) scale(1.2); opacity: 0.95; } }
+
+      .anim-sun-spin { animation: sunSpin 48s linear infinite; }
+      .anim-sun-pulse { animation: sunPulse 4s ease-in-out infinite; }
+      .anim-cloud-slow { animation: cloudDriftSlow 52s linear infinite; }
+      .anim-cloud-medium { animation: cloudDriftMedium 38s linear infinite; }
+      .anim-moon-float { animation: moonFloat 6s ease-in-out infinite; }
+      .anim-moon-aura { animation: moonAura 5s ease-in-out infinite; }
+      .anim-shooting-star { animation: shootingStar 9s ease-in-out infinite; }
+      .anim-star-twinkle { animation: starTwinkle 2.5s ease-in-out infinite; }
+      .anim-bamboo-left { transform-origin: bottom center; animation: bambooLeftSway 6.5s ease-in-out infinite; }
+      .anim-bamboo-right { transform-origin: bottom center; animation: bambooRightSway 7s ease-in-out infinite; }
+      .anim-leaf-rustle { animation: leafRustle 4.5s ease-in-out infinite; }
+      .anim-chimney-smoke { animation: chimneySmoke 3.5s ease-in-out infinite; }
+      .anim-lantern-sway { transform-origin: top center; animation: lanternSway 3.2s ease-in-out infinite; }
+      .anim-window-glow { animation: windowGlow 3s ease-in-out infinite; }
+      .anim-star-glow { animation: starGlow 3s ease-in-out infinite; }
+      .anim-candle { animation: candleFlicker 1.4s ease-in-out infinite; }
+      .anim-firefly { animation: fireflyPulse 3s ease-in-out infinite; }
+    </style>
+  </head>
+  <body class="h-full font-sans antialiased select-none text-slate-800 dark:text-slate-100 transition-colors duration-700 overflow-x-hidden">
+    
+    <!-- Background Nature Layer -->
+    <div id="natureBackground" class="fixed inset-0 pointer-events-none z-0 transition-colors duration-1000 overflow-hidden bg-gradient-to-b from-sky-300 via-amber-100 to-emerald-100 dark:from-slate-950 dark:via-slate-900 dark:to-emerald-950/80">
+      
+      <!-- Day Elements (Sun & Clouds) -->
+      <div id="daySky" class="absolute inset-0 transition-opacity duration-1000">
+        <!-- Sun -->
+        <div class="absolute top-8 right-12 md:right-28 pointer-events-none anim-sun-pulse">
+          <div class="relative w-24 h-24 rounded-full bg-gradient-to-tr from-amber-400 via-yellow-300 to-orange-300 shadow-[0_0_60px_rgba(251,191,36,0.85)] flex items-center justify-center">
+            <!-- Sun Rays -->
+            <div class="absolute inset-0 anim-sun-spin">
+              <div class="absolute -top-3 left-1/2 -translate-x-1/2 w-1.5 h-3 bg-amber-400 rounded-full"></div>
+              <div class="absolute -bottom-3 left-1/2 -translate-x-1/2 w-1.5 h-3 bg-amber-400 rounded-full"></div>
+              <div class="absolute top-1/2 -left-3 -translate-y-1/2 w-3 h-1.5 bg-amber-400 rounded-full"></div>
+              <div class="absolute top-1/2 -right-3 -translate-y-1/2 w-3 h-1.5 bg-amber-400 rounded-full"></div>
+            </div>
+            <!-- Smiling Face -->
+            <div class="relative flex flex-col items-center">
+              <div class="flex gap-3 mb-1">
+                <div class="w-2 h-2 rounded-full bg-amber-900"></div>
+                <div class="w-2 h-2 rounded-full bg-amber-900"></div>
+              </div>
+              <div class="w-5 h-2.5 border-b-2 border-amber-900 rounded-b-full"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Fluffy Clouds -->
+        <div class="absolute top-12 left-0 opacity-80 anim-cloud-slow">
+          <div class="w-44 h-14 bg-white/90 rounded-full blur-[1px] shadow-sm"></div>
+        </div>
+        <div class="absolute top-24 left-1/3 opacity-70 anim-cloud-medium">
+          <div class="w-36 h-12 bg-white/85 rounded-full blur-[1px] shadow-sm"></div>
+        </div>
+      </div>
+
+      <!-- Night Elements (Moon, Stars, Shooting Star) -->
+      <div id="nightSky" class="absolute inset-0 transition-opacity duration-1000 hidden">
+        <!-- Moon -->
+        <div class="absolute top-8 right-12 md:right-28 pointer-events-none anim-moon-float">
+          <div class="relative w-20 h-20 rounded-full bg-gradient-to-tr from-amber-100 to-yellow-200 shadow-[0_0_50px_rgba(254,240,138,0.7)] flex items-center justify-center anim-moon-aura">
+            <div class="absolute -top-1 -right-1 w-16 h-16 rounded-full bg-slate-950"></div>
+            <span class="text-xs font-mono text-amber-200/60 font-bold ml-4">✦</span>
+          </div>
+        </div>
+        <!-- Shooting Star -->
+        <div class="absolute top-20 right-1/4 w-28 h-0.5 bg-gradient-to-r from-transparent via-cyan-300 to-white anim-shooting-star pointer-events-none"></div>
+        <!-- Stars -->
+        <div class="absolute top-14 left-1/4 text-amber-200 text-xs anim-star-twinkle">★</div>
+        <div class="absolute top-28 left-1/2 text-cyan-200 text-xs anim-star-twinkle" style="animation-delay: 1.2s">✦</div>
+        <div class="absolute top-10 left-3/4 text-amber-100 text-sm anim-star-twinkle" style="animation-delay: 0.7s">★</div>
+        <div class="absolute top-44 left-16 text-yellow-200 text-xs anim-star-twinkle" style="animation-delay: 1.8s">✦</div>
+        <!-- Fireflies -->
+        <div class="absolute bottom-24 left-1/4 w-2 h-2 rounded-full bg-yellow-300 shadow-[0_0_8px_#fde047] anim-firefly"></div>
+        <div class="absolute bottom-36 right-1/3 w-2 h-2 rounded-full bg-yellow-300 shadow-[0_0_8px_#fde047] anim-firefly" style="animation-delay: 1.5s"></div>
+      </div>
+
+      <!-- Bamboo Stalks (Left & Right) -->
+      <div class="absolute -bottom-6 -left-6 w-36 h-96 opacity-50 dark:opacity-30 pointer-events-none anim-bamboo-left">
+        <svg viewBox="0 0 140 380" class="w-full h-full text-emerald-800 dark:text-emerald-700 fill-current">
+          <rect x="25" y="0" width="12" height="380" rx="4" />
+          <rect x="22" y="70" width="18" height="4" rx="2" fill="#047857" />
+          <rect x="22" y="150" width="18" height="4" rx="2" fill="#047857" />
+          <rect x="22" y="230" width="18" height="4" rx="2" fill="#047857" />
+          <path d="M37 70 Q 75 55 90 75 Q 60 70 37 72 Z" fill="#10b981" />
+          <path d="M37 150 Q 80 130 95 160 Q 65 148 37 152 Z" fill="#10b981" />
+          <path d="M25 110 Q -15 90 5 125 Q 15 115 25 112 Z" fill="#059669" />
+        </svg>
+      </div>
+
+      <div class="absolute -bottom-6 -right-6 w-36 h-96 opacity-50 dark:opacity-30 pointer-events-none anim-bamboo-right">
+        <svg viewBox="0 0 140 380" class="w-full h-full text-emerald-800 dark:text-emerald-700 fill-current">
+          <rect x="95" y="0" width="12" height="380" rx="4" />
+          <rect x="92" y="60" width="18" height="4" rx="2" fill="#047857" />
+          <rect x="92" y="140" width="18" height="4" rx="2" fill="#047857" />
+          <rect x="92" y="220" width="18" height="4" rx="2" fill="#047857" />
+          <path d="M95 60 Q 55 45 40 65 Q 70 60 95 62 Z" fill="#10b981" />
+          <path d="M95 140 Q 50 120 35 150 Q 65 138 95 142 Z" fill="#10b981" />
+        </svg>
+      </div>
     </div>
-    <div class="form-group">
-        <label for="UserName">User Name</label>
-        <input type="text" class="form-control" id="username" name="username" placeholder="Enter user name"/>
+
+    <!-- Main Container -->
+    <div class="relative z-10 min-h-screen flex flex-col justify-between p-3 sm:p-6">
+      
+      <!-- Top Tactical Status & Control Bar -->
+      <header class="w-full max-w-5xl mx-auto rounded-2xl bg-white/75 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200/80 dark:border-slate-800 shadow-sm p-3 flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+            🌾
+          </div>
+          <div>
+            <div class="flex items-center gap-1.5">
+              <h1 class="text-xs sm:text-sm font-bold tracking-tight text-slate-800 dark:text-slate-100">
+                CHÒI GÁC NGÔI NHÀ TRANH
+              </h1>
+              <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-500/30">
+                ẤP 15
+              </span>
+            </div>
+            <p class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 hidden sm:block">
+              Đăng ký phiên gác quân nhân mới
+            </p>
+          </div>
+        </div>
+
+        <!-- Controls: Nav Tabs, Sound, Theme -->
+        <div class="flex items-center gap-1.5 sm:gap-2">
+          <!-- Nav Link Tabs -->
+          <div class="flex items-center p-0.5 rounded-xl bg-slate-200/70 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs font-semibold">
+            <a href="login.html" class="flex items-center gap-1 px-3 py-1 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" /></svg>
+              <span>Đăng Nhập</span>
+            </a>
+            <a href="sign-up.html" class="flex items-center gap-1 px-3 py-1 rounded-lg bg-emerald-600 text-white shadow-sm font-medium">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" /></svg>
+              <span>Đăng Ký</span>
+            </a>
+          </div>
+
+          <!-- Sound Button -->
+          <button id="soundToggle" type="button" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 cursor-pointer" title="Bật/Tắt âm thanh">
+            <span id="soundIcon">🔊</span>
+          </button>
+
+          <!-- Theme Toggle -->
+          <button id="themeToggle" type="button" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 cursor-pointer" title="Chuyển chế độ sáng/tối">
+            <span id="themeIcon">☀️</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Center Content: Split Hero & Sign-up Form -->
+      <main class="w-full max-w-5xl mx-auto my-4 sm:my-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+        
+        <!-- Left Hero: Chú Bộ Đội Mascot & Chòi Gác Nhà Tranh -->
+        <div class="lg:col-span-5 flex flex-col items-center justify-center p-4 sm:p-6 rounded-3xl bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border border-white/80 dark:border-slate-800/80 shadow-xl">
+          
+          <!-- Hero Toggle -->
+          <div class="mb-4 flex items-center gap-1 p-1 rounded-2xl bg-slate-200/80 dark:bg-slate-800/80 text-xs font-semibold">
+            <button id="btnShowSoldier" type="button" class="px-3 py-1 rounded-xl bg-emerald-600 text-white shadow-sm transition-all cursor-pointer">
+              🪖 Chú Bộ Đội Chibi
+            </button>
+            <button id="btnShowCottage" type="button" class="px-3 py-1 rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-900 transition-all cursor-pointer">
+              🏡 Chòi Gác Nhà Tranh
+            </button>
+          </div>
+
+          <!-- Scene 1: Chibi Soldier Mascot -->
+          <div id="sceneSoldier" class="w-full flex flex-col items-center">
+            <div class="relative w-48 h-52 flex items-center justify-center">
+              
+              <!-- Speech Bubble -->
+              <div class="absolute -top-4 right-0 p-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-md text-[11px] font-bold text-emerald-700 dark:text-emerald-300">
+                <span id="soldierBubbleText">Chào đồng chí mới! 🫡</span>
+              </div>
+
+              <!-- Soldier SVG -->
+              <svg viewBox="0 0 160 180" class="w-full h-full">
+                <!-- Military Helmet -->
+                <ellipse cx="80" cy="52" rx="48" ry="26" fill="#15803d" stroke="#166534" stroke-width="2" />
+                <path d="M 32 52 Q 80 18 128 52 Z" fill="#16a34a" />
+                <circle cx="80" cy="40" r="8" fill="#dc2626" />
+                <polygon points="80,34 82,39 87,39 83,42 85,47 80,44 75,47 77,42 73,39 78,39" fill="#fde047" />
+
+                <!-- Face -->
+                <ellipse cx="80" cy="80" rx="34" ry="28" fill="#fed7aa" />
+                
+                <!-- Eyes with pupils that track typing -->
+                <g id="soldierEyes">
+                  <circle cx="68" cy="78" r="6" fill="#ffffff" stroke="#9a3412" stroke-width="1" />
+                  <circle id="leftPupil" cx="68" cy="78" r="3.5" fill="#1e293b" class="transition-all duration-100" />
+                  <circle cx="92" cy="78" r="6" fill="#ffffff" stroke="#9a3412" stroke-width="1" />
+                  <circle id="rightPupil" cx="92" cy="78" r="3.5" fill="#1e293b" class="transition-all duration-100" />
+                </g>
+
+                <!-- Rosy Cheeks -->
+                <circle cx="58" cy="86" r="4" fill="#f87171" opacity="0.6" />
+                <circle cx="102" cy="86" r="4" fill="#f87171" opacity="0.6" />
+
+                <!-- Smiling Mouth -->
+                <path id="soldierMouth" d="M 74 88 Q 80 94 86 88" stroke="#9a3412" stroke-width="2" fill="none" stroke-linecap="round" />
+
+                <!-- Hands Covering Eyes -->
+                <g id="soldierHands" class="transition-all duration-300 opacity-0 -translate-y-4">
+                  <ellipse cx="68" cy="78" rx="9" ry="7" fill="#f97316" stroke="#c2410c" stroke-width="1.5" />
+                  <ellipse cx="92" cy="78" rx="9" ry="7" fill="#f97316" stroke="#c2410c" stroke-width="1.5" />
+                </g>
+
+                <!-- Soldier Uniform Body -->
+                <rect x="52" y="106" width="56" height="50" rx="10" fill="#166534" />
+                <rect x="58" y="112" width="44" height="44" rx="6" fill="#15803d" />
+                <polygon points="68,106 76,106 72,114" fill="#dc2626" />
+                <polygon points="92,106 84,106 88,114" fill="#dc2626" />
+                <rect x="54" y="140" width="52" height="8" fill="#78350f" />
+                <rect x="75" y="139" width="10" height="10" fill="#eab308" rx="1" />
+              </svg>
+            </div>
+
+            <!-- Smile Progress Bar -->
+            <div class="w-48 mt-2 flex flex-col items-center">
+              <div class="w-full flex justify-between text-[10px] text-slate-500 dark:text-slate-400 font-semibold mb-1">
+                <span>Tiến độ hoàn thiện hồ sơ</span>
+                <span id="txtProgress">0%</span>
+              </div>
+              <div class="w-full h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
+                <div id="barProgress" class="h-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-300" style="width: 0%"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Scene 2: Thatched Cottage -->
+          <div id="sceneCottage" class="w-full flex flex-col items-center hidden">
+            <div class="relative w-64 h-56 flex items-center justify-center">
+              <svg viewBox="0 0 280 220" class="w-full h-full">
+                <rect x="180" y="25" width="16" height="35" fill="#854d0e" rx="2" />
+                <polygon points="140,20 20,95 260,95" fill="#ca8a04" stroke="#a16207" stroke-width="3" />
+                <polygon points="140,25 35,95 245,95" fill="#eab308" />
+                <rect x="45" y="95" width="190" height="105" fill="#d97706" rx="4" />
+                <rect x="50" y="100" width="180" height="95" fill="#f59e0b" rx="2" />
+                <rect x="105" y="98" width="70" height="18" fill="#78350f" rx="3" />
+                <text x="140" y="111" fill="#fef08a" font-size="10" font-weight="bold" text-anchor="middle">ẤP 15</text>
+                <rect x="65" y="125" width="45" height="45" fill="#fef08a" class="anim-window-glow" rx="3" stroke="#78350f" stroke-width="2" />
+                <rect x="145" y="120" width="55" height="75" fill="#78350f" rx="4" />
+                <rect x="35" y="195" width="210" height="15" fill="#57534e" rx="3" />
+              </svg>
+            </div>
+            <div class="p-2 px-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-xs text-emerald-800 dark:text-emerald-300 font-medium mt-2">
+              🌾 Chòi gác Ngôi Nhà Tranh mở sổ ghi danh quân nhân mới!
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Side: Sign-up Form Card -->
+        <div class="lg:col-span-7 w-full rounded-3xl bg-white/85 dark:bg-slate-900/85 backdrop-blur-xl border border-slate-200/90 dark:border-slate-800/90 shadow-2xl p-6 sm:p-8">
+          
+          <!-- Form Header -->
+          <div class="text-left mb-5">
+            <div class="flex items-center justify-between">
+              <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-teal-500/15 text-teal-700 dark:text-teal-400 border border-teal-500/30">
+                GHI DANH QUÂN NHÂN MỚI
+              </span>
+              <button id="btnFillSampleSignUp" type="button" class="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer flex items-center gap-1">
+                ⚡ <span>Điền mẫu tự động</span>
+              </button>
+            </div>
+            <h2 class="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-slate-100 mt-2">
+              ĐĂNG KÝ PHIÊN GÁC
+            </h2>
+            <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+              Thiết lập hồ sơ quân nhân và cấp mã trực ban an toàn
+            </p>
+          </div>
+
+          <!-- The Registration Form -->
+          <form id="signupForm" method="POST" action="/auth/register" class="space-y-3.5 text-left">
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <!-- Username -->
+              <div>
+                <label for="reg_username" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  TÊN ĐĂNG NHẬP
+                </label>
+                <input
+                  type="text"
+                  id="reg_username"
+                  name="username"
+                  required
+                  placeholder="hoangnam_102"
+                  class="w-full py-2 px-3 text-xs sm:text-sm rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+                />
+              </div>
+
+              <!-- Full Name -->
+              <div>
+                <label for="reg_fullname" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  HỌ VÀ TÊN QUÂN NHÂN
+                </label>
+                <input
+                  type="text"
+                  id="reg_fullname"
+                  name="fullname"
+                  required
+                  placeholder="Lê Hoàng Nam"
+                  class="w-full py-2 px-3 text-xs sm:text-sm rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+                />
+              </div>
+            </div>
+
+            <!-- Email & OTP Row -->
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
+              <!-- Email -->
+              <div class="sm:col-span-7">
+                <label for="reg_email" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  EMAIL QUÂN NHÂN
+                </label>
+                <input
+                  type="email"
+                  id="reg_email"
+                  name="email"
+                  required
+                  placeholder="namnguyenle@donvi.vn"
+                  class="w-full py-2 px-3 text-xs sm:text-sm rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+                />
+              </div>
+
+              <!-- OTP Code & Send Button -->
+              <div class="sm:col-span-5">
+                <div class="flex items-center justify-between mb-1">
+                  <label for="reg_otp" class="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    MÃ OTP (6 SỐ)
+                  </label>
+                  <button id="btnSendOTP" type="button" class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer">
+                    Gửi mã
+                  </button>
+                </div>
+                <input
+                  type="text"
+                  id="reg_otp"
+                  name="otp"
+                  required
+                  maxlength="6"
+                  placeholder="123456"
+                  class="w-full py-2 px-3 text-center tracking-widest font-mono text-xs sm:text-sm font-bold rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+                />
+              </div>
+            </div>
+            
+            <!-- Notice OTP banner -->
+            <div id="otpNotice" class="hidden p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-[11px] text-emerald-700 dark:text-emerald-300">
+              Đã gửi mã OTP thử nghiệm: <strong id="generatedOtpCode">882194</strong> (Tự động điền)
+            </div>
+
+            <!-- Password & Confirm Password Row -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <!-- Password -->
+              <div>
+                <label for="reg_password" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  MẬT MÃ TRỰC BAN
+                </label>
+                <div class="relative">
+                  <input
+                    type="password"
+                    id="reg_password"
+                    name="password"
+                    required
+                    placeholder="Tối thiểu 6 ký tự"
+                    class="w-full py-2 pl-3 pr-9 text-xs sm:text-sm rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+                  />
+                  <button id="toggleRegPassword" type="button" class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-slate-200 cursor-pointer">
+                    👁️
+                  </button>
+                </div>
+              </div>
+
+              <!-- Confirm Password -->
+              <div>
+                <label for="reg_confirm" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  XÁC NHẬN MẬT MÃ
+                </label>
+                <input
+                  type="password"
+                  id="reg_confirm"
+                  name="confirm_password"
+                  required
+                  placeholder="Nhập lại mật mã"
+                  class="w-full py-2 px-3 text-xs sm:text-sm rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+                />
+              </div>
+            </div>
+
+            <!-- Password Strength Bar -->
+            <div>
+              <div class="flex justify-between text-[10px] text-slate-500 dark:text-slate-400 font-semibold mb-1">
+                <span>Độ an toàn mật mã</span>
+                <span id="txtPassStrength">Chưa nhập</span>
+              </div>
+              <div class="w-full h-1.5 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden flex gap-1">
+                <div id="barStrength1" class="h-full w-1/4 bg-slate-300 dark:bg-slate-700 transition-colors"></div>
+                <div id="barStrength2" class="h-full w-1/4 bg-slate-300 dark:bg-slate-700 transition-colors"></div>
+                <div id="barStrength3" class="h-full w-1/4 bg-slate-300 dark:bg-slate-700 transition-colors"></div>
+                <div id="barStrength4" class="h-full w-1/4 bg-slate-300 dark:bg-slate-700 transition-colors"></div>
+              </div>
+            </div>
+
+            <!-- Agreement checkbox -->
+            <div class="pt-1">
+              <label class="flex items-start gap-2 cursor-pointer text-xs text-slate-600 dark:text-slate-400">
+                <input type="checkbox" name="terms" required class="w-4 h-4 mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 cursor-pointer" checked />
+                <span>Tôi cam kết bảo mật phiên gác và tuân thủ kỷ luật chòi gác Ấp 15</span>
+              </label>
+            </div>
+
+            <!-- Submit Button -->
+            <button
+              type="submit"
+              id="btnSubmitSignUp"
+              class="w-full py-3 px-4 rounded-xl font-bold text-sm tracking-wide text-white bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-500 hover:to-teal-500 shadow-lg shadow-emerald-700/25 flex items-center justify-center gap-2 cursor-pointer transition-all transform active:scale-98"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              <span>HOÀN TẤT ĐĂNG KÝ PHIÊN GÁC</span>
+            </button>
+
+            <!-- Switch to Login -->
+            <div class="mt-3 pt-2.5 border-t border-slate-200 dark:border-slate-800 text-center">
+              <a href="login.html" class="text-xs text-emerald-600 dark:text-emerald-400 hover:underline font-semibold cursor-pointer">
+                Đã có tài khoản quân nhân? Đăng nhập ngay 👉
+              </a>
+            </div>
+          </form>
+        </div>
+      </main>
+
+      <!-- Footer -->
+      <footer class="w-full max-w-5xl mx-auto py-3 text-center text-xs text-slate-600 dark:text-slate-400">
+        <p class="flex flex-wrap items-center justify-center gap-2">
+          <span>🌾 Chòi gác Ngôi Nhà Tranh &bull; Ấp 15</span>
+          <span>&bull;</span>
+          <span>Hệ thống trực ban đa nền tảng (HTML / Flask / Vite)</span>
+        </p>
+      </footer>
     </div>
-    <div class="form-group">
-        <label for="password">Password</label>
-        <input type="password" class="form-control" id="password" name="password" placeholder="Enter your password"/>
-    </div>
-    <div class="form-group">
-        <label for="confirm_password">Confirm Password</label>
-        <input type="password" class="form-control" id="confirm_password" name="confirm_password" placeholder="Confirm your password"/>
-    </div>
-    <br />
-    <button type="submit" class="btn btn-primary">Sign Up</button>
-</form>
-{% endblock %}
+
+    <!-- Standalone Client-Side Logic (No TSX / No External Build Required) -->
+    <script>
+      // 1. Audio Synthesizer via Web Audio API
+      class TacticalSoundFX {
+        constructor() {
+          this.ctx = null;
+          this.enabled = true;
+        }
+        init() {
+          if (!this.ctx) {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (AudioContext) this.ctx = new AudioContext();
+          }
+          if (this.ctx && this.ctx.state === 'suspended') {
+            this.ctx.resume();
+          }
+        }
+        playTone(freq, type = 'sine', duration = 0.1, gainVal = 0.08) {
+          if (!this.enabled) return;
+          try {
+            this.init();
+            if (!this.ctx) return;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+            gain.gain.setValueAtTime(gainVal, this.ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start();
+            osc.stop(this.ctx.currentTime + duration);
+          } catch(e) {}
+        }
+        click() { this.playTone(600, 'sine', 0.04, 0.05); }
+        success() {
+          this.playTone(523.25, 'triangle', 0.1, 0.08);
+          setTimeout(() => this.playTone(659.25, 'triangle', 0.15, 0.08), 90);
+        }
+      }
+      const soundFX = new TacticalSoundFX();
+
+      // 2. Dark / Light Mode State
+      const htmlEl = document.documentElement;
+      const themeToggle = document.getElementById('themeToggle');
+      const themeIcon = document.getElementById('themeIcon');
+      const daySky = document.getElementById('daySky');
+      const nightSky = document.getElementById('nightSky');
+
+      function applyTheme(isDark) {
+        if (isDark) {
+          htmlEl.classList.add('dark');
+          themeIcon.textContent = '🌙';
+          daySky.classList.add('hidden');
+          nightSky.classList.remove('hidden');
+          localStorage.setItem('duty_theme', 'dark');
+        } else {
+          htmlEl.classList.remove('dark');
+          themeIcon.textContent = '☀️';
+          daySky.classList.remove('hidden');
+          nightSky.classList.add('hidden');
+          localStorage.setItem('duty_theme', 'light');
+        }
+      }
+
+      const savedTheme = localStorage.getItem('duty_theme');
+      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      applyTheme(savedTheme === 'dark' || (!savedTheme && prefersDark));
+
+      themeToggle.addEventListener('click', () => {
+        soundFX.click();
+        const isCurrentlyDark = htmlEl.classList.contains('dark');
+        applyTheme(!isCurrentlyDark);
+      });
+
+      // 3. Sound Toggle
+      const soundToggle = document.getElementById('soundToggle');
+      const soundIcon = document.getElementById('soundIcon');
+      soundToggle.addEventListener('click', () => {
+        soundFX.enabled = !soundFX.enabled;
+        soundIcon.textContent = soundFX.enabled ? '🔊' : '🔇';
+        if (soundFX.enabled) soundFX.click();
+      });
+
+      // 4. Hero Switcher
+      const btnShowSoldier = document.getElementById('btnShowSoldier');
+      const btnShowCottage = document.getElementById('btnShowCottage');
+      const sceneSoldier = document.getElementById('sceneSoldier');
+      const sceneCottage = document.getElementById('sceneCottage');
+
+      btnShowSoldier.addEventListener('click', () => {
+        soundFX.click();
+        sceneSoldier.classList.remove('hidden');
+        sceneCottage.classList.add('hidden');
+        btnShowSoldier.className = 'px-3 py-1 rounded-xl bg-emerald-600 text-white shadow-sm transition-all cursor-pointer';
+        btnShowCottage.className = 'px-3 py-1 rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-900 transition-all cursor-pointer';
+      });
+
+      btnShowCottage.addEventListener('click', () => {
+        soundFX.click();
+        sceneCottage.classList.remove('hidden');
+        sceneSoldier.classList.add('hidden');
+        btnShowCottage.className = 'px-3 py-1 rounded-xl bg-emerald-600 text-white shadow-sm transition-all cursor-pointer';
+        btnShowSoldier.className = 'px-3 py-1 rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-900 transition-all cursor-pointer';
+      });
+
+      // 5. Reactive Elements
+      const regUsername = document.getElementById('reg_username');
+      const regFullname = document.getElementById('reg_fullname');
+      const regEmail = document.getElementById('reg_email');
+      const regOtp = document.getElementById('reg_otp');
+      const regPassword = document.getElementById('reg_password');
+      const regConfirm = document.getElementById('reg_confirm');
+      const soldierBubbleText = document.getElementById('soldierBubbleText');
+      const soldierHands = document.getElementById('soldierHands');
+      const leftPupil = document.getElementById('leftPupil');
+      const rightPupil = document.getElementById('rightPupil');
+      const barProgress = document.getElementById('barProgress');
+      const txtProgress = document.getElementById('txtProgress');
+
+      function calculateProgress() {
+        let count = 0;
+        if (regUsername.value.trim().length >= 3) count += 20;
+        if (regFullname.value.trim().length >= 2) count += 20;
+        if (regEmail.value.includes('@')) count += 20;
+        if (regOtp.value.length === 6) count += 20;
+        if (regPassword.value.length >= 6 && regPassword.value === regConfirm.value) count += 20;
+        barProgress.style.width = count + '%';
+        txtProgress.textContent = count + '%';
+      }
+
+      [regUsername, regFullname, regEmail, regOtp, regPassword, regConfirm].forEach(input => {
+        input.addEventListener('input', () => {
+          soundFX.click();
+          calculateProgress();
+        });
+      });
+
+      // Password Strength calculation
+      const barStrength1 = document.getElementById('barStrength1');
+      const barStrength2 = document.getElementById('barStrength2');
+      const barStrength3 = document.getElementById('barStrength3');
+      const barStrength4 = document.getElementById('barStrength4');
+      const txtPassStrength = document.getElementById('txtPassStrength');
+
+      regPassword.addEventListener('input', (e) => {
+        const val = e.target.value;
+        let score = 0;
+        if (val.length >= 6) score++;
+        if (/[A-Z]/.test(val)) score++;
+        if (/[0-9]/.test(val)) score++;
+        if (/[^A-Za-z0-9]/.test(val)) score++;
+
+        barStrength1.className = 'h-full w-1/4 transition-colors ' + (score >= 1 ? 'bg-rose-500' : 'bg-slate-300 dark:bg-slate-700');
+        barStrength2.className = 'h-full w-1/4 transition-colors ' + (score >= 2 ? 'bg-amber-500' : 'bg-slate-300 dark:bg-slate-700');
+        barStrength3.className = 'h-full w-1/4 transition-colors ' + (score >= 3 ? 'bg-teal-500' : 'bg-slate-300 dark:bg-slate-700');
+        barStrength4.className = 'h-full w-1/4 transition-colors ' + (score >= 4 ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700');
+
+        const labels = ['Chưa nhập', 'Yếu', 'Trung bình', 'Khá tốt', 'Tối mật DEFCON-4'];
+        txtPassStrength.textContent = val.length === 0 ? 'Chưa nhập' : labels[score] || 'Khá tốt';
+      });
+
+      regPassword.addEventListener('focus', () => {
+        soldierBubbleText.textContent = 'Che mắt bảo mật mật mã! 🙈';
+        if (soldierHands) soldierHands.classList.remove('opacity-0');
+      });
+
+      regPassword.addEventListener('blur', () => {
+        soldierBubbleText.textContent = 'Hồ sơ sắp hoàn tất! ✨';
+        if (soldierHands) soldierHands.classList.add('opacity-0');
+      });
+
+      // Password Toggle
+      const toggleRegPassword = document.getElementById('toggleRegPassword');
+      toggleRegPassword.addEventListener('click', () => {
+        soundFX.click();
+        const isPass = regPassword.getAttribute('type') === 'password';
+        regPassword.setAttribute('type', isPass ? 'text' : 'password');
+        toggleRegPassword.textContent = isPass ? '🙈' : '👁️';
+      });
+
+      // OTP Generation
+      const btnSendOTP = document.getElementById('btnSendOTP');
+      const otpNotice = document.getElementById('otpNotice');
+      const generatedOtpCode = document.getElementById('generatedOtpCode');
+
+      btnSendOTP.addEventListener('click', () => {
+        soundFX.success();
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        generatedOtpCode.textContent = code;
+        regOtp.value = code;
+        otpNotice.classList.remove('hidden');
+        calculateProgress();
+        soldierBubbleText.textContent = 'Đã nhận OTP: ' + code;
+      });
+
+      // Fill Sample
+      const btnFillSampleSignUp = document.getElementById('btnFillSampleSignUp');
+      btnFillSampleSignUp.addEventListener('click', () => {
+        soundFX.success();
+        regUsername.value = 'lehoangnam_ap15';
+        regFullname.value = 'Lê Hoàng Nam';
+        regEmail.value = 'namnguyenle123b@donvi.vn';
+        const code = '772189';
+        regOtp.value = code;
+        generatedOtpCode.textContent = code;
+        otpNotice.classList.remove('hidden');
+        regPassword.value = 'TrucBan102@Secure';
+        regConfirm.value = 'TrucBan102@Secure';
+        regPassword.dispatchEvent(new Event('input'));
+        calculateProgress();
+        soldierBubbleText.textContent = 'Đã điền đủ thông tin mẫu! 🎉';
+      });
+
+      // Form Submit
+      const signupForm = document.getElementById('signupForm');
+      signupForm.addEventListener('submit', function() {
+        soundFX.success();
+        if (window.confetti) {
+          window.confetti({
+            particleCount: 100,
+            spread: 70,
+            origin: { y: 0.6 }
+          });
+        }
+      });
+    </script>
+  </body>
+</html>

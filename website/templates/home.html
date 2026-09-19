@@ -13,6 +13,7 @@
             <th scope="col">Ngày</th>
             <th scope="col">Trực Gác Sáng</th>
             <th scope="col">Trực Gác Chiều</th>
+            <th scope="col">Thao tác</th>
         </tr>
     </thead>
     <tbody>
@@ -22,8 +23,9 @@
             <td>{{ duty.morning_duty }}</td>
             <td>{{ duty.afternoon_duty }}</td>
             <td>
-                <a href="{{ url_for('edit_duty', duty_id=duty.id) }}" class="btn btn-sm btn-primary">Sửa</a>
-                <a href="{{ url_for('delete_duty', duty_id=duty.id) }}" class="btn btn-sm btn-danger">Xóa</a>
+               
+                <a href="{{ url_for('admin_views.edit_duty', duty_id=duty.id) }}" class="btn btn-sm btn-primary">Sửa</a>
+                <a href="{{ url_for('admin_views.delete_duty', duty_id=duty.id) }}" class="btn btn-sm btn-danger">Xóa</a>
             </td>
         </tr>
         {% endfor %}

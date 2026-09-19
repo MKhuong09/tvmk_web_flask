@@ -1,9 +1,9 @@
 flask
 flask-login
-flask-sqlalchemy
-flask_migrate
+firebase-admin
 ortools
 gunicorn
 openpyxl
 pytz
-gunicorn
+pandas
+apscheduler

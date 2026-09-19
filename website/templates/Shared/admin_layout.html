@@ -3,122 +3,431 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ thống Quản lý Dân quân - Admin</title>
+    <title>{% block title %}Quản trị viên - SCHEDULE Hamlet{% endblock %}</title>
     
-    <link rel="stylesheet" href="{{ url_for('static', filename='Web/css/bootstrap.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='Web/css/font-awesome.min.css') }}">
+    <!-- Material Design Icons & Bootstrap  CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.2.96/css/materialdesignicons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap-grid.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background-color: #f4f6f9; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; min-height: 100vh; overflow-x: hidden; }
-        
-        /* SIDEBAR */
-        .sidebar { width: 240px; background-color: #ffffff; border-right: 1px solid #e3e6f0; display: flex; flex-direction: column; position: fixed; top: 0; bottom: 0; left: 0; z-index: 100; transition: all 0.3s ease-in-out; }
-        .sidebar-header { padding: 25px 20px; text-align: center; font-size: 0.9rem; color: #858796; border-bottom: 1px solid #f8f9fc; white-space: nowrap; overflow: hidden; }
-        .sidebar-header strong { display: block; color: #4e73df; font-size: 1.1rem; margin-bottom: 3px; }
-        .sidebar-menu { list-style: none; padding: 10px 0; }
-        
-        .sidebar-item a { display: flex; align-items: center; padding: 14px 24px; color: #5a5c69; text-decoration: none; font-size: 0.95rem; transition: all 0.2s ease; white-space: nowrap; border-left: 4px solid transparent; }
-        .sidebar-item a i { margin-right: 14px; font-size: 1.25rem; color: #b7b9cc; transition: all 0.2s ease; }
-        .sidebar-item a:hover { background-color: #f8fafc; color: #4e73df; font-weight: 500; border-left: 4px solid #4e73df; }
-        .sidebar-item.active a { background-color: #f1f5f9; color: #4e73df; font-weight: 600; border-left: 4px solid #4e73df; }
+        :root {
+            --primary-blue: #0a46e4;
+            --primary-red: #e53e3e;
+            --sidebar-width: 240px;
+            --sidebar-collapsed-width: 70px;
+            --topbar-height: 56px;
+        }
 
-        /* MAIN APPS */
-        .main-wrapper { margin-left: 240px; flex: 1; display: flex; flex-direction: column; min-width: 0; transition: all 0.3s ease-in-out; }
-        .top-header { height: 60px; background-color: #0a46e4; display: flex; align-items: center; justify-content: space-between; padding: 0 30px; color: #ffffff; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        .header-left-toggle { background: #e53e3e; border: none; color: white; padding: 6px 12px; border-radius: 4px; cursor: pointer; user-select: none; transition: none; } /* Đã xóa transition transform */
-        
-        .header-right-info { display: flex; align-items: center; gap: 15px; }
-        .role-badge { background-color: #2ecc71; color: white; padding: 5px 12px; border-radius: 4px; font-size: 0.85rem; font-weight: bold; }
-        .logout-btn { background-color: #1a202c; color: white; padding: 5px 12px; border-radius: 4px; font-size: 0.85rem; text-decoration: none; }
-        
-        .content-body { padding: 30px; flex: 1; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-        /* LOGIC THU GỌN SIDEBAR */
-        body.sidebar-collapsed .sidebar { width: 70px; }
-        body.sidebar-collapsed .sidebar-header span, body.sidebar-collapsed .sidebar-header strong, body.sidebar-collapsed .sidebar-item a span { display: none; }
-        body.sidebar-collapsed .sidebar-item a { justify-content: center; padding: 15px 0; border-left: 4px solid transparent; }
-        body.sidebar-collapsed .main-wrapper { margin-left: 70px; }
-        /* Đã xóa rotate(180deg) ở đây */
+        body { 
+            font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f8fafc; 
+            color: #1e293b;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        .topbar { 
+            height: var(--topbar-height); 
+            background: linear-gradient(90deg, #0a46e4 0%, #1754f2 100%);
+            color: #ffffff; 
+            display: flex; 
+            align-items: center; 
+            padding: 0 16px; 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            right: 0; 
+            z-index: 1030; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08); 
+        }
+
+        .btn-toggle-sidebar {
+            background-color: var(--primary-red);
+            color: #ffffff;
+            border: none;
+            width: 38px;
+            height: 38px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s ease, transform 0.1s ease;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+            outline: none;
+        }
+        .btn-toggle-sidebar:hover {
+            background-color: #c53030;
+        }
+
+        .brand-logo-text {
+            font-size: 1.25rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            color: #ffffff;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-left: 14px;
+        }
+
+        .brand-badge {
+            background: rgba(255, 255, 255, 0.2);
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 20px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .topbar-actions {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-header-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border: none;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .btn-header-green {
+            background-color: #00b074;
+            color: #ffffff;
+        }
+        .btn-header-green:hover {
+            background-color: #009663;
+            color: #ffffff;
+        }
+        .btn-header-blue {
+            background-color: #2e62ea;
+            color: #ffffff;
+        }
+        .btn-header-blue:hover {
+            background-color: #1e4fd8;
+            color: #ffffff;
+        }
+        .btn-header-dark {
+            background-color: #0f172a;
+            color: #ffffff;
+        }
+        .btn-header-dark:hover {
+            background-color: #000000;
+            color: #ffffff;
+        }
+
+       
+        .sidebar { 
+            width: var(--sidebar-width); 
+            background: #ffffff; 
+            border-right: 1px solid #e2e8f0; 
+            position: fixed; 
+            top: var(--topbar-height); 
+            bottom: 0; 
+            left: 0; 
+            z-index: 1020; 
+            transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1); 
+            overflow-y: auto; 
+            overflow-x: hidden; 
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar.collapsed {
+            width: var(--sidebar-collapsed-width);
+        }
+
+        .sidebar-user-card {
+            padding: 24px 16px 16px 16px;
+            text-align: center;
+            border-bottom: 1px solid #f1f5f9;
+            transition: all 0.2s ease;
+        }
+        .sidebar-avatar {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: #e0f2fe;
+            border: 2px solid #38bdf8;
+            margin: 0 auto 10px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #0284c7;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        .sidebar-username {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: #1e293b;
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .sidebar-userrole {
+            font-size: 0.75rem;
+            color: #64748b;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sidebar-menu { 
+            list-style: none; 
+            padding: 14px 10px; 
+            margin: 0;
+            flex: 1;
+        }
+        
+        .sidebar-item {
+            margin-bottom: 6px;
+        }
+
+        .sidebar-item a { 
+            display: flex; 
+            align-items: center; 
+            padding: 11px 16px; 
+            color: #475569; 
+            text-decoration: none; 
+            font-size: 0.9rem; 
+            font-weight: 500;
+            border-radius: 8px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
+            white-space: nowrap; 
+            position: relative;
+            background-color: transparent;
+        }
+
+        .sidebar-item a i { 
+            margin-right: 14px; 
+            font-size: 1.25rem; 
+            color: #64748b; 
+            transition: color 0.2s ease, transform 0.2s ease; 
+        }
+
+        /* Hover:*/
+        .sidebar-item a:hover { 
+            background-color: #f1f5f9; 
+            color: #1e293b; 
+        }
+        .sidebar-item a:hover i {
+            color: #2563eb;
+            transform: translateX(2px);
+        }
+
+        
+        .sidebar-item.active a { 
+            background-color: #eff6ff !important; 
+            color: #1d4ed8 !important; 
+            font-weight: 700 !important; 
+            box-shadow: 0 1px 2px rgba(37, 99, 235, 0.05);
+        }
+        .sidebar-item.active a::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 6px;
+            bottom: 6px;
+            width: 4px;
+            background-color: #2563eb;
+            border-radius: 0 4px 4px 0;
+        }
+        .sidebar-item.active a i {
+            color: #2563eb !important;
+        }
+
+        /* ================= MAIN WRAPPER ================= */
+        .main-wrapper { 
+            margin-left: var(--sidebar-width); 
+            margin-top: var(--topbar-height); 
+            padding: 24px; 
+            min-height: calc(100vh - var(--topbar-height));
+            transition: margin-left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            background-color: #f8fafc;
+        }
+        .main-wrapper.expanded {
+            margin-left: var(--sidebar-collapsed-width);
+        }
+
+        /* Khi Sidebar co lại */
+        .sidebar.collapsed .sidebar-user-card .sidebar-username,
+        .sidebar.collapsed .sidebar-user-card .sidebar-userrole,
+        .sidebar.collapsed .sidebar-item span {
+            display: none !important;
+        }
+        .sidebar.collapsed .sidebar-user-card {
+            padding: 12px 6px;
+        }
+        .sidebar.collapsed .sidebar-avatar {
+            width: 38px;
+            height: 38px;
+            font-size: 1rem;
+            margin-bottom: 0;
+        }
+        .sidebar.collapsed .sidebar-item a {
+            justify-content: center;
+            padding: 12px;
+        }
+        .sidebar.collapsed .sidebar-item a i {
+            margin-right: 0;
+        }
+
+        /* Responsive Mobile */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: var(--sidebar-width) !important;
+            }
+            .sidebar.mobile-open {
+                transform: translateX(0);
+                box-shadow: 4px 0 12px rgba(0,0,0,0.15);
+            }
+            .main-wrapper {
+                margin-left: 0 !important;
+                padding: 14px;
+            }
+        }
     </style>
+    {% block extra_css %}{% endblock %}
 </head>
 <body>
 
-    <div class="sidebar">
-        <div class="sidebar-header">
-            <strong>{{ current_user.user_name }}</strong>
-            <span>Quản trị viên</span>
+    <!-- TOPBAR HEADER -->
+    <header class="topbar">
+        <button class="btn-toggle-sidebar" id="btnSidebarToggle" title="Thu gọn / Mở rộng Sidebar">
+            <i class="mdi mdi-chevron-double-left" id="toggleIcon"></i>
+        </button>
+
+        <a href="{{ url_for('admin_views.admin_home') if url_for else '#' }}" class="brand-logo-text">
+            <span>SCHEDULE Hamlet</span>
+            <span class="brand-badge">Admin Portal</span>
+        </a>
+
+        <div class="topbar-actions">
+            <span class="btn-header-pill btn-header-green">
+                <i class="mdi mdi-check-decagram"></i>
+                <span class="d-none d-sm-inline">Quản trị viên</span>
+            </span>
+
+            <a href="#" class="btn-header-pill btn-header-blue">
+                <i class="mdi mdi-calendar-clock"></i>
+                <span class="d-none d-md-inline">Đăng ký lịch nghỉ</span>
+            </a>
+
+            <a href="{{ url_for('auth.logout') if url_for else '#' }}" class="btn-header-pill btn-header-dark">
+                <i class="mdi mdi-logout-variant"></i>
+                <span class="d-none d-sm-inline">Đăng xuất</span>
+            </a>
         </div>
+    </header>
+
+    <!-- SIDEBAR BÊN TRÁI -->
+    <aside class="sidebar" id="mainSidebar">
+        <!-- Thông tin User -->
+        <div class="sidebar-user-card">
+            <div class="sidebar-avatar">
+                <i class="mdi mdi-account"></i>
+            </div>
+            <div class="sidebar-username">{{ user.user_name if user and user.user_name else 'admin' }}</div>
+            <div class="sidebar-userrole">Quản trị viên SCHEDULE Hamlet</div>
+        </div>
+
+        <!-- Menu Danh Mục-->
         <ul class="sidebar-menu">
-            <li class="sidebar-item {{ 'active' if 'home' in request.path }}">
-                <a href="{{ url_for('admin_views.admin_home') }}">
+            <li class="sidebar-item {{ 'active' if request and 'home' in request.path }}">
+                <a href="{{ url_for('admin_views.admin_home') if url_for else '#' }}">
                     <i class="mdi mdi-chart-bar"></i> <span>Thống kê</span>
                 </a>
             </li>          
-            <li class="sidebar-item {{ 'active' if 'scheduleList' in request.path }}">
-                <a href="{{ url_for('admin_views.admin_scheduleList') }}">
+
+            <li class="sidebar-item {{ 'active' if request and 'scheduleList' in request.path }}">
+                <a href="{{ url_for('admin_views.admin_scheduleList') if url_for else '#' }}">
                     <i class="mdi mdi-account-group-outline"></i> <span>Dân quân</span>
                 </a>
             </li>
-            <li class="sidebar-item {{ 'active' if 'request' in request.path }}">
-                <a href="{{ url_for('admin_views.admin_request') }}">
-                    <i class="mdi mdi-account-group-outline"></i> <span>Xác thực</span>
+
+            <li class="sidebar-item {{ 'active' if request and 'request' in request.path }}">
+                <a href="{{ url_for('admin_views.admin_request') if url_for else '#' }}">
+                    <i class="mdi mdi-shield-check-outline"></i> <span>Xác thực</span>
                 </a>
             </li>
-             <li class="sidebar-item {{ 'active' if 'off-days' in request.path }}">
-                <a href="{{ url_for('admin_views.admin_users') }}">
-                    <i class="mdi mdi-account-group-outline"></i> <span>Quản lý ngày nghỉ</span>
+
+            <li class="sidebar-item {{ 'active' if request and ('off-days' in request.path or 'users' in request.path) }}">
+                <a href="{{ url_for('admin_views.admin_users') if url_for else '#' }}">
+                    <i class="mdi mdi-calendar-remove-outline"></i> <span>Quản lý ngày nghỉ</span>
+                </a>
+            </li>
+
+            <!-- Chỉ Active khi đang ở trang Lịch sử -->
+            <li class="sidebar-item {{ 'active' if request and 'history' in request.path }}">
+                <a href="{{ url_for('admin_views.admin_history') if url_for else '#' }}">
+                    <i class="mdi mdi-history"></i> <span>Lịch sử đăng ký trực</span>
                 </a>
             </li>
         </ul>
-    </div>
+    </aside>
 
-    <div class="main-wrapper">
-        <div class="top-header">
-            <button class="header-left-toggle" id="toggle-sidebar-btn">
-                <i class="mdi mdi-chevron-double-left" id="toggle-icon"></i>
-            </button>
-            <div class="header-right-info">
-                <span class="role-badge">Quản trị viên</span>
-                <a href="{{ url_for('admin_views.admin_registration') }}" class="btn btn-primary">Đăng ký lịch nghỉ</a>
-                <a href="{{ url_for('auth.logout') }}" class="logout-btn">Đăng xuất</a>
-            </div>
-        </div>
-        <div class="content-body">
-            {% block content %}{% endblock %}
-        </div>
-    </div>
+    <!-- (CONTENT) -->
+    <main class="main-wrapper" id="mainContent">
+        {% block content %}{% endblock %}
+    </main>
 
+    <!-- JavaScript Toggle Sidebar -->
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const toggleBtn = document.getElementById("toggle-sidebar-btn");
-            const icon = document.getElementById("toggle-icon");
-            const body = document.body;
+        document.addEventListener('DOMContentLoaded', function () {
+            const sidebar = document.getElementById('mainSidebar');
+            const mainContent = document.getElementById('mainContent');
+            const btnToggle = document.getElementById('btnSidebarToggle');
+            const toggleIcon = document.getElementById('toggleIcon');
 
-            // Khôi phục trạng thái từ bộ nhớ
-            if (localStorage.getItem("sidebar-collapsed") === "true") {
-                body.classList.add("sidebar-collapsed");
-                icon.className = "mdi mdi-chevron-double-right";
-            }
+            if (btnToggle && sidebar && mainContent) {
+                btnToggle.addEventListener('click', function () {
+                    const isMobile = window.innerWidth <= 768;
 
-            if (toggleBtn) {
-                toggleBtn.addEventListener("click", function() {
-                    body.classList.toggle("sidebar-collapsed");
-                    
-                    // Cập nhật biểu tượng không xoay
-                    if (body.classList.contains("sidebar-collapsed")) {
-                        icon.className = "mdi mdi-chevron-double-right";
+                    if (isMobile) {
+                        sidebar.classList.toggle('mobile-open');
                     } else {
-                        icon.className = "mdi mdi-chevron-double-left";
+                        sidebar.classList.toggle('collapsed');
+                        mainContent.classList.toggle('expanded');
+
+                        if (sidebar.classList.contains('collapsed')) {
+                            toggleIcon.classList.remove('mdi-chevron-double-left');
+                            toggleIcon.classList.add('mdi-chevron-double-right');
+                        } else {
+                            toggleIcon.classList.remove('mdi-chevron-double-right');
+                            toggleIcon.classList.add('mdi-chevron-double-left');
+                        }
                     }
-                    
-                    localStorage.setItem("sidebar-collapsed", body.classList.contains("sidebar-collapsed"));
                 });
             }
         });
     </script>
-
     {% block scripts %}{% endblock %}
 </body>
 </html>

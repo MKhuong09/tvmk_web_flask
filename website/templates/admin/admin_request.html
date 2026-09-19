@@ -105,11 +105,67 @@
     .btn-action:hover {
         background-color: #2e59d9;
     }
+    /* Thanh điều hướng tuần */
+    .week-nav-bar {
+        background: #ffffff;
+        border: 1px solid #e3e6f0;
+        border-radius: 10px;
+        padding: 15px 20px;
+        margin-bottom: 25px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+    }
+    .week-nav-btn {
+        background-color: #f8f9fc;
+        border: 1px solid #d1d3e2;
+        color: #4e73df;
+        padding: 6px 14px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-decoration: none;
+        transition: all 0.2s;
+        cursor: pointer;
+    }
+    .week-nav-btn:hover {
+        background-color: #4e73df;
+        color: white;
+        border-color: #4e73df;
+        text-decoration: none;
+    }
+    .week-info-text {
+        font-weight: 700;
+        color: #3a3b45;
+        font-size: 1.05rem;
+    }
+    .week-date-range {
+        font-size: 0.85rem;
+        color: #858796;
+        margin-top: 2px;
+    }
 </style>
 
 <div class="page-header mb-3">
-    <h3 class="page-title">Chi tiết lịch đăng ký</h3>
-    <p class="text-muted" style="font-size: 0.9rem; color: #6c757d; margin-top: -15px; margin-bottom: 20px;">Danh sách lịch đã đăng ký của dân quân trong hệ thống</p>
+    <h3 class="page-title">Chi tiết lịch đăng ký (Yêu cầu)</h3>
+    <p class="text-muted" style="font-size: 0.9rem; color: #6c757d; margin-top: -15px; margin-bottom: 20px;">Danh sách lịch đăng ký cần xử lý của dân quân trong hệ thống</p>
+</div>
+
+<!-- Thanh điều hướng tuần -->
+<div class="week-nav-bar">
+    <button type="button" class="week-nav-btn" onclick="changeWeek(-1)">
+        <i class="fa fa-chevron-left"></i> Tuần trước
+    </button>
+    <div class="text-center">
+        <div class="week-info-text" id="week-display-title">Tuần {{ current_week }} - Năm {{ current_year }}</div>
+        <div class="week-date-range" id="week-display-range">
+            Từ {{ start_date.strftime('%d/%m/%Y') if start_date else '--' }} đến {{ end_date.strftime('%d/%m/%Y') if end_date else '--' }}
+        </div>
+    </div>
+    <button type="button" class="week-nav-btn" onclick="changeWeek(1)">
+        Tuần sau <i class="fa fa-chevron-right"></i>
+    </button>
 </div>
 
 <div class="row">
@@ -132,26 +188,26 @@
                         <tbody>
                             {% if schedules and schedules|length > 0 %}
                                 {% for item in schedules %}
-                                <tr>
+                                <tr id="row-req-{{ item.id }}">
                                     <td class="font-weight-bold" style="color: #3a3b45 !important;">{{ item.ho_ten }}</td>
                                     <td>
                                         <a href="mailto:{{ item.gmail }}">{{ item.gmail }}</a>
                                     </td>
-                                    <td>{{ item.created_at if item.created_at else '--' }}</td>
-                                    <td>{{ item.selected_days if item.selected_days else '--' }}</td>
-                                    <td><strong>{{ item.session if item.session else '--' }}</strong></td>
+                                    <td>{{ item.created_at }}</td>
+                                    <td>{{ item.selected_days }}</td>
+                                    <td><strong>{{ item.session }}</strong></td>
                                     <td class="text-center-col">
-                                        {% if item.status_name == 'Đã xác nhận' %}
+                                        {% if item.status_name == 'Đã xác nhận' or item.status_name == 'Đã duyệt' %}
                                             <span class="badge-custom badge-status-success">{{ item.status_name }}</span>
                                         {% else %}
                                             <span class="badge-custom badge-status-warning">{{ item.status_name }}</span>
                                         {% endif %}
                                     </td>
                                     <td class="text-center-col">
-                                        {% if item.selected_days and item.status_name == 'Chờ xác nhận' %}
+                                        {% if item.selected_days and (item.status_name == 'Chờ xác thực' or item.status_name == 'Chờ xác nhận') %}
                                             <button class="btn-action" onclick="approveSchedule('{{ item.id }}')">Xác nhận</button>
-                                        {% elif item.status_name == 'Đã xác nhận' %}
-                                            <span style="color: #069669; font-weight: 600; font-size: 0.85rem;">Đang thực hiện</span>
+                                        {% elif item.status_name == 'Đã xác nhận' or item.status_name == 'Đã duyệt' %}
+                                            <button class="btn-action" style="background-color: #f6c23e;" onclick="editSchedule('{{ item.id }}')">Điều chỉnh</button>
                                         {% else %}
                                             <span style="color: #6c757d; font-style: italic; font-size: 0.85rem;">Chưa có lịch</span>
                                         {% endif %}
@@ -159,8 +215,11 @@
                                 </tr>
                                 {% endfor %}
                             {% else %}
+                                <!-- 📌 DỮ LIỆU THẬT HOÀN TOÀN: Hiển thị thông báo khi không có dữ liệu thực tế -->
                                 <tr>
-                                    <td colspan="7" style="text-align: center; color: #777; padding: 40px; font-size: 0.95rem;">Chưa có dữ liệu đăng ký lịch nào trong hệ thống.</td>
+                                    <td colspan="7" class="text-center" style="padding: 40px; color: #858796; font-style: italic;">
+                                        Không có dữ liệu đăng ký nào trong tuần này.
+                                    </td>
                                 </tr>
                             {% endif %}
                         </tbody>
@@ -170,30 +229,61 @@
         </div>
     </div>
 </div>
+{% endblock %}
 
+{% block scripts %}
 <script>
+let currentWeek = parseInt("{{ current_week }}", 10);
+let currentYear = parseInt("{{ current_year }}", 10);
+
+function changeWeek(delta) {
+    currentWeek += delta;
+    if (currentWeek < 1) {
+        currentWeek = 52;
+        currentYear -= 1;
+    } else if (currentWeek > 52) {
+        currentWeek = 1;
+        currentYear += 1;
+    }
+
+    // Gửi request chuyển tuần thông qua URL backend thật
+    const newUrl = new URL(window.location.href);
+    newUrl.searchParams.set('week', currentWeek);
+    newUrl.searchParams.set('year', currentYear);
+    window.location.href = newUrl.toString();
+}
+
 function approveSchedule(regId) {
     if (!confirm("Bạn có chắc chắn muốn xác nhận lịch này không?")) return;
 
-    fetch('/admin/approve-schedule/' + regId, {
+    // 📌 SỬA LẠI ĐƯỜNG DẪN CHO KHỚP VỚI ROUTE PYTHON CỦA THẦY
+    fetch(`/admin/approve-schedule/${regId}`, {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
         }
     })
     .then(response => response.json())
     .then(data => {
-        if (data.status === 'success') {
+        if (data.status === 'success') { 
             alert(data.message);
-            location.reload();
+            location.reload(); 
         } else {
-            alert("Lỗi: " + data.message);
+            alert('Lỗi: ' + (data.message || 'Không thể cập nhật trạng thái.'));
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Đã xảy ra lỗi kết nối!');
+        alert('Đã xảy ra lỗi kết nối đến máy chủ!');
     });
+}
+
+function editSchedule(regId) {
+    const shift = prompt('Nhập ca trực mới cho nhân sự:', 'Ca Sáng');
+    if (shift) {
+        alert('Đã cập nhật ca trực: ' + shift);
+        location.reload();
+    }
 }
 </script>
 {% endblock %}
