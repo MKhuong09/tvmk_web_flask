@@ -271,19 +271,19 @@ if __name__ == "__main__":
     # Quick local example (run after installing ortools or will fall back to greedy)
     users = [
         UserData(name="Vinh", email="a@example.com", userID=1, 
-                 unavailable_days=[DayOfWeek.MONDAY.value,DayOfWeek.WEDNESDAY.value,DayOfWeek.THURSDAY.value, DayOfWeek.SATURDAY.value], 
+                 unavailable_days=[DayOfWeek.TUESDAY.value,DayOfWeek.WEDNESDAY.value,DayOfWeek.FRIDAY.value, DayOfWeek.SUNDAY.value], 
                  max_days_per_week=3),
         
         UserData(name="Nhan", email="b@example.com", userID=2,
-                 unavailable_days=[DayOfWeek.WEDNESDAY.value,DayOfWeek.FRIDAY.value, DayOfWeek.SATURDAY.value,DayOfWeek.SUNDAY.value]
-                 , max_days_per_week=3),
+                 unavailable_days=[DayOfWeek.MONDAY.value,DayOfWeek.WEDNESDAY.value,DayOfWeek.THURSDAY.value, DayOfWeek.SATURDAY.value,DayOfWeek.SUNDAY.value]
+                 , max_days_per_week=2),
         
         UserData(name="Nam", email="c@example.com", userID=3,
                  unavailable_days=[],
                  max_days_per_week=1),
         
         UserData(name="Son", email="d@example.com", userID=4,
-                 unavailable_days=[DayOfWeek.MONDAY.value,DayOfWeek.TUESDAY.value,DayOfWeek.THURSDAY.value, DayOfWeek.SATURDAY.value],
+                 unavailable_days=[],
                  max_days_per_week=3),
         
         UserData(name="Huy", email="e@example.com", userID=5,

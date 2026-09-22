@@ -20,6 +20,18 @@ class User(UserMixin):
 def create_app():
     app = Flask(__name__)
     app.config['SECRET_KEY'] = 'MK dep trai Nhat Tren The Gioi va __ Giau Co va se MuA duoc Xe hoi 31ty07trieu2001k @@'
+<<<<<<< Updated upstream
+=======
+    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{DB_NAME}'
+    app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
+    app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', '465'))
+    app.config['MAIL_USE_SSL'] = os.getenv('MAIL_USE_SSL', 'true').lower() == 'true'
+    app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME', '')
+    app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD', '')
+    app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_DEFAULT_SENDER', app.config['MAIL_USERNAME'])
+    db.init_app(app)
+    Migrate.init_app(app, db) # Khởi tạo Flask-Migrate với ứng dụng và cơ sở dữ liệu
+>>>>>>> Stashed changes
 
 
     # 1. Khởi tạo kết nối Firebase Admin SDK

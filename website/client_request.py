@@ -1,8 +1,13 @@
-from flask import Blueprint, render_template, request, flash, redirect, url_for
+from flask import Blueprint, current_app, render_template, request, flash, redirect, url_for
 from flask_login import login_required, current_user
+<<<<<<< Updated upstream
 from datetime import datetime
 from .models import Registration, Notification
 from . import db  # Import đối tượng db Firestore đã khởi tạo ở __init__.py
+=======
+from website.models import Registration, Notification, User, db
+from mailAgent.mailbox import send_email
+>>>>>>> Stashed changes
 
 client_request = Blueprint('client_request', __name__)
 
@@ -52,6 +57,7 @@ def submit_shift_adjustment(id):
         flash('Vui lòng nhập lý do muốn thay đổi lịch.', 'warning')
         return redirect(url_for('client_request.request_shift_change_form', id=reg.id))
         
+<<<<<<< Updated upstream
     # Tạo dữ liệu thông báo gửi cho Admin lưu vào Firestore
     notif_data = {
         'user_id': current_user.id,
@@ -65,6 +71,29 @@ def submit_shift_adjustment(id):
     
     # Thêm document vào collection 'notifications' trên Firestore
     db.collection('notifications').add(notif_data)
+=======
+    # Tạo thông báo gửi cho Admin
+    new_request_notif = Notification(
+        user_id=current_user.id,
+        title="Yêu cầu thay đổi lịch trực",
+        message=f"Học viên {current_user.user_name} gửi yêu cầu đổi lịch (Tuần {reg.week_number}). Đổi sang: {new_session}. Lý do: '{reason}'.",
+        status='pending'
+    )
+    
+    db.session.add(new_request_notif)
+    db.session.commit()
+
+    admin_emails = [
+        user.email for user in User.query.filter(User.role_id.in_([1, 3])).all()
+        if user.email
+    ]
+    send_email(
+        current_app,
+        admin_emails,
+        f'Yêu cầu thay đổi lịch từ {current_user.user_name}',
+        new_request_notif.message,
+    )
+>>>>>>> Stashed changes
     
     flash('Gửi phiếu yêu cầu thay đổi lịch thành công!', 'success')
     return redirect(url_for('client_views.client_detailshift'))

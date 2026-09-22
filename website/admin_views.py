@@ -1,10 +1,15 @@
-import os
 import io
 import calendar
-from datetime import datetime, timedelta
-from flask import send_file
-from flask import Blueprint, render_template, redirect, request, url_for, flash, jsonify, session
+from flask import Blueprint, current_app, render_template, redirect, request, url_for, flash, jsonify, session
 from flask_login import login_required, current_user
+from flask import send_file
+
+from mailAgent.mailbox import send_email
+from .models import ScheduleOutput, User, Registration, Status, db
+from algorithms.schedule_agent import DayOfWeek, ScheduleAgent, UserData, convert_day_to_numeric
+
+from sqlalchemy import func
+from datetime import datetime, timedelta
 import pytz
 from firebase_admin import firestore
 from website.utils import send_mail_based_on_admin_config
@@ -187,6 +192,36 @@ def approve_schedule(reg_id):
         
         return jsonify({'status': 'success', 'message': 'Đã duyệt lịch thành công!'})
     except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@admin_views.route('/decline-schedule/<int:reg_id>', methods=['POST'])
+@login_required
+def decline_schedule(reg_id):
+    registration = Registration.query.get_or_404(reg_id)
+
+    # 1. Tìm/tạo trạng thái 'Đã từ chối'
+    declined_status = Status.query.filter_by(name='Đã từ chối').first()
+    if not declined_status:
+        declined_status = Status(name='Đã từ chối')
+        db.session.add(declined_status)
+        db.session.commit()
+
+    try:
+        # 2. Chuyển trạng thái đơn này thành 'Đã từ chối' (chưa hiện lên client vội)
+        registration.status_id = declined_status.id
+        db.session.commit()
+        # Gửi email thông báo từ chối đến người dùng
+        user = User.query.get(registration.user_id)
+        if user and user.email:
+            subject = "Thông báo từ chối đăng ký"
+            body = f"Xin chào {user.user_name},\n\nĐơn đăng ký của bạn đã bị từ chối. Vui lòng liên hệ Ấp Đội Trưởng để biết thêm chi tiết. \
+                Link đăng ký lịch: {url_for('main_views.register_schedule', _external=True)}\
+                \n\nTrân trọng."
+            send_email(current_app, [user.email], subject, body)
+            
+        return jsonify({'status': 'success', 'message': 'Đã từ chối đơn thành công!'}), 200
+    except Exception as e:
+        db.session.rollback()
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 
