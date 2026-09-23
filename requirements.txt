@@ -2,8 +2,11 @@ flask
 flask-login
 flask-sqlalchemy
 flask_migrate
+flask_mail
 ortools
 gunicorn
 openpyxl
 pytz
 gunicorn
+firebase_admin
+mailAgent

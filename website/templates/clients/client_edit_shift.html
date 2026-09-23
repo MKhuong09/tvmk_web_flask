@@ -6,38 +6,37 @@
 
     <div class="card shadow-sm p-4">
         <form method="POST">
-            <!-- Buổi trực cố định -->
-            <input type="hidden" name="session" value="Cả tuần">
+            <!-- Chọn ca trực linh hoạt -->
+            <div class="mb-3">
+                <label class="form-label fw-bold">Ca trực:</label>
+                <select class="form-select" name="session" required>
+                    <option value="Sáng" {% if reg.session == 'Sáng' %}selected{% endif %}>Sáng</option>
+                    <option value="Chiều" {% if reg.session == 'Chiều' %}selected{% endif %}>Chiều</option>
+                    <option value="Cả tuần" {% if reg.session == 'Cả tuần' %}selected{% endif %}>Cả tuần</option>
+                </select>
+            </div>
 
-            <!-- Tách chuỗi selected_days từ database thành danh sách (VD: ['T5', 'T6']) -->
+            <!-- Tách chuỗi selected_days từ database thành danh sách -->
             {% set saved_days = reg.selected_days.split(', ') if reg.selected_days else [] %}
-            {% set day1 = saved_days[0] if saved_days|length > 0 else '' %}
-            {% set day2 = saved_days[1] if saved_days|length > 1 else '' %}
-
             {% set days_options = [('T2', 'Thứ 2'), ('T3', 'Thứ 3'), ('T4', 'Thứ 4'), ('T5', 'Thứ 5'), ('T6', 'Thứ 6'), ('T7', 'Thứ 7'), ('CN', 'Chủ nhật')] %}
 
-            <div class="row mb-3">
-                <!-- Ngày nghỉ thứ nhất -->
-                <div class="col-md-6">
-                    <label class="form-label fw-bold">Ngày nghỉ / Không trực thứ 1:</label>
-                    <select class="form-select" name="day_1">
-                        <option value="">-- Chọn ngày nghỉ --</option>
-                        {% for code, label in days_options %}
-                            <option value="{{ code }}" {% if day1 == code %}selected{% endif %}>{{ label }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
+            <!-- Lấy giới hạn số ngày nghỉ do Admin quy định -->
+            {% set max_off = current_user.allowed_off_days if current_user.allowed_off_days is defined and current_user.allowed_off_days > 0 else 2 %}
 
-                <!-- Ngày nghỉ thứ hai -->
-                <div class="col-md-6">
-                    <label class="form-label fw-bold">Ngày nghỉ / Không trực thứ 2:</label>
-                    <select class="form-select" name="day_2">
-                        <option value="">-- Chọn ngày nghỉ --</option>
-                        {% for code, label in days_options %}
-                            <option value="{{ code }}" {% if day2 == code %}selected{% endif %}>{{ label }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
+            <div class="row mb-3">
+                {% for i in range(max_off) %}
+                    <!-- Giữ lại giá trị cũ nếu có, nếu vượt quá thì để trống  -->
+                    {% set current_val = saved_days[i] if i < saved_days|length else '' %}
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Ngày nghỉ thứ {{ i + 1 }}:</label>
+                        <select class="form-select" name="day_{{ i + 1 }}">
+                            <option value="">-- Chọn ngày nghỉ --</option>
+                            {% for code, label in days_options %}
+                                <option value="{{ code }}" {% if current_val == code %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                {% endfor %}
             </div>
 
             <button type="submit" class="btn btn-primary">Lưu thay đổi</button>

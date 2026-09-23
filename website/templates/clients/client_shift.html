@@ -4,276 +4,642 @@
 
 {% block styles %}
 <style>
+    /* Modern Minimalist Design Tokens */
     :root {
-        --green-main: #a5c422; 
-        --green-light: #bde038;
-        --yellow-bg: #ffd875;
-        --yellow-cell: #fff0c2;
-        --gray-bg: #e0e0e0;
-        --blue-btn: #4ba2f2;
-        --red-pastel: #ff6b6b; 
+        --primary: #059669;          /* Emerald primary */
+        --primary-hover: #047857;
+        --primary-light: #ecfdf5;
+        --accent: #6366f1;           /* Indigo accent */
+        --accent-light: #eef2ff;
+        --warning: #f59e0b;          /* Amber */
+        --warning-light: #fffbeb;
+        --danger: #ef4444;           /* Rose */
+        --danger-light: #fef2f2;
+        --surface: #ffffff;
+        --surface-ground: #f8fafc;
+        --border: #e2e8f0;
+        --text-main: #0f172a;
+        --text-muted: #64748b;
+        --radius: 14px;
+        --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.07), 0 1px 2px -1px rgb(0 0 0 / 0.07);
+        --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.08);
     }
 
     .schedule-container {
-        font-family: Arial, sans-serif;
-        padding: 20px 15px;
-        max-width: 1200px;
-        margin: 0 auto;
+        font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        max-width: 1100px;
+        margin: 24px auto;
+        padding: 0 16px;
+        color: var(--text-main);
     }
 
-    .rule-banner {
-        background-color: var(--red-pastel);
-        color: white;
-        width: 100%;
-        text-align: center;
-        font-weight: bold;
-        font-size: 16px;
-        border-radius: 4px;
-        max-height: 0;
-        opacity: 0;
-        padding: 0;
-        margin-bottom: 0;
-        overflow: hidden;
-        transition: max-height 0.4s ease, opacity 0.4s ease, padding 0.4s ease, margin-bottom 0.4s ease;
-    }
-    
-    .rule-banner.show {
-        max-height: 60px;
-        opacity: 1;
-        padding: 12px 0;
-        margin-bottom: 20px;
-    }
-
+    /* Top Heading and Notice */
     .header-action {
         display: flex;
-        justify-content: space-between;
+        flex-wrap: wrap;
         align-items: center;
+        justify-content: space-between;
+        gap: 16px;
         margin-bottom: 20px;
     }
-    .header-action h1 {
-        font-size: 32px;
-        font-weight: bold;
-        color: #111;
+
+    .header-title-group h1 {
+        font-size: 24px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        color: var(--text-main);
         margin: 0;
     }
-    .btn-blue {
-        background-color: var(--blue-btn);
-        color: white;
-        border: none;
-        padding: 10px 35px;
-        font-size: 16px;
-        font-weight: bold;
-        border-radius: 4px;
-        cursor: pointer;
+
+    .header-title-group p {
+        margin: 4px 0 0;
+        font-size: 13px;
+        color: var(--text-muted);
     }
 
+    .alert-rule-banner {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--primary-light);
+        border: 1px solid #a7f3d0;
+        color: #065f46;
+        padding: 10px 16px;
+        border-radius: var(--radius);
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .alert-rule-banner strong {
+        color: #047857;
+        text-decoration: underline;
+    }
+
+    /* Week Dropdown & Countdown bar */
     .filter-rule-row {
-        margin-bottom: 25px;
-    }
-    .dropdown-week select {
-        background-color: var(--gray-bg);
-        border: 1px solid #ababab;
-        padding: 12px 15px;
-        width: 350px;
-        font-size: 15px;
-        font-weight: bold;
-        color: #333;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 14px 18px;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 20px;
+        box-shadow: var(--shadow-sm);
     }
 
-    .quick-action-bar {
-        background-color: var(--gray-bg);
-        border: 1px solid #999;
+    .dropdown-week-box {
         display: flex;
         align-items: center;
-        margin-bottom: 30px;
-        border-radius: 4px;
+        gap: 10px;
+    }
+
+    .dropdown-week-box select {
+        background-color: var(--surface-ground);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 9px 14px;
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--text-main);
+        outline: none;
+        cursor: pointer;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .dropdown-week-box select:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.15);
+    }
+
+    .timer-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: var(--warning-light);
+        border: 1px solid #fde68a;
+        color: #92400e;
+        padding: 6px 12px;
+        border-radius: 9999px;
+        font-size: 12px;
+        font-weight: 700;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    /* Quick Action & Registration Card */
+    .registration-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-sm);
+        margin-bottom: 24px;
         overflow: hidden;
     }
-    .week-title-box {
-        background-color: var(--green-main);
-        color: white;
-        padding: 15px 20px;
-        text-align: center;
-        font-weight: bold;
-        font-size: 15px;
-        min-width: 100px;
-    }
-    .checkbox-group {
+
+    .registration-card-header {
+        background: linear-gradient(to right, #f8fafc, #ffffff);
+        border-bottom: 1px solid var(--border);
+        padding: 14px 20px;
         display: flex;
         align-items: center;
+        justify-content: space-between;
     }
-    .checkbox-group.days {
-        border-right: 1px solid #b0b0b0;
-        flex-grow: 1;
-        justify-content: space-around;
-        padding: 0 30px;
+
+    .week-badge {
+        font-size: 14px;
+        font-weight: 800;
+        color: var(--text-main);
+        display: flex;
+        align-items: center;
+        gap: 8px;
     }
-    .checkbox-group label {
+
+    .week-badge span {
+        background: #f1f5f9;
+        border: 1px solid var(--border);
+        padding: 3px 8px;
+        border-radius: 6px;
+        font-size: 12px;
+        color: var(--text-muted);
+        font-weight: 600;
+    }
+
+    /* Days Checkbox Grid - Đã căn đều 7 ngày */
+    .days-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 12px;
+        padding: 20px;
+    }
+
+    @media (max-width: 840px) {
+        .days-grid {
+            grid-template-columns: repeat(4, 1fr);
+        }
+    }
+
+    @media (max-width: 520px) {
+        .days-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    .day-checkbox-label {
+        position: relative;
         display: flex;
         flex-direction: column;
         align-items: center;
-        font-weight: bold;
-        font-size: 15px;
-        gap: 8px;
+        justify-content: center;
+        text-align: center;
+        min-height: 110px;
+        padding: 16px 10px;
+        background: var(--surface-ground);
+        border: 1.5px solid var(--border);
+        border-radius: 12px;
         cursor: pointer;
+        user-select: none;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        box-sizing: border-box;
+    }
+
+    .day-checkbox-label:hover:not(.is-disabled) {
+        background: #f1f5f9;
+        border-color: #cbd5e1;
+        transform: translateY(-2px);
+    }
+
+    .day-checkbox-label input[type="checkbox"] {
+        position: absolute;
+        opacity: 0;
+        width: 0;
+        height: 0;
+        pointer-events: none;
         margin: 0;
     }
-    .checkbox-group label input[type="checkbox"] {
-        width: 18px;
-        height: 18px;
-    }
-    .action-buttons {
-        display: flex;
-        gap: 12px;
-        padding: 0 20px;
-    }
-    .btn-green-action {
-        background-color: var(--green-light);
-        border: 1px solid #99b81b;
-        padding: 10px 25px;
-        font-weight: bold;
+
+    .day-title {
         font-size: 15px;
-        border-radius: 4px;
-        cursor: pointer;
-        transition: all 0.2s ease-in-out;
+        font-weight: 800;
+        color: var(--text-main);
+        margin-bottom: 3px;
+        display: block;
+        line-height: 1.2;
     }
 
-    .btn-green-action:disabled {
+    .day-sub {
+        font-size: 11px;
+        color: var(--text-muted);
+        font-weight: 600;
+        display: block;
+        line-height: 1.2;
+    }
+
+    .custom-check-indicator {
+        width: 22px;
+        height: 22px;
+        border-radius: 6px;
+        border: 2px solid #cbd5e1;
+        background: white;
+        margin-top: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        flex-shrink: 0;
+    }
+
+    /* Checked state */
+    .day-checkbox-label.is-checked {
+        background: #ecfdf5;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.25);
+    }
+
+    .day-checkbox-label.is-checked .day-title {
+        color: #065f46;
+    }
+
+    .day-checkbox-label.is-checked .day-sub {
+        color: #047857;
+    }
+
+    .day-checkbox-label.is-checked .custom-check-indicator {
+        background: var(--primary);
+        border-color: var(--primary);
+    }
+
+    .day-checkbox-label.is-checked .custom-check-indicator::after {
+        content: '';
+        width: 5px;
+        height: 10px;
+        border: solid white;
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+        margin-bottom: 2px;
+    }
+
+    /* Disabled state */
+    .day-checkbox-label.is-disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+        background: #f8fafc;
+        border-color: #e2e8f0;
+        transform: none !important;
+    }
+
+    /* Action bar buttons */
+    .action-footer {
+        border-top: 1px solid var(--border);
+        padding: 14px 20px;
+        background: #fafbfc;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .selected-summary {
+        font-size: 13px;
+        color: var(--text-muted);
+    }
+
+    .selected-summary strong {
+        color: var(--text-main);
+    }
+
+    .btn-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .btn-submit {
+        background: var(--primary);
+        color: white;
+        border: none;
+        padding: 9px 22px;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 2px 4px rgba(5, 150, 105, 0.2);
+        transition: all 0.2s ease;
+    }
+
+    .btn-submit:hover:not(:disabled) {
+        background: var(--primary-hover);
+        box-shadow: 0 4px 8px rgba(5, 150, 105, 0.3);
+        transform: translateY(-1px);
+    }
+
+    .btn-submit:disabled {
         opacity: 0.5;
         cursor: not-allowed;
-        background-color: #d1e7dd;
-        border-color: #bcd0c7;
+        transform: none;
+        box-shadow: none;
     }
 
+    .btn-cancel {
+        background: white;
+        color: #475569;
+        border: 1px solid var(--border);
+        padding: 9px 18px;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .btn-cancel:hover {
+        background: #f1f5f9;
+        color: #0f172a;
+    }
+
+    /* Capacity Status Table - Căn chỉnh đều tuyệt đối 100% */
     .status-table-container {
-        border: 1px solid #222;
-        border-radius: 4px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-sm);
         overflow: hidden;
     }
+
     .table-header-banner {
-        background-color: var(--green-light);
-        text-align: center;
-        padding: 10px;
-        font-weight: bold;
-        font-size: 16px;
-        border-bottom: 1px solid #222;
+        background: #f8fafc;
+        border-bottom: 1px solid var(--border);
+        padding: 12px 18px;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text-main);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
     }
+
+    .table-responsive-wrapper {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
     .status-table {
         width: 100%;
+        min-width: 680px;
         border-collapse: collapse;
+        table-layout: fixed; /* Cố định tỉ lệ cột tránh co giãn lệch */
+        text-align: center;
+        font-size: 13px;
     }
-    .status-table th, .status-table td {
-        border: 1px solid #222;
-        padding: 14px;
+
+    .status-table col.col-label {
+        width: 23%;
+    }
+
+    .status-table col.col-day {
+        width: 11%;
+    }
+
+    .status-table th {
+        background: #f8fafc;
+        color: #475569;
+        font-weight: 700;
+        font-size: 13px;
+        padding: 12px 8px;
+        border-bottom: 1px solid var(--border);
+        vertical-align: middle;
         text-align: center;
     }
-    .status-table th {
-        background-color: #72b063;
-        color: #000;
-        font-weight: bold;
+
+    .status-table th.th-label {
+        text-align: left;
+        padding-left: 20px;
+        color: #334155;
     }
-    .status-table tbody tr {
-        background-color: var(--yellow-cell);
+
+    .status-table td {
+        padding: 12px 8px;
+        border-bottom: 1px solid var(--border);
+        color: var(--text-main);
+        vertical-align: middle;
+        text-align: center;
+        background: #ffffff;
     }
-    .cell-shift {
-        font-weight: bold;
-        color: #fff !important;
+
+    .status-table tr:hover td {
+        background: #fafbfc;
     }
-    .row-sang .cell-shift {
-        background-color: #fca34d;
+
+    .status-table tr:last-child td {
+        border-bottom: none;
     }
-    .row-chieu .cell-shift {
-        background-color: #fcd068;
-    }
+
     .cell-label {
-        font-weight: bold;
+        text-align: left !important;
+        padding-left: 20px !important;
+        font-weight: 700;
+        color: #1e293b;
     }
-    .status-table td.full {
-        font-weight: bold;
+
+    .capacity-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 52px;
+        padding: 4px 10px;
+        border-radius: 8px;
+        font-weight: 700;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 12px;
+        background: #f1f5f9;
+        color: #334155;
+        border: 1px solid transparent;
+        line-height: 1.2;
+    }
+
+    .capacity-badge.good {
+        background: #ecfdf5;
+        color: #065f46;
+        border: 1px solid #a7f3d0;
+    }
+
+    .capacity-badge.low {
+        background: #fffbeb;
+        color: #92400e;
+        border: 1px solid #fde68a;
     }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="schedule-container">
+    <!-- Header Section -->
     <div class="header-action">
-        <h1>Lịch đăng ký Tuần</h1>
-        <div class="alert alert-info" style="background-color: #d1ecf1; color: #0c5460; padding: 10px; margin-bottom: 20px; border-radius: 4px; text-align: center;">
-            Tài khoản của bạn được phép chọn chính xác <strong>{{ allowed_off_days }} ngày nghỉ</strong> trong tuần.
+        <div class="header-title-group">
+            <h1>Lịch Đăng Ký Tuần</h1>
+            <p>Hệ thống đăng ký lịch trực & ngày nghỉ - Dân Quân Ấp 27</p>
+        </div>
+        <div class="alert-rule-banner">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="16" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+            <span>Quy định: Bạn được chọn đúng <strong>{{ allowed_off_days }} ngày nghỉ</strong> trong tuần.</span>
         </div>   
     </div>
 
+    <!-- Filter & Deadline Row -->
     <div class="filter-rule-row">
-        <div class="dropdown-week">
-            <select>
-                <option id="countdown-dropdown">Tuần 1 - Tháng 6 : (dd-dd)-(Đang tải...)</option>
+        <div class="dropdown-week-box">
+            <label for="select-week" style="font-size: 13px; font-weight: 600; color: var(--text-muted);">Tuần:</label>
+            <select id="select-week">
+                <option id="countdown-dropdown">Tuần 1 - Tháng 6 : (dd-dd)-(Đang tính toán...)</option>
             </select>
         </div>
-    </div>
 
-    <div class="quick-action-bar">
-        <div class="week-title-box">
-            Tuần 1<br>Tháng 6
-        </div>
-        <!-- Đã xóa bỏ hoàn toàn cụm chọn buổi (shifts) ở đây -->
-        <div class="checkbox-group days">
-            <label>T2 <input type="checkbox" name="quick_day" value="T2"></label>
-            <label>T3 <input type="checkbox" name="quick_day" value="T3"></label>
-            <label>T4 <input type="checkbox" name="quick_day" value="T4"></label>
-            <label>T5 <input type="checkbox" name="quick_day" value="T5"></label>
-            <label>T6 <input type="checkbox" name="quick_day" value="T6"></label>
-            <label>T7 <input type="checkbox" name="quick_day" value="T7"></label>
-            <label>CN <input type="checkbox" name="quick_day" value="CN"></label>
-        </div>
-        <div class="action-buttons">    
-            <button class="btn-green-action" id="btn-quick-submit">Đăng ký</button>
-            <button class="btn-green-action cancel" id="btn-quick-clear">Hủy</button>
+        <div class="timer-pill" id="live-timer-pill">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            <span id="countdown-text">Đang tải hạn đăng ký...</span>
         </div>
     </div>
 
+    <!--  Days Selector Card  -->
+    <div class="registration-card">
+        <div class="registration-card-header">
+            <div class="week-badge">
+                <span id="badge-week-title">Tuần 1 - Tháng 6</span>
+                <span>Chọn ngày nghỉ của bạn</span>
+            </div>
+            <span style="font-size: 12px; color: var(--text-muted); font-weight: 500;">
+                Tối đa: <strong style="color: var(--primary);">{{ allowed_off_days }} ngày</strong>
+            </span>
+        </div>
+
+        <!-- 7 Days  -->
+        <div class="days-grid">
+            <label class="day-checkbox-label" id="label-T2">
+                <input type="checkbox" name="quick_day" value="T2">
+                <span class="day-title">Thứ 2</span>
+                <span class="day-sub">T2</span>
+                <span class="custom-check-indicator"></span>
+            </label>
+            <label class="day-checkbox-label" id="label-T3">
+                <input type="checkbox" name="quick_day" value="T3">
+                <span class="day-title">Thứ 3</span>
+                <span class="day-sub">T3</span>
+                <span class="custom-check-indicator"></span>
+            </label>
+            <label class="day-checkbox-label" id="label-T4">
+                <input type="checkbox" name="quick_day" value="T4">
+                <span class="day-title">Thứ 4</span>
+                <span class="day-sub">T4</span>
+                <span class="custom-check-indicator"></span>
+            </label>
+            <label class="day-checkbox-label" id="label-T5">
+                <input type="checkbox" name="quick_day" value="T5">
+                <span class="day-title">Thứ 5</span>
+                <span class="day-sub">T5</span>
+                <span class="custom-check-indicator"></span>
+            </label>
+            <label class="day-checkbox-label" id="label-T6">
+                <input type="checkbox" name="quick_day" value="T6">
+                <span class="day-title">Thứ 6</span>
+                <span class="day-sub">T6</span>
+                <span class="custom-check-indicator"></span>
+            </label>
+            <label class="day-checkbox-label" id="label-T7">
+                <input type="checkbox" name="quick_day" value="T7">
+                <span class="day-title">Thứ 7</span>
+                <span class="day-sub">T7</span>
+                <span class="custom-check-indicator"></span>
+            </label>
+            <label class="day-checkbox-label" id="label-CN">
+                <input type="checkbox" name="quick_day" value="CN">
+                <span class="day-title">Chủ Nhật</span>
+                <span class="day-sub">CN</span>
+                <span class="custom-check-indicator"></span>
+            </label>
+        </div>
+
+        <!-- Footer Action -->
+        <div class="action-footer">
+            <div class="selected-summary">
+                Đã chọn: <strong id="selected-count-display">0</strong> / {{ allowed_off_days }} ngày nghỉ
+            </div>
+            <div class="btn-group">
+                <button type="button" class="btn-cancel" id="btn-quick-clear">Xóa chọn</button>
+                <button type="button" class="btn-submit" id="btn-quick-submit" disabled>Xác nhận đăng ký</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Capacity Overview Table  -->
     <div class="status-table-container">
         <div id="countdown-table-header" class="table-header-banner">
-            Tuần 1 - Tháng 6 : (dd-dd)-(Đang tải...)
+            <span>Bảng thống kê quân số trực tuần</span>
+            <span style="font-size: 11px; color: var(--text-muted); font-weight: normal;">(Chỉ tiêu tối thiểu: 4/ca)</span>
         </div>
-        <table class="status-table">
-            <thead>
-                <tr>
-                    <th style="width: 25%;">Trạng thái</th>
-                    <th>T2</th>
-                    <th>T3</th>
-                    <th>T4</th>
-                    <th>T5</th>
-                    <th>T6</th>
-                    <th>T7</th>
-                    <th>CN</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td class="cell-label">Số lượng đi làm</td>
-                    <td>{{ working_counts.T2 }}/{{ total_capacity }}</td>
-                    <td>{{ working_counts.T3 }}/{{ total_capacity }}</td>
-                    <td>{{ working_counts.T4 }}/{{ total_capacity }}</td>
-                    <td>{{ working_counts.T5 }}/{{ total_capacity }}</td>
-                    <td>{{ working_counts.T6 }}/{{ total_capacity }}</td>
-                    <td>{{ working_counts.T7 }}/{{ total_capacity }}</td>
-                    <td>{{ working_counts.CN }}/{{ total_capacity }}</td>
-                </tr>
-            </tbody>
-        </table>
+        <div class="table-responsive-wrapper">
+            <table class="status-table">
+                <colgroup>
+                    <col class="col-label">
+                    <col class="col-day">
+                    <col class="col-day">
+                    <col class="col-day">
+                    <col class="col-day">
+                    <col class="col-day">
+                    <col class="col-day">
+                    <col class="col-day">
+                </colgroup>
+                <thead>
+                    <tr>
+                        <th class="th-label">Trạng thái</th>
+                        <th>Thứ 2</th>
+                        <th>Thứ 3</th>
+                        <th>Thứ 4</th>
+                        <th>Thứ 5</th>
+                        <th>Thứ 6</th>
+                        <th>Thứ 7</th>
+                        <th>Chủ Nhật</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="cell-label">Số lượng đi làm</td>
+                        <td><span class="capacity-badge good">{{ working_counts.T2 }}/{{ total_capacity }}</span></td>
+                        <td><span class="capacity-badge good">{{ working_counts.T3 }}/{{ total_capacity }}</span></td>
+                        <td><span class="capacity-badge good">{{ working_counts.T4 }}/{{ total_capacity }}</span></td>
+                        <td><span class="capacity-badge good">{{ working_counts.T5 }}/{{ total_capacity }}</span></td>
+                        <td><span class="capacity-badge good">{{ working_counts.T6 }}/{{ total_capacity }}</span></td>
+                        <td><span class="capacity-badge low">{{ working_counts.T7 }}/{{ total_capacity }}</span></td>
+                        <td><span class="capacity-badge low">{{ working_counts.CN }}/{{ total_capacity }}</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     const dropdownTimer = document.getElementById('countdown-dropdown');
-    const tableHeaderTimer = document.getElementById('countdown-table-header');
-    const weekTitleBox = document.querySelector('.week-title-box');
+    const countdownText = document.getElementById('countdown-text');
+    const badgeWeekTitle = document.getElementById('badge-week-title');
+    const selectedCountDisplay = document.getElementById('selected-count-display');
     
     const btnQuickRegister = document.getElementById('btn-quick-submit');
     const btnQuickCancel = document.getElementById('btn-quick-clear');
-    const alertBanner = document.getElementById('dynamic-alert-banner');
+
+    const MAX_OFF_DAYS = parseInt("{{ allowed_off_days }}") || 2;
 
     function initRealTimeSchedule() {
         const now = new Date();
@@ -300,8 +666,8 @@ document.addEventListener("DOMContentLoaded", function () {
         const weekOfMonth = Math.ceil((now.getDate() + firstDayShift) / 7);
         const currentMonth = now.getMonth() + 1;
 
-        if (weekTitleBox) {
-            weekTitleBox.innerHTML = `Tuần ${weekOfMonth}<br>Tháng ${currentMonth}`;
+        if (badgeWeekTitle) {
+            badgeWeekTitle.textContent = `Tuần ${weekOfMonth} - Tháng ${currentMonth}`;
         }
 
         function updateCountdown() {
@@ -310,9 +676,9 @@ document.addEventListener("DOMContentLoaded", function () {
             const totalSeconds = Math.floor(timeDiff / 1000);
             
             if (totalSeconds < 0) {
-                const openText = `Tuần ${weekOfMonth} - Tháng ${currentMonth} : (${dateRangeStr}) - (Đang mở đăng ký tự do)`;
+                const openText = `Tuần ${weekOfMonth} - Tháng ${currentMonth} : (${dateRangeStr}) - Đang mở đăng ký tự do`;
                 if (dropdownTimer) dropdownTimer.textContent = openText;
-                if (tableHeaderTimer) tableHeaderTimer.textContent = openText;
+                if (countdownText) countdownText.textContent = 'Mở đăng ký tự do';
                 return;
             }
 
@@ -320,56 +686,65 @@ document.addEventListener("DOMContentLoaded", function () {
             const minutes = Math.floor((totalSeconds % 3600) / 60);
             const seconds = totalSeconds % 60;
 
-            const textResult = `Tuần ${weekOfMonth} - Tháng ${currentMonth} : (${dateRangeStr}) - (${String(hours).padStart(2, '0')}h:${String(minutes).padStart(2, '0')}m:${String(seconds).padStart(2, '0')}s)`;
+            const timeFormatted = `${String(hours).padStart(2, '0')}h:${String(minutes).padStart(2, '0')}m:${String(seconds).padStart(2, '0')}s`;
+            const textResult = `Tuần ${weekOfMonth} - Tháng ${currentMonth} : (${dateRangeStr}) - (${timeFormatted})`;
 
             if (dropdownTimer) dropdownTimer.textContent = textResult;
-            if (tableHeaderTimer) tableHeaderTimer.textContent = textResult;
+            if (countdownText) countdownText.textContent = `Hạn chót: ${timeFormatted}`;
         }
 
         updateCountdown();
         setInterval(updateCountdown, 1000);
 
-        // Hàm kiểm tra và cập nhật giao diện checkbox
+        // Validation & Interactive Styling
         function checkValidationRules() {
             const allDayInputs = document.querySelectorAll('input[name="quick_day"]');
             const checkedDays = document.querySelectorAll('input[name="quick_day"]:checked');
-            const MAX_OFF_DAYS = parseInt("{{ allowed_off_days }}") || 2; 
+            const count = checkedDays.length;
 
-            // Khóa/mở các ô chưa chọn
+            if (selectedCountDisplay) {
+                selectedCountDisplay.textContent = count;
+            }
+
             allDayInputs.forEach(cb => {
-                if (!cb.checked && checkedDays.length >= MAX_OFF_DAYS) {
-                    cb.disabled = true;
+                const label = cb.closest('.day-checkbox-label');
+                if (cb.checked) {
+                    label.classList.add('is-checked');
+                    label.classList.remove('is-disabled');
                 } else {
-                    cb.disabled = false;
+                    label.classList.remove('is-checked');
+                    if (count >= MAX_OFF_DAYS) {
+                        cb.disabled = true;
+                        label.classList.add('is-disabled');
+                    } else {
+                        cb.disabled = false;
+                        label.classList.remove('is-disabled');
+                    }
                 }
             });
 
-            // Nút đăng ký chỉ bật khi chọn ĐÚNG số lượng do Admin quy định
+            // Enable submit only when exactly MAX_OFF_DAYS are picked
             if (btnQuickRegister) {
-                btnQuickRegister.disabled = (checkedDays.length !== MAX_OFF_DAYS);
+                btnQuickRegister.disabled = (count !== MAX_OFF_DAYS);
             }
         }
 
-        // Bắt sự kiện thay đổi trên các checkbox
+        // Change listeners
         document.querySelectorAll('input[name="quick_day"]').forEach(cb => {
-            cb.addEventListener('change', function(e) {
-                const MAX_OFF_DAYS = parseInt("{{ allowed_off_days }}") || 2;
+            cb.addEventListener('change', function() {
                 const checkedDays = document.querySelectorAll('input[name="quick_day"]:checked');
-
                 if (checkedDays.length > MAX_OFF_DAYS) {
-                    this.checked = false; 
+                    this.checked = false;
                     alert(`Tài khoản của bạn chỉ được phép chọn tối đa ${MAX_OFF_DAYS} ngày nghỉ!`);
                 }
-                
                 checkValidationRules();
             });
         });
 
-        // Xử lý sự kiện khi bấm nút ĐĂNG KÝ
+        // Submit action
         if (btnQuickRegister) {
             btnQuickRegister.addEventListener('click', function() {
                 const selectedOffDays = Array.from(document.querySelectorAll('input[name="quick_day"]:checked')).map(cb => cb.value);
-                const MAX_OFF_DAYS = parseInt("{{ allowed_off_days }}") || 2;
 
                 if (selectedOffDays.length !== MAX_OFF_DAYS) {
                     alert(`Vui lòng chọn đúng ${MAX_OFF_DAYS} ngày nghỉ trước khi đăng ký!`);
@@ -377,6 +752,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
 
                 btnQuickRegister.disabled = true;
+                btnQuickRegister.textContent = "Đang lưu...";
 
                 fetch('{{ url_for("client_views.register_schedule") }}', {
                     method: 'POST',
@@ -390,22 +766,24 @@ document.addEventListener("DOMContentLoaded", function () {
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === 'success') {
-                        alert(`Đăng ký thành công! Hệ thống đã ghi nhận ${MAX_OFF_DAYS} ngày nghỉ của bạn.`);
+                        alert(`Đăng ký thành công! Đã ghi nhận ${MAX_OFF_DAYS} ngày nghỉ của bạn.`);
                         window.location.reload();
                     } else {
                         alert("Đăng ký thất bại: " + data.message);
                         btnQuickRegister.disabled = false;
+                        btnQuickRegister.textContent = "Xác nhận đăng ký";
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
                     alert("Có lỗi kết nối hệ thống!");
                     btnQuickRegister.disabled = false;
+                    btnQuickRegister.textContent = "Xác nhận đăng ký";
                 });
             });
         }
 
-        // Xử lý sự kiện khi bấm nút HỦY
+        // Clear action
         if (btnQuickCancel) {
             btnQuickCancel.addEventListener('click', function() {
                 document.querySelectorAll('input[name="quick_day"]').forEach(cb => {

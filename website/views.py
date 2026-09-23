@@ -1,9 +1,7 @@
-from flask import Blueprint, redirect, render_template, url_for
-from flask_login import login_required, current_user
-
+from flask import Blueprint, redirect, url_for
 views = Blueprint('views', __name__)
 
 @views.route('/')
-#@login_required
-def home():
-    return render_template('home.html', user=current_user)
+def home_redirect():
+
+    return redirect(url_for('auth.login'))

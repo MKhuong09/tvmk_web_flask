@@ -29,8 +29,6 @@ from website.models import User
 
 from ortools.sat.python import cp_model
 
-
-
 class DayOfWeek(enum.Enum):
     MONDAY = 1
     TUESDAY = 2

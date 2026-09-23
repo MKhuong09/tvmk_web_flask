@@ -1,18 +1,543 @@
-{% extends "base.html" %} {% block title %} Login {% endblock %}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SCHEDULE Hamlet • Căn nhà Ấp 15</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #10b981;
+      --primary-hover: #059669;
+      --card-bg: rgba(10, 20, 36, 0.78);
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --border: rgba(255, 255, 255, 0.15);
+      --input-bg: rgba(15, 28, 48, 0.65);
+      --shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.85);
+    }
 
-{% block content %}
-<h1>Login</h1>
-<form method="POST">
-    <h3 align="center">Sign in to your account</h3>
-    <div class="form-group">
-        <label for="UserName">Name</label>
-        <input type="text" class="form-control" id="username" name="username" placeholder="Enter your name"/>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--text);
+      padding: 20px;
+      position: relative;
+      overflow-x: hidden;
+      /* HÌNH NỀN MẶT TRĂNG BẦU TRỜI ANIME */
+       background: #060e1a url("{{ url_for('static', filename='hinh-nen-bau-troi023.png') }}") no-repeat center center fixed;
+      background-size: cover;
+    }
+
+    /* Nếu bạn để ảnh trong static, CSS dự phòng */
+    @supports not (background: url('/Content/hinh-nen-bau-troi023.png')) {
+      body {
+        background-image: url('/static/hinh-nen-bau-troi023.png');
+      }
+    }
+
+    /* Lớp phủ chuyển sắc đêm huyền ảo giúp nổi bật khung chữ */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at 50% 15%, rgba(56, 189, 248, 0.15), transparent 60%),
+                  linear-gradient(to bottom, rgba(5, 12, 28, 0.4) 0%, rgba(5, 10, 24, 0.75) 100%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* LOGO TIÊU ĐỀ: SCHEDULE HAMLET */
+    .top-header {
+      position: absolute;
+      top: 24px;
+      left: 32px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 20;
+    }
+    .brand-logo {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #10b981, #065f46);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      box-shadow: 0 4px 18px rgba(16, 185, 129, 0.5);
+    }
+    .brand-name {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: #ffffff;
+      text-shadow: 0 2px 12px rgba(0,0,0,0.6);
+    }
+    .brand-name span {
+      color: #34d399;
+    }
+    .brand-tag {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      padding: 3px 9px;
+      border-radius: 6px;
+      background: rgba(16, 185, 129, 0.25);
+      border: 1px solid rgba(52, 211, 153, 0.4);
+      color: #6ee7b7;
+    }
+
+    /* KHUNG TRƯỢT KÉP (GLASSMORPHISM MỜ NỀN) */
+    .auth-container {
+      position: relative;
+      width: 100%;
+      max-width: 960px;
+      min-height: 620px;
+      background: var(--card-bg);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      z-index: 10;
+    }
+
+    .form-box {
+      position: absolute;
+      top: 0;
+      height: 100%;
+      width: 50%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 40px 48px;
+      transition: all 0.65s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      overflow-y: auto;
+    }
+
+    .sign-in-box {
+      left: 0;
+      z-index: 2;
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .sign-up-box {
+      right: 0;
+      z-index: 1;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* TẤM RÈM XANH NGỌC TRƯỢT QUA LẠI (OVERLAY) */
+    .overlay-container {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      width: 50%;
+      height: 100%;
+      overflow: hidden;
+      transition: transform 0.65s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      z-index: 100;
+    }
+
+    .overlay {
+      background: linear-gradient(135deg, #064e3b 0%, #059669 50%, #0d9488 100%);
+      color: #ffffff;
+      position: relative;
+      left: -100%;
+      height: 100%;
+      width: 200%;
+      transform: translateX(0);
+      transition: transform 0.65s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+
+    .overlay::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(rgba(255, 255, 255, 0.2) 1.5px, transparent 1.5px);
+      background-size: 18px 18px;
+      pointer-events: none;
+    }
+
+    .overlay-panel {
+      position: absolute;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-direction: column;
+      padding: 45px 42px;
+      text-align: center;
+      top: 0;
+      height: 100%;
+      width: 50%;
+      transition: transform 0.65s ease-in-out;
+    }
+
+    .overlay-left { transform: translateX(-20%); }
+    .overlay-right { right: 0; transform: translateX(0); }
+
+    /* HIỆU ỨNG ĐẨY QUA KHI BẤM NÚT */
+    .auth-container.right-panel-active .sign-in-box {
+      transform: translateX(-20%);
+      opacity: 0;
+      pointer-events: none;
+    }
+    .auth-container.right-panel-active .sign-up-box {
+      transform: translateX(0);
+      opacity: 1;
+      z-index: 5;
+      pointer-events: auto;
+    }
+    .auth-container.right-panel-active .overlay-container {
+      transform: translateX(-100%);
+    }
+    .auth-container.right-panel-active .overlay {
+      transform: translateX(50%);
+    }
+    .auth-container.right-panel-active .overlay-left {
+      transform: translateX(0);
+    }
+    .auth-container.right-panel-active .overlay-right {
+      transform: translateX(20%);
+    }
+
+    .btn-slide-white {
+      background: #ffffff;
+      color: #064e3b;
+      border: none;
+      padding: 13px 30px;
+      border-radius: 14px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+      transition: transform 0.2s;
+    }
+    .btn-slide-white:hover {
+      transform: scale(1.04);
+    }
+
+    .btn-submit {
+      width: 100%;
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #fff;
+      border: none;
+      padding: 12px;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+      transition: transform 0.2s;
+    }
+    .btn-submit:hover {
+      transform: translateY(-1px);
+    }
+
+    h1 { font-size: 25px; font-weight: 800; margin-bottom: 6px; }
+    p.subtitle { color: var(--text-muted); font-size: 13px; margin-bottom: 22px; }
+
+    .input-group { margin-bottom: 14px; }
+    .input-group label { display: block; font-size: 12.5px; font-weight: 600; margin-bottom: 5px; color: #e2e8f0; }
+    .input-box {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .input-box input {
+      width: 100%;
+      padding: 11px 14px 11px 40px;
+      background: var(--input-bg);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      color: #ffffff;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .input-box input:focus {
+      border-color: #10b981;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.3);
+    }
+    .input-icon {
+      position: absolute;
+      left: 14px;
+      font-size: 16px;
+      color: #94a3b8;
+    }
+
+    /* ĐÃ LOẠI BỎ THÔNG BÁO LẶP LẠI (SỬA LỖI ĐỎ) */
+    .flash-box {
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 12.5px;
+      font-weight: 600;
+      margin-bottom: 14px;
+      background: rgba(239, 68, 68, 0.2);
+      border: 1px solid rgba(239, 68, 68, 0.5);
+      color: #fca5a5;
+    }
+    .flash-box.success {
+      background: rgba(16, 185, 129, 0.2);
+      border-color: rgba(16, 185, 129, 0.5);
+      color: #6ee7b7;
+    }
+
+    .divider {
+      text-align: center;
+      margin: 16px 0;
+      position: relative;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: #64748b;
+    }
+    .social-row { display: flex; gap: 10px; }
+    .social-btn {
+      flex: 1;
+      padding: 10px;
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      cursor: pointer;
+      color: var(--text);
+      font-size: 15px;
+      transition: border-color 0.2s;
+    }
+    .social-btn:hover { border-color: #10b981; }
+
+    .terms-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin: 14px 0 16px 0;
+    }
+    .terms-row a { color: #34d399; text-decoration: none; font-weight: 600; }
+  </style>
+</head>
+<body>
+
+ 
+  <div style="position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 0; overflow: hidden; pointer-events: none;">
+    <img 
+      src="{{ url_for('static', filename='anime-moon-landscape.jpg') }}" 
+      alt="Anime Night Sky Background" 
+      style="width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;"
+      onerror="if(!this.triedContent){this.triedContent=true; this.src='/Content/hinh-nen-bau-troi023.png';} else {this.src='https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=2094&auto=format&fit=crop';}"
+    />
+  
+    <div style="position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(4, 9, 20, 0.35) 0%, rgba(4, 9, 20, 0.7) 100%);"></div>
+  </div>
+
+  <!-- TIÊU ĐỀ: SCHEDULE HAMLET -->
+  <div class="top-header" style="position: absolute; z-index: 20;">
+    <div class="brand-logo">🍃</div>
+    <div>
+      <div class="brand-name">SCHEDULE <span>Hamlet</span></div>
     </div>
-    <div class="form-group">
-        <label for="password">Password</label>
-        <input type="password" class="form-control" id="password" name="password" placeholder="Enter your password"/>
+    <span class="brand-tag">ẤP 15</span>
+  </div>
+
+  <!-- CONTAINER TRƯỢT -->
+  <div class="auth-container" id="authContainer">
+
+    <!-- 1. ĐĂNG NHẬP  -->
+    <div class="form-box sign-in-box">
+      <form method="POST" action="{{ url_for('auth.login') }}">
+        <h1>Đăng nhập hệ thống 🍃</h1>
+        <p class="subtitle">Nhập tài khoản để xem lịch trực ban</p>
+
+      
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% set shown_messages = [] %}
+            {% for category, message in messages %}
+              {% if message not in shown_messages and "Please log in to access this page" not in message %}
+                <div class="flash-box {% if category == 'success' %}success{% endif %}">
+                  {{ message }}
+                </div>
+                {% set _ = shown_messages.append(message) %}
+              {% endif %}
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <div class="input-group">
+          <label>Tên đăng nhập</label>
+          <div class="input-box">
+            <span class="input-icon">👤</span>
+            <input type="text" name="username" placeholder="Ví dụ: DongLam123" required />
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>Mật khẩu</label>
+          <div class="input-box">
+            <span class="input-icon">🔒</span>
+            <input type="password" name="password" placeholder="Nhập mật khẩu" required />
+          </div>
+        </div>
+
+        <button type="submit" class="btn-submit">
+          <span>Đăng nhập ngay</span>
+          <span>→</span>
+        </button>
+
+        <div class="divider">HOẶC TIẾP TỤC VỚI</div>
+        <div class="social-row">
+          <button type="button" class="social-btn">🌐</button>
+          <button type="button" class="social-btn">🐙</button>
+          <button type="button" class="social-btn">🍏</button>
+        </div>
+      </form>
     </div>
-    <br />
-    <button type="submit" class="btn btn-primary">Login</button>
-</form>
-{% endblock %}
+
+    <!-- 2. ĐĂNG KÝ  -->
+    <div class="form-box sign-up-box">
+      <form method="POST" action="{{ url_for('auth.sign_up') }}">
+        <h1>Tạo tài khoản mới 🌱</h1>
+        <p class="subtitle">Tham gia SCHEDULE Hamlet ngay hôm nay</p>
+
+        <div class="input-group">
+          <label>Họ và tên</label>
+          <div class="input-box">
+            <span class="input-icon">👤</span>
+            <input type="text" name="full_name" placeholder="Nguyễn Văn An" required />
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>Tên đăng nhập</label>
+          <div class="input-box">
+            <span class="input-icon">👤</span>
+            <input type="text" name="username" placeholder="nguyen_an123" required />
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>Địa chỉ Email</label>
+          <div class="input-box">
+            <span class="input-icon">✉️</span>
+            <input type="email" name="email" placeholder="an.nguyen@domain.com" required />
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>Mật khẩu</label>
+          <div class="input-box">
+            <span class="input-icon">🔒</span>
+            <input type="password" name="password" placeholder="Tối thiểu 7 ký tự" required />
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>Xác nhận mật khẩu</label>
+          <div class="input-box">
+            <span class="input-icon">🔒</span>
+            <input type="password" name="confirm_password" placeholder="Nhập lại mật khẩu" required />
+          </div>
+        </div>
+
+        <div class="terms-row">
+          <input type="checkbox" required />
+          <span>Tôi đồng ý với <a href="#">Điều khoản & Bảo mật</a></span>
+        </div>
+
+        <button type="submit" class="btn-submit">
+          <span>Đăng ký tài khoản</span>
+          <span>→</span>
+        </button>
+      </form>
+    </div>
+
+    <!-- 3. RÈM TRƯỢT XANH NGỌC -->
+    <div class="overlay-container">
+      <div class="overlay">
+        
+        <div class="overlay-panel overlay-left">
+          <div style="font-size: 12px; font-weight: 700; color: #a7f3d0;">SCHEDULE HAMLET • ẤP 15</div>
+          <div>
+            <div style="font-size: 44px; margin-bottom: 12px;">🍃</div>
+            <h2 style="font-size: 26px; font-weight: 800; margin-bottom: 10px;">Chào mừng trở lại!</h2>
+            <p style="font-size: 13.5px; opacity: 0.9; max-width: 320px; margin: 0 auto; line-height: 1.6;">
+              Đã sở hữu tài khoản? Đăng nhập để tiếp tục quản lý lịch trực ban và dữ liệu.
+            </p>
+            <div style="margin-top: 24px;">
+              <button type="button" class="btn-slide-white" id="toSignInBtn">
+                <span>←</span>
+                <span>Đăng nhập ngay</span>
+              </button>
+            </div>
+          </div>
+          <div style="font-size: 11px; opacity: 0.7;">Bảo mật thông tin 256-bit</div>
+        </div>
+
+        <div class="overlay-panel overlay-right">
+          <div style="font-size: 12px; font-weight: 700; color: #a7f3d0;">SCHEDULE HAMLET • ẤP 15</div>
+          <div>
+            <div style="font-size: 44px; margin-bottom: 12px;">✨</div>
+            <h2 style="font-size: 26px; font-weight: 800; margin-bottom: 10px;">Bạn chưa có tài khoản?</h2>
+            <p style="font-size: 13.5px; opacity: 0.9; max-width: 320px; margin: 0 auto; line-height: 1.6;">
+              Tạo tài khoản mới ngay để nhận lịch phân công và ca trực mới nhất.
+            </p>
+            <div style="margin-top: 24px;">
+              <button type="button" class="btn-slide-white" id="toSignUpBtn">
+                <span>Tạo tài khoản mới</span>
+                <span>→</span>
+              </button>
+            </div>
+          </div>
+          <div style="font-size: 11px; opacity: 0.7;">Bảo mật thông tin 256-bit</div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const container = document.getElementById('authContainer');
+    const toSignUpBtn = document.getElementById('toSignUpBtn');
+    const toSignInBtn = document.getElementById('toSignInBtn');
+
+    toSignUpBtn.addEventListener('click', () => {
+      container.classList.add('right-panel-active');
+    });
+
+    toSignInBtn.addEventListener('click', () => {
+      container.classList.remove('right-panel-active');
+    });
+
+    if (window.location.pathname.includes('sign-up') || window.location.pathname.includes('sign_up')) {
+      container.classList.add('right-panel-active');
+    }
+  </script>
+</body>
+</html>
