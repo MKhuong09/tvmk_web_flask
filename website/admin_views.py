@@ -6,7 +6,6 @@ from flask import Blueprint, current_app, render_template, redirect, request, ur
 from flask_login import login_required, current_user
 from flask import send_file
 
-from mailAgent.mailbox import send_email
 from .models import  User, Registration, Status, db
 from algorithms.schedule_agent import DayOfWeek, ScheduleAgent, UserData, convert_day_to_numeric
 
@@ -266,34 +265,44 @@ def approve_schedule(reg_id):
             'message': str(e)
         }), 500
 
-@admin_views.route('/decline-schedule/<int:reg_id>', methods=['POST'])
+@admin_views.route('/decline-schedule/<string:reg_id>', methods=['POST'])
 @login_required
 def decline_schedule(reg_id):
-    registration = Registration.query.get_or_404(reg_id)
+    if current_user.role_id != 1:
+        return jsonify({'status': 'error', 'message': 'Bạn không có quyền thực hiện thao tác này!'}), 403
 
-    # 1. Tìm/tạo trạng thái 'Đã từ chối'
-    declined_status = Status.query.filter_by(name='Đã từ chối').first()
-    if not declined_status:
-        declined_status = Status(name='Đã từ chối')
-        db.session.add(declined_status)
-        db.session.commit()
-
+    db = get_db()
     try:
-        # 2. Chuyển trạng thái đơn này thành 'Đã từ chối' (chưa hiện lên client vội)
-        registration.status_id = declined_status.id
-        db.session.commit()
-        # Gửi email thông báo từ chối đến người dùng
-        user = User.query.get(registration.user_id)
-        if user and user.email:
+        registration_ref = db.collection('registrations').document(reg_id)
+        registration = registration_ref.get()
+        if not registration.exists:
+            return jsonify({'status': 'error', 'message': 'Không tìm thấy thông tin đăng ký!'}), 404
+
+        declined_statuses = list(
+            db.collection('statuses').where('name', '==', 'Đã từ chối').limit(1).stream()
+        )
+        if declined_statuses:
+            declined_status_id = declined_statuses[0].id
+        else:
+            declined_status_ref = db.collection('statuses').document()
+            declined_status_ref.set({'name': 'Đã từ chối'})
+            declined_status_id = declined_status_ref.id
+
+        registration_data = registration.to_dict() or {}
+        registration_ref.update({'status_id': declined_status_id})
+
+        user_id = registration_data.get('user_id')
+        user = db.collection('users').document(str(user_id)).get() if user_id else None
+        user_data = user.to_dict() or {} if user and user.exists else {}
+        if user_data.get('email'):
             subject = "Thông báo từ chối đăng ký"
-            body = f"Xin chào {user.user_name},\n\nĐơn đăng ký của bạn đã bị từ chối. Vui lòng liên hệ Ấp Đội Trưởng để biết thêm chi tiết. \
-                Link đăng ký lịch: {url_for('main_views.register_schedule', _external=True)}\
+            body = f"Xin chào {user_data.get('user_name', '')},\n\nĐơn đăng ký của bạn đã bị từ chối. Vui lòng liên hệ Ấp Đội Trưởng để biết thêm chi tiết. \
+                Link đăng ký lịch: {url_for('client_views.register_schedule', _external=True)}\
                 \n\nTrân trọng."
-            send_email(current_app, [user.email], subject, body)
+            send_mail_based_on_admin_config(subject, [user_data['email']], body)
             
         return jsonify({'status': 'success', 'message': 'Đã từ chối đơn thành công!'}), 200
     except Exception as e:
-        db.session.rollback()
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 

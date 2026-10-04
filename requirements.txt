@@ -10,3 +10,6 @@ pytz
 ortools
 apscheduler
 gunicorn
+pandas
+apscheduler
+sqlalchemy

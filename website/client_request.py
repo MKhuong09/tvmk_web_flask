@@ -8,10 +8,13 @@ from google.cloud.firestore_v1.client import Client as FirestoreClient
 
 from .models import Registration
 
-=======
-from website.models import Registration, Notification, User, db
-from mailAgent.mailbox import send_email
->>>>>>> Stashed changes
+
+from flask import Blueprint, current_app, render_template, request, flash, redirect, url_for
+from flask_login import login_required, current_user
+from datetime import datetime
+from website.models import Registration, Notification, User
+from website.utils import send_mail_based_on_admin_config
+from . import db  # Import đối tượng db Firestore đã khởi tạo ở __init__.py
 
 client_request = Blueprint("client_request", __name__)
 
@@ -90,8 +93,18 @@ def submit_shift_adjustment(id: str):
         'is_read': False,
         'created_at': datetime.utcnow(),
     }
-
+    
+    # Thêm document vào collection 'notifications' trên Firestore
     db.collection('notifications').add(notif_data)
-
+    admin_emails = [
+    user.email for user in db.collection('users').where('role_id', 'in', [1, 3]).stream()
+    if user.email
+    ]
+    send_mail_based_on_admin_config(
+        f'Yêu cầu thay đổi lịch từ {current_user.user_name}',
+        admin_emails,
+        notif_data['message'],
+    )
+    
     flash('Gửi phiếu yêu cầu thay đổi lịch thành công!', 'success')
     return redirect(url_for('client_views.client_detailshift'))

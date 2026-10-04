@@ -4,6 +4,9 @@ from flask_login import current_user, login_required
 from google.cloud.firestore import Query  # Import trực tiếp Query từ google.cloud để tránh lỗi Pylance
 from typing import Any, cast
 from google.cloud.firestore_v1.client import Client as FirestoreClient
+from google.cloud.firestore_v1.base_query import FieldFilter
+
+
 from firebase_admin import firestore
 from website.utils import send_mail_based_on_admin_config
 import pytz
@@ -25,7 +28,7 @@ def home():
 
     conf_ref = (
         db.collection("statuses")
-        .where("name", "==", "Đã xác nhận")
+        .where(filter=FieldFilter("name", "==", "Đã xác nhận"))
         .limit(1)
         .stream()
     )
@@ -36,8 +39,8 @@ def home():
         approved_status_id = conf_list[0].id
         regs_stream = (
             db.collection("registrations")
-            .where("week_number", "==", current_week)
-            .where("status_id", "==", approved_status_id)
+            .where(filter=FieldFilter("week_number", "==", current_week))
+            .where(filter=FieldFilter("status_id", "==", approved_status_id))
             .stream()
         )
         registrations = [doc.to_dict() or {} for doc in regs_stream]
@@ -136,7 +139,7 @@ def client_shift():
 
     conf_ref = (
         db.collection("statuses")
-        .where("name", "==", "Đã xác nhận")
+        .where(filter=FieldFilter("name", "==", "Đã xác nhận"))
         .limit(1)
         .stream()
     )
@@ -147,8 +150,8 @@ def client_shift():
         confirmed_status_id = conf_list[0].id
         regs_stream = (
             db.collection("registrations")
-            .where("week_number", "==", current_week)
-            .where("status_id", "==", confirmed_status_id)
+            .where(filter=FieldFilter("week_number", "==", current_week))
+            .where(filter=FieldFilter("status_id", "==", confirmed_status_id))
             .stream()
         )
         registrations = [doc.to_dict() or {} for doc in regs_stream]
@@ -230,13 +233,14 @@ def register_schedule():
         current_week = current_date.isocalendar()[1]
 
         existing_regs = list(
-    db.collection("registrations")
-    .where("user_id", "==", current_user.id)
-    .where("week_year", "==", iso_year)
-    .where("week_number", "==", current_week)
-    .limit(1)
-    .stream()
-)
+            db.collection("registrations")
+            .where(filter=FieldFilter("user_id", "==", current_user.id))
+            .where(filter=FieldFilter("week_number", "==", current_week))
+            .where(filter=FieldFilter("week_year", "==", iso_year))
+            .where(filter=FieldFilter("status_id", "in", ["STS_001", "STS_002", "STS_003","STS_004"]))  # Thêm điều kiện status_id để kiểm tra các trạng thái khác nhau
+            .limit(1)
+            .stream()
+        )
         if existing_regs:
             return (
                 jsonify(
@@ -259,7 +263,7 @@ def register_schedule():
 
         conf_ref = (
             db.collection("statuses")
-            .where("name", "==", "Đã xác nhận")
+            .where(filter=FieldFilter("name", "==", "Đã xác nhận"))
             .limit(1)
             .stream()
         )
@@ -269,8 +273,8 @@ def register_schedule():
             confirmed_regs = [
                 doc.to_dict()
                 for doc in db.collection("registrations")
-                .where("week_number", "==", current_week)
-                .where("status_id", "==", confirmed_status_id)
+                .where(filter=FieldFilter("week_number", "==", current_week))
+                .where(filter=FieldFilter("status_id", "==", confirmed_status_id))
                 .stream()
             ]
 
@@ -308,7 +312,7 @@ def register_schedule():
 
         pend_ref = (
             db.collection("statuses")
-            .where("name", "==", "Chờ xác nhận")
+            .where(filter=FieldFilter("name", "==", "Chờ xác nhận"))
             .limit(1)
             .stream()
         )
@@ -350,7 +354,7 @@ def client_detailshift():
     db = get_db()
     regs_stream = (
         db.collection("registrations")
-        .where("user_id", "==", current_user.id)
+        .where(filter=FieldFilter("user_id", "==", current_user.id))
         .order_by("week_number", direction=Query.DESCENDING)
         .stream()
     )
@@ -486,7 +490,7 @@ def edit_shift(id: str):
 
         pend_ref = (
             db.collection("statuses")
-            .where("name", "==", "Chờ xác nhận")
+            .where(filter=FieldFilter("name", "==", "Chờ xác nhận"))
             .limit(1)
             .stream()
         )
@@ -560,7 +564,7 @@ def notifications():
 
     notifs_stream = (
         db.collection("notifications")
-        .where("user_id", "==", current_user.id)
+        .where(filter=FieldFilter("user_id", "==", current_user.id))
         .stream()
     )
 

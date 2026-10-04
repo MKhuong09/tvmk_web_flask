@@ -1,4 +1,7 @@
 venv/
+.venv/
+__pycache__/
+website/serviceAccountKey.json
 algorithms/__pycache__/
 website/__pycache__/
 schedule.xlsx

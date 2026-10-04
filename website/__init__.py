@@ -1,12 +1,13 @@
 import os
 from flask import Flask, send_from_directory
+import json
 from flask_cors import CORS
 from flask_login import LoginManager, UserMixin, current_user
 from flask_socketio import SocketIO  
 from werkzeug.security import generate_password_hash
+from werkzeug.middleware.proxy_fix import ProxyFix
 import firebase_admin
 from firebase_admin import credentials, firestore
-
 from .views import views
 
 db = None
@@ -22,21 +23,10 @@ class User(UserMixin):
         self.role_id = data.get('role_id')
 
 def create_app():
+    global db
     app = Flask(__name__)
     CORS(app)
     app.config['SECRET_KEY'] = 'MK dep trai Nhat Tren The Gioi va __ Giau Co va se MuA duoc Xe hoi 31ty07trieu2001k @@'
-<<<<<<< Updated upstream
-=======
-    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{DB_NAME}'
-    app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
-    app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', '465'))
-    app.config['MAIL_USE_SSL'] = os.getenv('MAIL_USE_SSL', 'true').lower() == 'true'
-    app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME', '')
-    app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD', '')
-    app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_DEFAULT_SENDER', app.config['MAIL_USERNAME'])
-    db.init_app(app)
-    Migrate.init_app(app, db) # Khởi tạo Flask-Migrate với ứng dụng và cơ sở dữ liệu
->>>>>>> Stashed changes
 
     # 1. Khởi tạo kết nối Firebase Admin SDK
     if not firebase_admin._apps:
@@ -44,10 +34,26 @@ def create_app():
         cred_path = os.path.join(current_dir, 'serviceAccountKey.json')
 
         cred = credentials.Certificate(cred_path)
+    # 1. Khởi tạo kết nối Firebase Admin SDK
+    if not firebase_admin._apps:
+        service_account_json = os.getenv('FIREBASE_SERVICE_ACCOUNT_JSON', '')
+        if service_account_json:
+            try:
+                service_account_info = json.loads(service_account_json)
+            except json.JSONDecodeError as error:
+                raise RuntimeError('FIREBASE_SERVICE_ACCOUNT_JSON must contain valid JSON.') from error
+            cred = credentials.Certificate(service_account_info)
+        else:
+            current_dir = os.path.abspath(os.path.dirname(__file__))
+            cred_path = os.path.join(current_dir, 'serviceAccountKey.json')
+            if not os.path.isfile(cred_path):
+                raise RuntimeError(
+                    'Set FIREBASE_SERVICE_ACCOUNT_JSON or provide website/serviceAccountKey.json.'
+                )
+            cred = credentials.Certificate(cred_path)
         firebase_admin.initialize_app(cred)
     
     # 2. Khởi tạo Cloud Firestore Database Client
-    global db
     db = firestore.client()
 
     # Khởi tạo SocketIO gắn vào Flask app
@@ -65,6 +71,10 @@ def create_app():
     @app.route('/Scripts/<path:filename>')
     def serve_scripts(filename):
         return send_from_directory(os.path.join(app.root_path, 'Scripts'), filename)
+
+    @app.route('/healthz')
+    def health_check():
+        return {'status': 'ok'}, 200
 
     # 3. Đăng ký các Blueprints
     from .auth import auth
@@ -122,6 +132,14 @@ def create_app():
             admin_check = list(db_client.collection('users').where('role_id', '==', 1).limit(1).stream())
             
             if not admin_check:
+                admin_username = os.getenv('BOOTSTRAP_ADMIN_USERNAME')
+                admin_email = os.getenv('BOOTSTRAP_ADMIN_EMAIL')
+                admin_password = os.getenv('BOOTSTRAP_ADMIN_PASSWORD')
+                if not admin_username or not admin_email or not admin_password:
+                    raise RuntimeError(
+                        'Set BOOTSTRAP_ADMIN_USERNAME, BOOTSTRAP_ADMIN_EMAIL, and '
+                        'BOOTSTRAP_ADMIN_PASSWORD to create the initial admin account.'
+                    )
                 admin_data = {
                     'user_name': 'admin',
                     'email': 'admin@gmail.com',
@@ -131,10 +149,12 @@ def create_app():
                     'allowed_off_days': 2,
                     'is_verified': True,
                 }
-                db_client.collection('users').add(admin_data)
+                db_client.collection('users').document('bootstrap-admin').set(admin_data)
                 print("Đã tự động tạo tài khoản Admin thành công!")
             else:
                 print("Tài khoản Admin đã tồn tại trong CSDL.")
+        except RuntimeError:
+            raise
         except Exception as e:
             print(f"Không thể khởi tạo admin tự động: {e}")
 
