@@ -8,6 +8,10 @@ from google.cloud.firestore_v1.client import Client as FirestoreClient
 
 from .models import Registration
 
+=======
+from website.models import Registration, Notification, User, db
+from mailAgent.mailbox import send_email
+>>>>>>> Stashed changes
 
 client_request = Blueprint("client_request", __name__)
 

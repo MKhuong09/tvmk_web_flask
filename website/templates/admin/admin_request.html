@@ -206,8 +206,11 @@
                                     <td class="text-center-col">
                                         {% if item.selected_days and (item.status_name == 'Chờ xác thực' or item.status_name == 'Chờ xác nhận') %}
                                             <button class="btn-action" onclick="approveSchedule('{{ item.id }}')">Xác nhận</button>
+                                            <button class="btn-action btn-danger" onclick="declineSchedule('{{ item.id }}')">Từ chối</button>
                                         {% elif item.status_name == 'Đã xác nhận' or item.status_name == 'Đã duyệt' %}
                                             <button class="btn-action" style="background-color: #f6c23e;" onclick="editSchedule('{{ item.id }}')">Điều chỉnh</button>
+                                        {% elif item.status_name == 'Đã xác nhận' %}
+                                            <span style="color: #069669; font-weight: 600; font-size: 0.85rem;">Đang thực hiện</span>
                                         {% else %}
                                             <span style="color: #6c757d; font-style: italic; font-size: 0.85rem;">Chưa có lịch</span>
                                         {% endif %}
@@ -284,6 +287,31 @@ function editSchedule(regId) {
         alert('Đã cập nhật ca trực: ' + shift);
         location.reload();
     }
+}
+</script>
+<script>
+function declineSchedule(regId) {
+    if (!confirm("Bạn có chắc chắn muốn từ chối lịch này không?")) return;
+
+    fetch('/admin/decline-schedule/' + regId, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            alert(data.message);
+            location.reload();
+        } else {
+            alert("Lỗi: " + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Đã xảy ra lỗi kết nối!');
+    });
 }
 </script>
 {% endblock %}
