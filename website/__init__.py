@@ -1,13 +1,17 @@
-from flask import Flask, send_from_directory
 import os
+from flask import Flask, send_from_directory
+from flask_cors import CORS
+from flask_login import LoginManager, UserMixin, current_user
+from flask_socketio import SocketIO  
+from werkzeug.security import generate_password_hash
 import firebase_admin
 from firebase_admin import credentials, firestore
-from flask_login import LoginManager, UserMixin, current_user
-from werkzeug.security import generate_password_hash
+
 from .views import views
 
-
 db = None
+# Khởi tạo instance của SocketIO
+socketio = SocketIO()
 
 # Định nghĩa lớp User tương thích với Flask-Login khi dùng Firestore
 class User(UserMixin):
@@ -19,21 +23,24 @@ class User(UserMixin):
 
 def create_app():
     app = Flask(__name__)
+    CORS(app)
     app.config['SECRET_KEY'] = 'MK dep trai Nhat Tren The Gioi va __ Giau Co va se MuA duoc Xe hoi 31ty07trieu2001k @@'
-
 
     # 1. Khởi tạo kết nối Firebase Admin SDK
     if not firebase_admin._apps:
-      current_dir = os.path.abspath(os.path.dirname(__file__))
-      cred_path = os.path.join(current_dir, 'serviceAccountKey.json')
+        current_dir = os.path.abspath(os.path.dirname(__file__))
+        cred_path = os.path.join(current_dir, 'serviceAccountKey.json')
 
-      cred = credentials.Certificate(cred_path)
-      firebase_admin.initialize_app(cred)
+        cred = credentials.Certificate(cred_path)
+        firebase_admin.initialize_app(cred)
     
     # 2. Khởi tạo Cloud Firestore Database Client
     global db
     db = firestore.client()
-    
+
+    # Khởi tạo SocketIO gắn vào Flask app
+    socketio.init_app(app, cors_allowed_origins="*")
+        
     # Định nghĩa các đường dẫn tĩnh
     @app.route('/Content/<path:filename>')
     def serve_content(filename):
@@ -49,17 +56,21 @@ def create_app():
 
     # 3. Đăng ký các Blueprints
     from .auth import auth
-    
     from .admin_views import admin_views
     from .client_views import client_views
     from .client_request import client_request
+    from .api import api_bp
     
-
-    app.register_blueprint(auth, url_prefix='/auth')
+    app.register_blueprint(api_bp, url_prefix='/api')
+    app.register_blueprint(auth, url_prefix='/')
     app.register_blueprint(views, url_prefix='/')
     app.register_blueprint(admin_views, url_prefix='/admin')
     app.register_blueprint(client_views, url_prefix='/client')
     app.register_blueprint(client_request, url_prefix='/client')
+
+    # Import file events để đăng ký xử lý các sự kiện Socket
+    with app.app_context():
+        from . import events
 
     # 4. Cấu hình Flask-Login
     login_manager = LoginManager()
@@ -71,8 +82,10 @@ def create_app():
         try:
             db_client = firestore.client()
             user_doc = db_client.collection('users').document(user_id).get()
-            if user_doc.exists:
-                return User(user_id, user_doc.to_dict())
+            if user_doc and getattr(user_doc, 'exists', False):
+                to_dict_fn = getattr(user_doc, 'to_dict', None)
+                if callable(to_dict_fn):
+                    return User(user_id, to_dict_fn())
         except Exception:
             pass
         return None
@@ -94,7 +107,6 @@ def create_app():
     with app.app_context():
         try:
             db_client = firestore.client()
-            # Kiểm tra xem đã có user nào mang quyền admin (role_id = 1) chưa
             admin_check = list(db_client.collection('users').where('role_id', '==', 1).limit(1).stream())
             
             if not admin_check:
@@ -103,7 +115,7 @@ def create_app():
                     'email': 'admin@gmail.com',
                     'full_name': 'Quản Trị Viên',
                     'password': generate_password_hash('1234567', method='pbkdf2:sha256'),
-                    'role_id': 1,  # Phân quyền Admin trong hệ thống
+                    'role_id': 1, 
                     'allowed_off_days': 2,
                     'is_verified': True,
                 }

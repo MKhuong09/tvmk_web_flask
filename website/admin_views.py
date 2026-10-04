@@ -1,20 +1,49 @@
 import os
 import io
 import calendar
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone 
 from flask import send_file
 from flask import Blueprint, render_template, redirect, request, url_for, flash, jsonify, session
 from flask_login import login_required, current_user
 import pytz
+from typing import Any, cast
 from firebase_admin import firestore
-from website.utils import send_mail_based_on_admin_config
+from google.cloud.firestore_v1.client import Client as FirestoreClient
 from google.cloud.firestore import SERVER_TIMESTAMP
+from google.cloud.firestore_v1.base_document import DocumentSnapshot
 import pandas as pd
+
+# Import các hàm tiện ích và cơ chế cache từ utils.py
+from website.utils import send_mail_based_on_admin_config, cache_result, clear_universal_cache
 
 admin_views = Blueprint('admin_views', __name__)
 
-def get_db():
-    return firestore.client()
+def get_db() -> FirestoreClient:
+    return cast(FirestoreClient, firestore.client())
+
+db = get_db()
+
+# --- CÁC HÀM LẤY DỮ LIỆU TỪ FIRESTORE (ÁP DỤNG DECORATOR CACHE 30 GIÂY) ---
+
+@cache_result(ttl=30)
+def get_schedules_from_db():
+    """Lấy danh sách toàn bộ schedules có cache"""
+    print("[DEBUG] Đang gọi Firestore lấy danh sách schedules...")
+    docs = db.collection('schedules').stream()
+    return [doc.to_dict() for doc in docs]
+
+@cache_result(ttl=30)
+def get_users_from_db():
+    """Lấy danh sách toàn bộ users có cache"""
+    print("[DEBUG] Đang gọi Firestore lấy danh sách users...")
+    users_stream = db.collection('users').stream()
+    users_list = []
+    for doc in users_stream:
+        u_data = doc.to_dict() or {}
+        u_data['id'] = doc.id
+        users_list.append(u_data)
+    return users_list
+
 
 def get_working_days(selected_days_str):
     if not selected_days_str or selected_days_str == "--":
@@ -39,14 +68,7 @@ def get_week_date_range(year, week_number):
 @admin_views.route('/home')
 @login_required
 def admin_home():
-    db = get_db()
-    users_ref = db.collection('users').stream()
-    all_users = []
-    for doc in users_ref:
-        u_data = doc.to_dict() or {}
-        u_data['id'] = doc.id
-        all_users.append(u_data)
-        
+    all_users = get_users_from_db()  # Dùng hàm có cache
     total_people = len(all_users)
     registered = 0
     not_registered = 0
@@ -54,19 +76,24 @@ def admin_home():
     vietnam_tz = pytz.timezone('Asia/Ho_Chi_Minh')
     current_week = datetime.now(vietnam_tz).isocalendar()[1]
 
+    week_regs = (
+        db.collection('registrations')
+        .where('week_number', '==', current_week)
+        .stream()
+    )
+
+    registered_user_ids = set()
+
+    for doc in week_regs:
+        reg_data = doc.to_dict() or {}
+        if reg_data.get('selected_days') and reg_data.get('session'):
+            registered_user_ids.add(reg_data.get('user_id'))
+
     for user in all_users:
-        regs_ref = db.collection('registrations').where('user_id', '==', user['id']).where('week_number', '==', current_week).limit(1).stream()
-        reg_list = list(regs_ref)
-        
-        if reg_list:
-            reg_data = reg_list[0].to_dict() or {}
-            if reg_data.get('selected_days') and reg_data.get('session'):
-                registered += 1
-            else:
-                not_registered += 1
+        if user['id'] in registered_user_ids:
+            registered += 1
         else:
             not_registered += 1
-
     total_schedule = total_people  
     week_schedule = total_people   
 
@@ -92,66 +119,82 @@ def admin_scheduleList():
     current_year = request.args.get('year', default=now.year, type=int)
     default_week = now.isocalendar()[1]
     current_week = request.args.get('week', default=default_week, type=int)
-    
+
     start_date, end_date = get_week_date_range(current_year, current_week)
-    
-    db = get_db()
-    users_ref = db.collection('users').where('role_id', '!=', 1).stream()
+
+    all_users = get_users_from_db()
     schedules_data = []
-    
-    for u_doc in users_ref:
-        user_info = u_doc.to_dict() or {}
-        user_id = u_doc.id
-        
+
+    for user_info in all_users:
+        if user_info.get('role_id') == 1:
+            continue
+
+        user_id = user_info['id']
         raw_name = user_info.get('full_name') or user_info.get('user_name', 'Không rõ')
-        short_name = raw_name.strip().split(" ")[-1] if raw_name else "Thành viên"
-        
-        regs_ref = db.collection('registrations').where('user_id', '==', user_id).where('week_number', '==', current_week).limit(1).stream()
+        short_name = raw_name.strip().split(' ')[-1] if raw_name else 'Thành viên'
+
+        regs_ref = (
+            db.collection('registrations')
+            .where('user_id', '==', user_id)
+            .where('week_number', '==', current_week)
+            .limit(1)
+            .stream()
+        )
         reg_list = list(regs_ref)
-        
+
         reg_data = reg_list[0].to_dict() if reg_list else None
         reg_id = reg_list[0].id if reg_list else None
-        
-        actual_days = get_working_days(reg_data.get('selected_days')) if reg_data and reg_data.get('selected_days') else "--"
-        
-        status_name = "Chưa đăng ký"
+
+        actual_days = (
+            get_working_days(reg_data.get('selected_days'))
+            if reg_data and reg_data.get('selected_days')
+            else '--'
+        )
+
+        status_name = 'Chưa đăng ký'
         if reg_data and reg_data.get('status_id'):
-            status_doc = db.collection('statuses').document(str(reg_data.get('status_id'))).get()
+            status_doc = cast(
+                DocumentSnapshot,
+                db.collection('statuses')
+                .document(str(reg_data.get('status_id')))
+                .get(),
+            )
+
             if status_doc.exists:
                 status_dict = status_doc.to_dict() or {}
                 status_name = status_dict.get('name', 'Chưa đăng ký')
 
-        created_at_str = "--"
+        created_at_str = '--'
         if reg_data and reg_data.get('created_at'):
             created_at_val = reg_data.get('created_at')
             if isinstance(created_at_val, datetime):
                 created_at_str = created_at_val.strftime('%d/%m/%Y %H:%M')
 
         schedules_data.append({
-            "id": reg_id,
-            "ho_ten": raw_name,
-            "ten_rut_gon": short_name,
-            "gmail": user_info.get('email'),
-            "ngay_chon": created_at_str,
-            "selected_days": actual_days,
-            "session": reg_data.get('session') if reg_data else "--",
-            "status_name": status_name
+            'id': reg_id,
+            'ho_ten': raw_name,
+            'ten_rut_gon': short_name,
+            'gmail': user_info.get('email'),
+            'ngay_chon': created_at_str,
+            'selected_days': actual_days,
+            'session': reg_data.get('session') if reg_data else '--',
+            'status_name': status_name,
         })
-        
+
     prev_week = current_week - 1
     prev_year = current_year
     if prev_week < 1:
         prev_week = 52
         prev_year -= 1
-        
+
     next_week = current_week + 1
     next_year = current_year
     if next_week > 52:
         next_week = 1
         next_year += 1
-        
+
     return render_template(
-        'admin/admin_scheduleList.html', 
+        'admin/admin_scheduleList.html',
         users_schedules=schedules_data,
         user=current_user,
         current_week=current_week,
@@ -161,7 +204,7 @@ def admin_scheduleList():
         prev_week=prev_week,
         prev_year=prev_year,
         next_week=next_week,
-        next_year=next_year
+        next_year=next_year,
     )
 
 
@@ -169,25 +212,52 @@ def admin_scheduleList():
 @login_required
 def approve_schedule(reg_id):
     if current_user.role_id != 1:
-        return jsonify({'status': 'error', 'message': 'Bạn không có quyền thực hiện thao tác này!'}), 403
+        return jsonify({
+            'status': 'error',
+            'message': 'Bạn không có quyền thực hiện thao tác này!'
+        }), 403
 
     try:
-        db = get_db()
         reg_ref = db.collection('registrations').document(reg_id)
-        if not reg_ref.get().exists:
-            return jsonify({'status': 'error', 'message': 'Không tìm thấy thông tin đăng ký!'}), 404
-        
-        statuses_ref = db.collection('statuses').where('name', '==', 'Đã duyệt').limit(1).stream()
+        reg_doc = reg_ref.get()
+
+        reg_doc = cast(Any, reg_ref.get())
+
+        if not reg_doc.exists:
+            return jsonify({
+                'status': 'error',
+                'message': 'Không tìm thấy thông tin đăng ký!'
+            }), 404
+
+        statuses_ref = (
+            db.collection('statuses')
+            .where('name', '==', 'Đã duyệt')
+            .limit(1)
+            .stream()
+        )
         status_list = list(statuses_ref)
+
         if not status_list:
-            return jsonify({'status': 'error', 'message': 'Không tìm thấy trạng thái "Đã duyệt" trong CSDL!'}), 400
-            
+            return jsonify({
+                'status': 'error',
+                'message': 'Không tìm thấy trạng thái "Đã duyệt" trong CSDL!'
+            }), 400
+
         approved_status_id = status_list[0].id
         reg_ref.update({'status_id': approved_status_id})
-        
-        return jsonify({'status': 'success', 'message': 'Đã duyệt lịch thành công!'})
+
+        clear_universal_cache()
+
+        return jsonify({
+            'status': 'success',
+            'message': 'Đã duyệt lịch thành công!'
+        })
+
     except Exception as e:
-        return jsonify({'status': 'error', 'message': str(e)}), 500
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
 
 
 @admin_views.route('/generate-schedule', methods=['POST'])
@@ -198,7 +268,6 @@ def generate_schedule():
         return redirect(url_for('admin_views.admin_home'))
 
     action = request.form.get('action_generate') or request.form.get('action_confirm') or request.form.get('action_cancel')
-    db = get_db()
 
     try:
         vietnam_tz = pytz.timezone('Asia/Ho_Chi_Minh')
@@ -241,6 +310,9 @@ def generate_schedule():
                 updated_count += 1
             batch.commit()
             
+            # Xóa sạch toàn bộ cache chung sau khi xác nhận lịch
+            clear_universal_cache()
+
             flash(f'Lưu thành công {updated_count} lịch trực tuần {current_week} lên trang client!', 'success')
             return redirect(url_for('admin_views.admin_home'))
 
@@ -261,59 +333,87 @@ def admin_request():
         flash('Bạn không có quyền truy cập trang này!', 'danger')
         return redirect(url_for('admin_views.admin_home'))
 
-    current_year = request.args.get('year', default=datetime.now().year, type=int)
-    current_week = request.args.get('week', default=datetime.now().isocalendar()[1], type=int)
+    current_year = request.args.get(
+        'year',
+        default=datetime.now().year,
+        type=int,
+    )
+    current_week = request.args.get(
+        'week',
+        default=datetime.now().isocalendar()[1],
+        type=int,
+    )
 
     start_date, end_date = get_week_date_range(current_year, current_week)
     prev_week_date = start_date - timedelta(days=7)
     next_week_date = start_date + timedelta(days=7)
-    
+
     prev_year, prev_week, _ = prev_week_date.isocalendar()
     next_year, next_week, _ = next_week_date.isocalendar()
 
-    db = get_db()
-    registrations = db.collection('registrations').where('week_number', '==', current_week).order_by('created_at', direction='DESCENDING').stream()
+    registrations = (
+        db.collection('registrations')
+        .where('week_number', '==', current_week)
+        .order_by('created_at', direction='DESCENDING')
+        .stream()
+    )
 
     schedules_data = []
+
     for reg_doc in registrations:
         reg = reg_doc.to_dict() or {}
         selected_days = reg.get('selected_days', '')
+
         if not selected_days or selected_days.strip() == '--':
             continue
 
         user_id = reg.get('user_id')
         user_info = None
+
         if user_id:
-            u_doc = db.collection('users').document(str(user_id)).get()
+            u_doc = cast(
+                Any,
+                db.collection('users').document(str(user_id)).get(),
+            )
             if u_doc.exists:
                 user_info = u_doc.to_dict() or {}
 
-        raw_name = (user_info.get('full_name') or user_info.get('user_name', 'Không rõ')) if user_info else "Không rõ"
-        short_name = raw_name.strip().split(" ")[-1] if raw_name else "Thành viên"
-        
+        raw_name = (
+            user_info.get('full_name') or user_info.get('user_name', 'Không rõ')
+            if user_info
+            else 'Không rõ'
+        )
+        short_name = raw_name.strip().split(' ')[-1] if raw_name else 'Thành viên'
         actual_days = get_working_days(selected_days)
-        
-        status_name = "Chờ xác thực"
+
+        status_name = 'Chờ xác thực'
         status_id = reg.get('status_id')
+
         if status_id:
-            s_doc = db.collection('statuses').document(str(status_id)).get()
+            s_doc = cast(
+                Any,
+                db.collection('statuses').document(str(status_id)).get(),
+            )
             if s_doc.exists:
-             s_data = s_doc.to_dict()
-             if s_data:
+                s_data = s_doc.to_dict() or {}
                 status_name = s_data.get('name', 'Chờ xác thực')
 
         created_at_dt = reg.get('created_at')
-        created_at_str = created_at_dt.strftime('%d/%m/%Y %H:%M') if isinstance(created_at_dt, datetime) else "--"
+        created_at_str = (
+            created_at_dt.strftime('%d/%m/%Y %H:%M')
+            if isinstance(created_at_dt, datetime)
+            else '--'
+        )
 
         schedules_data.append({
-            "id": reg_doc.id,
-            "ho_ten": raw_name,
-            "ten_rut_gon": short_name,
-            "gmail": user_info.get('email') if user_info else "Không rõ",
-            "created_at": created_at_str,
-            "selected_days": actual_days or "--",
-            "session": reg.get('session') or "--",
-            "status_name": status_name
+            'id': reg_doc.id,
+            'ho_ten': raw_name,
+            'ten_rut_gon': short_name,
+            'gmail': user_info.get('email') if user_info else 'Không rõ',
+            'created_at': created_at_str,
+            'selected_days': actual_days or '--',
+            'session': reg.get('session') or '--',
+            'status_name': status_name,
         })
 
     return render_template(
@@ -327,9 +427,8 @@ def admin_request():
         prev_year=prev_year,
         next_week=next_week,
         next_year=next_year,
-        user=current_user
+        user=current_user,
     )
-
 
 @admin_views.route('/my-registration')
 @login_required
@@ -337,7 +436,6 @@ def admin_registration():
     vietnam_tz = pytz.timezone('Asia/Ho_Chi_Minh')
     current_week = datetime.now(vietnam_tz).isocalendar()[1]
     
-    db = get_db()
     conf_ref = db.collection('statuses').where('name', '==', 'Đã xác nhận').limit(1).stream()
     conf_list = list(conf_ref)
     
@@ -372,17 +470,20 @@ def admin_registration():
 
 @admin_views.route('/user-detail/<string:id>')
 @login_required
-def admin_user_detail(id):
+def admin_user_detail(id: str):
     if current_user.role_id != 1:
         flash('Bạn không có quyền truy cập!', 'danger')
         return redirect(url_for('admin_views.admin_home'))
-        
-    db = get_db()
-    u_doc = db.collection('users').document(id).get()
+
+    u_doc = cast(
+        DocumentSnapshot,
+        db.collection('users').document(id).get(),
+    )
+
     if not u_doc.exists:
         flash('Không tìm thấy người dùng!', 'danger')
         return redirect(url_for('admin_views.admin_home'))
-        
+
     class TargetUser:
         def __init__(self, uid, data):
             self.id = uid
@@ -392,53 +493,95 @@ def admin_user_detail(id):
             self.role_id = data.get('role_id')
 
     target_user = TargetUser(id, u_doc.to_dict() or {})
-    return render_template('admin/admin_user_detail.html', target_user=target_user, user=current_user)
+
+    return render_template(
+        'admin/admin_user_detail.html',
+        target_user=target_user,
+        user=current_user,
+    )
 
 
 @admin_views.route('/update-off-days/<string:user_id>', methods=['POST'])
-@login_required 
-def update_off_days(user_id):
-    new_limit = request.form.get('allowed_off_days', type=int)
-    db = get_db()
-    
-    u_ref = db.collection('users').document(user_id)
-    u_doc = u_ref.get()
-    
+@login_required
+def update_off_days(user_id: str):
+    if current_user.role_id != 1:
+        flash("Bạn không có quyền thực hiện thao tác này!", "danger")
+        return redirect(url_for("admin_views.admin_home"))
+
+    new_limit = request.form.get("allowed_off_days", type=int)
+
+    u_ref = db.collection("users").document(user_id)
+    u_doc = cast(DocumentSnapshot, u_ref.get())
+
     if not u_doc.exists:
-        flash('Không tìm thấy người dùng!', 'danger')
-        return redirect(url_for('admin_views.admin_users'))
-        
+        flash("Không tìm thấy người dùng!", "danger")
+        return redirect(url_for("admin_views.admin_users"))
+
     user_data = u_doc.to_dict() or {}
+
+    if new_limit is None or new_limit < 0:
+        flash("Giá trị ngày nghỉ không hợp lệ!", "danger")
+        return redirect(url_for("admin_views.admin_users"))
+
+    u_ref.update({"allowed_off_days": new_limit})
+    clear_universal_cache()
     
-    if new_limit is not None and new_limit >= 0: # Cho phép chỉnh mức ngày nghỉ hợp lý
-        u_ref.update({'allowed_off_days': new_limit})
-        
-        # Thêm thông báo vào collection cho client đọc
-        db.collection('notifications').add({
-            'user_id': user_id, # Phải khớp chính xác ID của user được nhận
-            'title': "Cập nhật hạn mức ngày nghỉ",
-            'message': f"Quản trị viên vừa cập nhật hạn mức ngày nghỉ của bạn thành {new_limit} ngày.",
-            'status': 'pending',
-            'is_read': False,
-            'created_at': SERVER_TIMESTAMP  
-        })
-        
+    notification_time = datetime.now(timezone.utc)
+    db.collection("notifications").add({
+        "user_id": user_id,
+        "title": "Cập nhật hạn mức ngày nghỉ",
+        "message": (
+            f"Quản trị viên vừa cập nhật hạn mức ngày nghỉ "
+            f"của bạn thành {new_limit} ngày."
+        ),
+        "status": "pending",
+        "is_read": False,
+        'created_at': notification_time,
+        'expires_at': notification_time + timedelta(hours=1),
+    })
+
+    email = (user_data.get("email") or "").strip()
+    email_sent = False
+
+    if email:
+        email_subject = "[HỆ THỐNG] Cập nhật hạn mức ngày nghỉ phép"
+        email_body = (
+            f"Xin chào {user_data.get('user_name')},\n\n"
+            f"Quản trị viên vừa cập nhật hạn mức ngày nghỉ phép "
+            f"của bạn thành: {new_limit} ngày.\n\n"
+            "Trân trọng!"
+        )
+
         try:
-            email_subject = "[HỆ THỐNG] Cập nhật hạn mức ngày nghỉ phép"
-            email_body = (
-                f"Xin chào {user_data.get('user_name')},\n\n"
-                f"Quản trị viên vừa cập nhật hạn mức ngày nghỉ phép của bạn thành: {new_limit} ngày.\n\n"
-                f"Trân trọng!"
+            email_sent = send_mail_based_on_admin_config(
+                email_subject,
+                [email],
+                email_body,
             )
-            send_mail_based_on_admin_config(email_subject, [user_data.get('email')], email_body)
-        except Exception as e:
-            print(f"Lỗi gửi email: {e}")
-        
-        flash(f'Đã cập nhật số ngày nghỉ cho {user_data.get("user_name")} thành {new_limit} ngày!', 'success')
+        except Exception as exc:
+            print(f"Lỗi gửi email: {exc}")
+
+    flash(
+        f"Đã cập nhật số ngày nghỉ cho "
+        f"{user_data.get('user_name')} thành {new_limit} ngày!",
+        "success",
+    )
+
+    if email_sent:
+        flash("Đã gửi email thông báo cho client.", "success")
+    elif email:
+        flash(
+            "Đã cập nhật hạn mức, nhưng email chưa gửi được. "
+            "Hãy kiểm tra lỗi SMTP trong Terminal.",
+            "warning",
+        )
     else:
-        flash('Giá trị ngày nghỉ không hợp lệ!', 'danger')
-        
-    return redirect(url_for('admin_views.admin_users'))
+        flash(
+            "Đã cập nhật hạn mức, nhưng tài khoản này chưa có email.",
+            "warning",
+        )
+
+    return redirect(url_for("admin_views.admin_users"))
 
 
 @admin_views.route('/users')
@@ -448,8 +591,7 @@ def admin_users():
         flash('Bạn không có quyền truy cập!', 'danger')
         return redirect(url_for('admin_views.admin_home'))
     
-    db = get_db()
-    users_stream = db.collection('users').stream()
+    users_list = get_users_from_db()  # Dùng hàm có cache
     
     class UserObj:
         def __init__(self, uid, data):
@@ -459,7 +601,7 @@ def admin_users():
             self.allowed_off_days = data.get('allowed_off_days', 2)
             self.role_id = data.get('role_id')
 
-    users = [UserObj(doc.id, doc.to_dict() or {}) for doc in users_stream]
+    users = [UserObj(u['id'], u) for u in users_list]
     return render_template('admin/admin_usershift.html', users=users, user=current_user)
 
 
@@ -515,28 +657,39 @@ def admin_history():
     selected_month = request.args.get('month', default=now.month, type=int)
     selected_year = request.args.get('year', default=now.year, type=int)
 
-    db = get_db()
     try:
-        # Cache Users để loại bỏ hoàn toàn N+1 query
+        users_list = get_users_from_db()  # Dùng hàm có cache
         users_cache = {}
-        for u_doc in db.collection('users').stream():
-            u_data = u_doc.to_dict() or {}
+        for u_data in users_list:
+            u_id = u_data['id']
             raw_name = u_data.get('full_name') or u_data.get('user_name', 'Không rõ')
             short_name = raw_name.strip().split(" ")[-1] if raw_name else "Thành viên"
-            users_cache[u_doc.id] = {
+            users_cache[u_id] = {
                 'ho_ten': raw_name,
                 'ten_rut_gon': short_name,
                 'gmail': u_data.get('email', 'Không rõ')
             }
 
-        # Cache Statuses
         statuses_cache = {}
         for s_doc in db.collection('statuses').stream():
             s_data = s_doc.to_dict() or {}
             statuses_cache[s_doc.id] = s_data.get('name', 'Chưa xác thực')
 
         weeks_data = build_month_weeks_matrix(selected_year, selected_month)
-        regs_stream = db.collection('registrations').order_by('created_at', direction='DESCENDING').stream()
+        start_of_month = datetime(selected_year, selected_month, 1)
+
+        if selected_month == 12:
+            start_of_next_month = datetime(selected_year + 1, 1, 1)
+        else:
+            start_of_next_month = datetime(selected_year, selected_month + 1, 1)
+
+        regs_stream = (
+            db.collection('registrations')
+            .where('created_at', '>=', start_of_month)
+            .where('created_at', '<', start_of_next_month)
+            .order_by('created_at', direction='DESCENDING')
+            .stream()
+        )
 
         schedules_data = []
         total_active_personnel = 0
@@ -544,9 +697,7 @@ def admin_history():
         for reg_doc in regs_stream:
             reg = reg_doc.to_dict() or {}
             created_at_dt = reg.get('created_at')
-            if isinstance(created_at_dt, datetime):
-                if created_at_dt.month != selected_month or created_at_dt.year != selected_year:
-                    continue
+            if isinstance(created_at_dt, datetime):           
                 created_at_str = created_at_dt.strftime('%d/%m/%Y %H:%M')
             else:
                 created_at_str = "--"
@@ -615,7 +766,7 @@ def admin_history():
 
     return render_template(
         'admin/admin_history.html',
-        weeks_data=weeks_data,                       
+        weeks_data=weeks_data,                     
         schedules=schedules_data,                    
         selected_month=selected_month,
         selected_year=selected_year,
@@ -625,19 +776,20 @@ def admin_history():
     )
 
 
-
 @admin_views.route('/export-excel', methods=['GET'])
 @login_required
 def export_excel():
     if current_user.role_id != 1:
-        flash('Bạn không có quyền thực hiện thao tác này!', 'danger')
+        flash('Bạn không có quyền truy cập thao tác này!', 'danger')
         return redirect(url_for('admin_views.admin_home'))
          
     selected_month = request.args.get('month', default=None, type=int)
     selected_year = request.args.get('year', default=None, type=int)
     
-    db = get_db()
     regs_stream = db.collection('registrations').stream()
+    
+    users_list = get_users_from_db()  # Dùng hàm có cache
+    users_map = {u['id']: (u.get('full_name') or u.get('user_name', 'Không rõ')) for u in users_list}
     
     data_list = []
     for reg_doc in regs_stream:
@@ -650,12 +802,7 @@ def export_excel():
                 continue
         
         user_id = reg.get('user_id')
-        user_name = "Không rõ"
-        if user_id:
-            u_doc = db.collection('users').document(str(user_id)).get()
-            if u_doc.exists:
-                u_data = u_doc.to_dict() or {}
-                user_name = u_data.get('full_name') or u_data.get('user_name', 'Không rõ')
+        user_name = users_map.get(str(user_id), "Không rõ") if user_id else "Không rõ"
                 
         data_list.append({
             "Họ và tên": user_name,
@@ -676,3 +823,55 @@ def export_excel():
         as_attachment=True,
         download_name=f'LichSuTruc_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
     )
+@admin_views.route('/client-accounts')
+@login_required
+def admin_client_accounts():
+    if current_user.role_id != 1:
+        flash('Bạn không có quyền truy cập!', 'danger')
+        return redirect(url_for('admin_views.admin_home'))
+
+    clients = [
+        client
+        for client in get_users_from_db()
+        if client.get('role_id') == 2
+    ]
+
+    return render_template(
+        'admin/client_accounts.html',
+        clients=clients,
+        user=current_user,
+    )
+
+
+@admin_views.route(
+    '/client-accounts/<string:user_id>/delete',
+    methods=['POST'],
+)
+@login_required
+def delete_client_account(user_id: str):
+    if current_user.role_id != 1:
+        flash('Bạn không có quyền thực hiện thao tác này!', 'danger')
+        return redirect(url_for('admin_views.admin_home'))
+
+    user_ref = db.collection('users').document(user_id)
+    user_doc = cast(DocumentSnapshot, user_ref.get())
+
+    if not user_doc.exists:
+        flash('Không tìm thấy tài khoản client!', 'danger')
+        return redirect(url_for('admin_views.admin_client_accounts'))
+
+    user_data = user_doc.to_dict() or {}
+
+    # Chỉ cho phép xóa tài khoản client, không xóa tài khoản admin
+    if user_data.get('role_id') != 2:
+        flash('Chỉ có thể xóa tài khoản client.', 'danger')
+        return redirect(url_for('admin_views.admin_client_accounts'))
+
+    user_ref.delete()
+    clear_universal_cache()
+
+    flash(
+        f"Đã xóa tài khoản '{user_data.get('user_name', user_id)}'.",
+        'success',
+    )
+    return redirect(url_for('admin_views.admin_client_accounts'))

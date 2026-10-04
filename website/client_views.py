@@ -2,17 +2,16 @@ from datetime import datetime, timedelta
 from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 from google.cloud.firestore import Query  # Import trực tiếp Query từ google.cloud để tránh lỗi Pylance
-import pytz
-
+from typing import Any, cast
+from google.cloud.firestore_v1.client import Client as FirestoreClient
 from firebase_admin import firestore
 from website.utils import send_mail_based_on_admin_config
-
+import pytz
 client_views = Blueprint("client_views", __name__)
 
 
-def get_db():
-    return firestore.client()
-
+def get_db() -> FirestoreClient:
+    return cast(FirestoreClient, firestore.client())
 
 @client_views.route("/")
 @login_required
@@ -22,10 +21,8 @@ def home():
 
     db = get_db()
     all_days_in_week = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"]
-    
     schedule_by_day = {day: [] for day in all_days_in_week}
 
-    # Tìm status 'Đã xác nhận'
     conf_ref = (
         db.collection("statuses")
         .where("name", "==", "Đã xác nhận")
@@ -43,28 +40,30 @@ def home():
             .where("status_id", "==", approved_status_id)
             .stream()
         )
-        registrations = [doc.to_dict() for doc in regs_stream]
+        registrations = [doc.to_dict() or {} for doc in regs_stream]
 
     for reg in registrations:
-        if not reg:
-            continue
         user_id = reg.get("user_id")
         if not user_id:
             continue
 
-        u_doc = db.collection("users").document(str(user_id)).get()
+        u_doc = cast(
+            Any,
+            db.collection("users").document(str(user_id)).get(),
+        )
         if not u_doc.exists:
             continue
 
         user_info = u_doc.to_dict() or {}
         user_name = user_info.get(
-            "user_name", user_info.get("username", "Thành viên")
+            "user_name",
+            user_info.get("username", "Thành viên"),
         )
         raw_off_days = reg.get("selected_days")
 
         off_days_list = (
             [
-                d.strip()
+                day.strip()
                 .replace("Thứ ", "T")
                 .replace("Chủ Nhật", "CN")
                 .replace("Thứ Hai", "T2")
@@ -73,21 +72,22 @@ def home():
                 .replace("Thứ Năm", "T5")
                 .replace("Thứ Sáu", "T6")
                 .replace("Thứ Bảy", "T7")
-                for d in raw_off_days.split(",")
+                for day in raw_off_days.split(",")
             ]
             if raw_off_days
             else []
         )
-        
-        working_days = [d for d in all_days_in_week if d not in off_days_list]
+
+        working_days = [
+            day for day in all_days_in_week
+            if day not in off_days_list
+        ]
 
         for day in working_days:
-            if day in schedule_by_day:
-                if user_name not in schedule_by_day[day]:
-                    schedule_by_day[day].append(user_name)
+            if day in schedule_by_day and user_name not in schedule_by_day[day]:
+                schedule_by_day[day].append(user_name)
 
-   
-    # dữ liệu giả 
+    # Dữ liệu mẫu khi tuần hiện tại chưa có lịch
     if not any(schedule_by_day.values()):
         schedule_by_day = {
             "T2": ["Nguyễn Văn An", "Trần Văn Bình"],
@@ -96,21 +96,20 @@ def home():
             "T5": ["Vũ Văn Giang"],
             "T6": ["Bùi Văn Hải", "Ngô Văn Hùng"],
             "T7": ["Dương Văn Khải"],
-            "CN": ["Lý Văn Long", "Hồ Văn Minh"]
+            "CN": ["Lý Văn Long", "Hồ Văn Minh"],
         }
 
-    # Tính tổng số quân số độc lập trong tuần
-    unique_users_in_week = set()
-    for day_list in schedule_by_day.values():
-        for name in day_list:
-            unique_users_in_week.add(name)
-    total_personnel = len(unique_users_in_week)
+    unique_users_in_week = {
+        name
+        for day_list in schedule_by_day.values()
+        for name in day_list
+    }
 
     return render_template(
-        "clients/client_home.html", 
-        user=current_user, 
+        "clients/client_home.html",
+        user=current_user,
         schedule_by_day=schedule_by_day,
-        total_personnel=total_personnel
+        total_personnel=len(unique_users_in_week),
     )
 
 
@@ -118,19 +117,23 @@ def home():
 @login_required
 def client_shift():
     vietnam_tz = pytz.timezone("Asia/Ho_Chi_Minh")
-    current_week = datetime.now(vietnam_tz).isocalendar()[1]
+    iso_year, current_week, _ = current_date.isocalendar()
 
     db = get_db()
-    
-    # [QUAN TRỌNG] Lấy dữ liệu user mới nhất trực tiếp từ Firestore để cập nhật allowed_off_days chuẩn xác
-    users_ref = db.collection("users")
-    user_doc_ref = users_ref.document(str(current_user.id))
-    user_doc = user_doc_ref.get()
-    user_data = user_doc.to_dict()
-    if user_data is not None:
-        allowed_off_days = user_data.get("allowed_off_days", getattr(current_user, "allowed_off_days", 2))
+
+    # Lấy hạn mức ngày nghỉ mới nhất của user từ Firestore
+    user_doc_ref = db.collection("users").document(str(current_user.id))
+    user_doc = cast(Any, user_doc_ref.get())
+    user_data = user_doc.to_dict() or {}
+
+    if user_data:
+        allowed_off_days = user_data.get(
+            "allowed_off_days",
+            getattr(current_user, "allowed_off_days", 2),
+        )
     else:
         allowed_off_days = getattr(current_user, "allowed_off_days", 2)
+
     conf_ref = (
         db.collection("statuses")
         .where("name", "==", "Đã xác nhận")
@@ -148,27 +151,28 @@ def client_shift():
             .where("status_id", "==", confirmed_status_id)
             .stream()
         )
-        registrations = [doc.to_dict() for doc in regs_stream]
+        registrations = [doc.to_dict() or {} for doc in regs_stream]
 
     all_days_in_week = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"]
     working_counts = {day: 0 for day in all_days_in_week}
     total_capacity = 4
 
     for reg in registrations:
-        if not reg:
-            continue
         raw_off_days = reg.get("selected_days")
         off_days_list = (
             [
-                d.strip()
+                day.strip()
                 .replace("Thứ ", "T")
                 .replace("Chủ Nhật", "CN")
-                for d in raw_off_days.split(",")
+                for day in raw_off_days.split(",")
             ]
             if raw_off_days
             else []
         )
-        working_days = [d for d in all_days_in_week if d not in off_days_list]
+        working_days = [
+            day for day in all_days_in_week
+            if day not in off_days_list
+        ]
 
         for day in working_days:
             if day in working_counts:
@@ -179,7 +183,7 @@ def client_shift():
         user=current_user,
         working_counts=working_counts,
         total_capacity=total_capacity,
-        allowed_off_days=allowed_off_days, # Truyền biến đã query trực tiếp vào template
+        allowed_off_days=allowed_off_days,
     )
 
 @client_views.route("/register-schedule", methods=["POST"])
@@ -191,15 +195,20 @@ def register_schedule():
         selected_off_days = data.get("days", [])
 
         # [SỬA 1] Truy vấn trực tiếp Firestore để lấy hạn mức allowed_off_days mới nhất của user
-        user_doc = db.collection("users").document(str(current_user.id)).get()  # pyright: ignore
-        user_data = user_doc.to_dict() if user_doc and user_doc.exists else {}
-        allowed_limit = (
-            user_data.get(
-                "allowed_off_days", getattr(current_user, "allowed_off_days", 2)
-            )
-            if user_data is not None
-            else 2
+        user_doc = cast(
+            Any,
+              db.collection("users").document(str(current_user.id)).get(),
         )
+
+        if user_doc.exists:
+            user_data = user_doc.to_dict() or {}
+        else:
+         user_data = {}
+
+        allowed_limit = user_data.get(
+            "allowed_off_days",
+            getattr(current_user, "allowed_off_days", 2),
+)
 
         # [SỬA 2] So sánh với giới hạn động (allowed_limit) và hiển thị thông báo linh hoạt
         if len(selected_off_days) != allowed_limit:
@@ -221,12 +230,13 @@ def register_schedule():
         current_week = current_date.isocalendar()[1]
 
         existing_regs = list(
-            db.collection("registrations")
-            .where("user_id", "==", current_user.id)
-            .where("week_number", "==", current_week)
-            .limit(1)
-            .stream()
-        )
+    db.collection("registrations")
+    .where("user_id", "==", current_user.id)
+    .where("week_year", "==", iso_year)
+    .where("week_number", "==", current_week)
+    .limit(1)
+    .stream()
+)
         if existing_regs:
             return (
                 jsonify(
@@ -283,7 +293,7 @@ def register_schedule():
                         if d in current_counts:
                             current_counts[d] += 1
 
-            MAX_CAPACITY = 3
+            MAX_CAPACITY = 4
             for day in user_working_days:
                 if current_counts.get(day, 0) >= MAX_CAPACITY:
                     return (
@@ -348,22 +358,13 @@ def client_detailshift():
     all_regs = []
     all_days_in_week = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"]
 
-    conf_ref = (
-        db.collection("statuses")
-        .where("name", "==", "Đã xác nhận")
-        .limit(1)
-        .stream()
-    )
-    conf_list = list(conf_ref)
-    confirmed_status_id = conf_list[0].id if conf_list else None
-
     for doc in regs_stream:
         r_data = doc.to_dict() or {}
         r_data["id"] = doc.id
 
         raw_off = r_data.get("selected_days", "")
         if raw_off:
-            off_days_list = [d.strip() for d in raw_off.split(",")]
+            off_days_list = [day.strip() for day in raw_off.split(",")]
             r_data["working_days"] = [
                 day for day in all_days_in_week if day not in off_days_list
             ]
@@ -371,22 +372,26 @@ def client_detailshift():
             r_data["working_days"] = []
 
         status_name = ""
-        s_id = r_data.get("status_id")
-        if s_id:
-            s_doc = db.collection("statuses").document(str(s_id)).get()
+        status_id = r_data.get("status_id")
+
+        if status_id:
+            s_doc = cast(
+                Any,
+                db.collection("statuses")
+                .document(str(status_id))
+                .get(),
+            )
             if s_doc.exists:
-                s_dict = s_doc.to_dict() or {} 
+                s_dict = s_doc.to_dict() or {}
                 status_name = s_dict.get("name", "")
 
         class StatusObj:
-
             def __init__(self, name):
                 self.name = name
 
         r_data["status_obj"] = StatusObj(status_name)
 
         class RegObj:
-
             def __init__(self, data):
                 self.__dict__.update(data)
 
@@ -396,7 +401,10 @@ def client_detailshift():
     history_regs = []
 
     for reg in all_regs:
-        is_confirmed = reg.status_obj and reg.status_obj.name == "Đã xác nhận"
+        is_confirmed = (
+            reg.status_obj
+            and reg.status_obj.name == "Đã xác nhận"
+        )
         is_past_week = reg.week_number < current_week
 
         if is_confirmed or is_past_week:
@@ -414,9 +422,12 @@ def client_detailshift():
 
 @client_views.route("/request-change/<string:id>", methods=["POST"])
 @login_required
-def request_change_shift(id):
+def request_change_shift(id: str):
     db = get_db()
-    reg_doc = db.collection("registrations").document(id).get()
+    reg_doc = cast(
+        Any,
+        db.collection("registrations").document(id).get(),
+    )
 
     if not reg_doc.exists:
         flash("Không tìm thấy lịch trực.", "danger")
@@ -433,13 +444,12 @@ def request_change_shift(id):
     )
     return redirect(url_for("client_views.client_detailshift"))
 
-
 @client_views.route("/edit-shift/<string:id>", methods=["GET", "POST"])
 @login_required
-def edit_shift(id):
+def edit_shift(id: str):
     db = get_db()
     reg_ref = db.collection("registrations").document(id)
-    reg_doc = reg_ref.get()
+    reg_doc = cast(Any, reg_ref.get())
 
     if not reg_doc.exists:
         flash("Không tìm thấy lịch trực.", "danger")
@@ -453,16 +463,19 @@ def edit_shift(id):
         return redirect(url_for("client_views.client_detailshift"))
 
     if request.method == "POST":
-        # Truy vấn trực tiếp Firestore để lấy hạn mức ngày nghỉ mới nhất do Admin vừa sửa
-        u_doc = db.collection("users").document(str(current_user.id)).get()
-        max_off = 2  # Giá trị mặc định an toàn
-        if u_doc and u_doc.exists:
-            u_info = u_doc.to_dict()
-            if u_info is not None:
-                max_off = u_info.get("allowed_off_days", getattr(current_user, "allowed_off_days", 2))
-        else:
-            max_off = getattr(current_user, "allowed_off_days", 2)
+        u_doc = cast(
+            Any,
+            db.collection("users").document(str(current_user.id)).get(),
+        )
+
+        max_off = getattr(current_user, "allowed_off_days", 2)
+        if u_doc.exists:
+            u_info = u_doc.to_dict() or {}
+            max_off = u_info.get("allowed_off_days", max_off)
+
+        max_off = int(max_off)
         days_list = []
+
         for i in range(max_off):
             day_val = request.form.get(f"day_{i + 1}")
             if day_val and day_val not in days_list:
@@ -480,40 +493,46 @@ def edit_shift(id):
         pend_list = list(pend_ref)
         pending_status_id = pend_list[0].id if pend_list else None
 
-        reg_ref.update(
-            {
-                "selected_days": selected_days_str,
-                "session": session_val,
-                "status_id": pending_status_id,
-            }
-        )
+        reg_ref.update({
+            "selected_days": selected_days_str,
+            "session": session_val,
+            "status_id": pending_status_id,
+        })
 
         current_time_str = datetime.now().strftime("%d/%m/%Y lúc %H:%M")
 
-        db.collection("notifications").add(
-    {
-        "user_id": current_user.id,
-        "title": "Yêu cầu sửa lịch trực (Chờ duyệt)",
-        "message": f"Học viên {current_user.user_name} vừa thay đổi lịch trực tuần {reg_data.get('week_number')} vào lúc {current_time_str}.",
-        "status": "pending",
-        "is_read": False,
-        "created_at": datetime.now(), 
-    }
-)
+        db.collection("notifications").add({
+            "user_id": current_user.id,
+            "title": "Yêu cầu sửa lịch trực (Chờ duyệt)",
+            "message": (
+                f"Học viên {current_user.user_name} vừa thay đổi lịch trực "
+                f"tuần {reg_data.get('week_number')} vào lúc {current_time_str}."
+            ),
+            "status": "pending",
+            "is_read": False,
+            "created_at": datetime.now(),
+        })
 
         try:
-            email_subject = f"[HỆ THỐNG] Xác nhận yêu cầu sửa lịch trực tuần {reg_data.get('week_number')}"
+            email_subject = (
+                f"[HỆ THỐNG] Xác nhận yêu cầu sửa lịch trực "
+                f"tuần {reg_data.get('week_number')}"
+            )
             email_body = (
                 f"Xin chào {current_user.user_name},\n\n"
-                f"Bạn vừa cập nhật lại lịch trực tuần {reg_data.get('week_number')} vào lúc {current_time_str}.\n"
+                f"Bạn vừa cập nhật lại lịch trực tuần "
+                f"{reg_data.get('week_number')} vào lúc {current_time_str}.\n"
                 f"- Ca trực: {session_val}\n"
                 f"- Các ngày nghỉ đăng ký: {selected_days_str}\n\n"
-                f"Yêu cầu của bạn đang ở trạng thái chờ duyệt từ quản trị viên.\n\n"
-                f"Trân trọng!"
+                "Yêu cầu của bạn đang ở trạng thái chờ duyệt từ quản trị viên.\n\n"
+                "Trân trọng!"
             )
-            send_mail_based_on_admin_config(
-                email_subject, [current_user.email], email_body
-            )
+            if current_user.email:
+                send_mail_based_on_admin_config(
+                    email_subject,
+                    [current_user.email],
+                    email_body,
+                )
         except Exception as e:
             print(f"Lỗi gửi email: {e}")
 
@@ -524,14 +543,13 @@ def edit_shift(id):
         return redirect(url_for("client_views.client_detailshift"))
 
     class RegObj:
-
         def __init__(self, data):
             self.__dict__.update(data)
 
     return render_template(
-        "clients/client_edit_shift.html", reg=RegObj(reg_data)
+        "clients/client_edit_shift.html",
+        reg=RegObj(reg_data),
     )
-
 
 @client_views.route("/notifications")
 @login_required
@@ -547,7 +565,7 @@ def notifications():
     )
 
     user_notifications = []
-    one_day_ago = now - timedelta(days=1)
+    one_hour_ago = now - timedelta(hours=1)
 
     batch = db.batch()
     has_deletes = False
@@ -557,7 +575,7 @@ def notifications():
         n_data["id"] = doc.id
         created_at = n_data.get("created_at")
 
-        if isinstance(created_at, datetime) and created_at < one_day_ago:
+        if isinstance(created_at, datetime) and created_at < one_hour_ago:
             batch.delete(doc.reference)
             has_deletes = True
             continue
@@ -593,10 +611,10 @@ def notifications():
     "/notification/delete/<string:notif_id>", methods=["POST", "GET"]
 )
 @login_required
-def delete_notification(notif_id):
+def delete_notification(notif_id: str):
     db = get_db()
     notif_ref = db.collection("notifications").document(notif_id)
-    notif_doc = notif_ref.get()
+    notif_doc = cast(Any, notif_ref.get())
     notif_data = notif_doc.to_dict() or {}
 
     if (
@@ -608,11 +626,11 @@ def delete_notification(notif_id):
         flash("Đã xóa thông báo thành công!", "success")
     else:
         flash(
-            "Không tìm thấy thông báo hoặc bạn không có quyền xóa.", "danger"
+            "Không tìm thấy thông báo hoặc bạn không có quyền xóa.",
+            "danger",
         )
 
     return redirect(url_for("client_views.notifications"))
-
 
 @client_views.route("/profile", methods=["GET", "POST"])
 @login_required

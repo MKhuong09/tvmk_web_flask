@@ -12,6 +12,8 @@
         margin-bottom: 24px;
         flex-wrap: wrap;
         gap: 15px;
+        position: relative;
+        z-index: 10;
     }
     .page-title {
         font-size: 1.75rem;
@@ -46,6 +48,23 @@
         transform: translateY(-1px);
         color: white;
         text-decoration: none;
+    }
+
+    .btn-auth-email {
+        background-color: #4f46e5;
+        color: white;
+        border: none;
+        padding: 10px 18px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        margin-left: 10px;
+        transition: all 0.2s;
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+    }
+    .btn-auth-email:hover {
+        background-color: #4338ca;
+        transform: translateY(-1px);
     }
 
     /* 3 THẺ CHỈ SỐ QUÂN SỐ */
@@ -148,26 +167,7 @@
         color: #64748b;
         margin: 0;
     }
-    .chart-legend {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        font-size: 0.8rem;
-        font-weight: 600;
-        color: #475569;
-    }
-    .legend-item {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-    .legend-bullet {
-        width: 10px;
-        height: 10px;
-        border-radius: 2px;
-    }
 
-    /* BẢNG SỐ NGƯỜI ĐĂNG KÝ BÊN DƯỚI BIỂU ĐỒ TRÒN */
     .status-summary-table {
         width: 100%;
         border-collapse: collapse;
@@ -189,19 +189,18 @@
         font-size: 1.35rem;
     }
 
-    /* MODAL */
-    .schedule-modal {
+    /* MODAL CHUNG */
+    .modal-overlay {
         position: fixed;
         inset: 0;
         background: rgba(15, 23, 42, 0.5);
         backdrop-filter: blur(3px);
-        display: flex;
+        display: none;
         align-items: center;
         justify-content: center;
-        z-index: 9999;
+        z-index: 99999;
     }
-    .schedule-modal-content {
-        width: min(420px, 92vw);
+    .modal-box {
         background: #ffffff;
         border-radius: 12px;
         box-shadow: 0 20px 40px rgba(15, 23, 42, 0.2);
@@ -209,21 +208,197 @@
     }
 </style>
 
-<!-- TIÊU ĐỀ TRANG VÀ NÚT TẠO LỊCH -->
+<!-- TIÊU ĐỀ TRANG VÀ NÚT BẤM -->
 <div class="page-header-container">
     <div>
         <h2 class="page-title">Thống kê</h2>
         <p class="page-subtitle">Tổng hợp quân số, tình hình đăng ký và phân bổ ca trực Ban CHQS</p>
     </div>
 
-    <button type="button" class="btn-generate-schedule" id="openScheduleModalBtn">
-        <i class="mdi mdi-calendar-clock"></i> Generate Weekend Schedule
-    </button>
+    <div>
+        <button type="button" class="btn-generate-schedule" id="openScheduleModalBtn">
+            <i class="mdi mdi-calendar-clock"></i> Generate Weekend Schedule
+        </button>
+        <button type="button" class="btn-auth-email" id="btnOpenAuthModal" onclick="openAuthModal()">
+            📧 Cấp phép Email Đăng ký
+        </button>
+    </div>
 </div>
 
-<!-- MODAL CẤU HÌNH XẾP LỊCH -->
-<div id="scheduleModal" class="schedule-modal" style="display: none;">
-    <div class="schedule-modal-content">
+<!-- 3 THẺ METRICS -->
+<div class="dashboard-metrics-grid">
+    <div class="metric-card">
+        <div class="card-info">
+            <h4>TỔNG SỐ DÂN QUÂN</h4>
+            <div class="metric-value" id="metric-total-people">{{ total_people if total_people is defined and total_people else 38 }}</div>
+            <div class="metric-subtext text-emerald">
+                <i class="mdi mdi-check"></i> Đạt 100% biên chế
+            </div>
+        </div>
+        <div class="metric-icon-box icon-box-blue">
+            <i class="mdi mdi-account-box-outline"></i>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="card-info">
+            <h4>TOTAL</h4>
+            <div class="metric-value">{{ total_schedule if total_schedule is defined and total_schedule else 142 }}</div>
+            <div class="metric-subtext text-blue">
+                <i class="mdi mdi-layers-outline"></i> Tổng lượt ca trực đã xếp
+            </div>
+        </div>
+        <div class="metric-icon-box icon-box-purple">
+            <i class="mdi mdi-account-multiple"></i>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="card-info">
+            <h4>LỊCH LÀM TRONG TUẦN</h4>
+            <div class="metric-value">{{ week_schedule if week_schedule is defined and week_schedule else 28 }}</div>
+            <div class="metric-subtext text-emerald">
+                <i class="mdi mdi-shield-check-outline"></i> 4 ca / ngày x 7 ngày
+            </div>
+        </div>
+        <div class="metric-icon-box icon-box-green">
+            <i class="mdi mdi-calendar-check-outline"></i>
+        </div>
+    </div>
+</div>
+<section style="
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+">
+    <div style="
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 14px;
+    ">
+        <h3 style="margin: 0; font-size: 1.05rem; color: #0f172a;">
+            🟢 Người dùng đang hoạt động
+        </h3>
+
+        <span style="
+            color: #059669;
+            background: #ecfdf5;
+            border-radius: 20px;
+            padding: 5px 10px;
+            font-size: 0.85rem;
+            font-weight: 700;
+        ">
+            <span id="onlineUserCount">0</span> online
+        </span>
+    </div>
+
+    <div
+        id="onlineUserList"
+        style="display: flex; flex-wrap: wrap; gap: 10px;"
+        aria-live="polite"
+    >
+        <span style="color: #64748b;">Đang kết nối...</span>
+    </div>
+</section>
+<!--  BIỂU ĐỒ CỘT VÀ BIỂU ĐỒ TRÒN -->
+<div class="dashboard-charts-grid">
+    <div class="chart-panel">
+        <div class="chart-header">
+            <div class="chart-title-group">
+                <h3>Biểu đồ Phân Bổ Ca Trực Trong Tuần</h3>
+                <p>Số lượng lượt trực ca Sáng, Chiều và Tuần tra Đêm từ Thứ 2 đến Chủ Nhật</p>
+            </div>
+        </div>
+        <div style="position: relative; height: 260px; width: 100%;">
+            <canvas id="shiftsBarChart"></canvas>
+        </div>
+    </div>
+
+    <div class="chart-panel">
+        <div class="chart-header">
+            <div class="chart-title-group">
+                <h3>Số Người Đăng Ký <span id="current-live-time" style="font-size: 0.85rem; font-weight: 500; color: #64748b;"></span></h3>
+                <p>Tỉ lệ đăng ký ca trực tuần hiện tại</p>
+            </div>
+        </div>
+        
+        <div style="position: relative; height: 160px; display: flex; justify-content: center; align-items: center;">
+            <canvas id="registrationPieChart"></canvas>
+        </div>
+
+        <table class="status-summary-table">
+            <tr>
+                <td>Đã đăng ký</td>
+                <td id="metric-registered" style="color: #10b981 !important;">{{ registered if registered is defined and registered else 32 }}</td>
+            </tr>
+            <tr>
+                <td>Chưa đăng ký</td>
+                <td id="metric-not-registered" style="color: #ef4444 !important;">{{ not_registered if not_registered is defined and not_registered else 6 }}</td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<!-- CẤP PHÉP EMAIL -->
+<div id="authModal" class="modal-overlay">
+    <div class="modal-box" style="width: 480px;">
+        <h3 style="margin-top: 0; margin-bottom: 16px; color: #1e293b;">Cấp phép Email (Chỉ dùng 1 lần)</h3>
+        
+        <label style="font-weight: 600; display: block; margin-bottom: 8px;">Chọn hình thức nhập:</label>
+        <select id="authInputType" onchange="toggleAuthInputType(this.value)" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1; margin-bottom: 16px;">
+            <option value="text">📝 Dán/Nhập Văn bản thô</option>
+            <option value="image">📁 Tải ảnh/Chụp màn hình</option>
+        </select>
+
+        <!-- Khối nhập Văn bản -->
+        <div id="authTextBlock">
+            <textarea id="authRawText" rows="5" placeholder="Dán văn bản hoặc đoạn chat chứa danh sách email vào đây..." style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1; box-sizing: border-box;"></textarea>
+        </div>
+
+        <!-- dán Ảnh -->
+        <div id="authImageBlock" style="display: none;">
+            <div id="imageDropZone" 
+                 style="border: 2px dashed #cbd5e1; border-radius: 6px; padding: 16px; text-align: center; background-color: #f8fafc; cursor: pointer; transition: all 0.2s;"
+                 onclick="document.getElementById('authImageFile').click();">
+                
+                <div id="dropZonePrompt">
+                    <p style="margin: 0; font-size: 14px; color: #475569;">
+                        📂 Nhấp để chọn file hoặc <b>Ctrl + V</b> để dán ảnh
+                    </p>
+                    <span style="font-size: 12px; color: #94a3b8;">(Hỗ trợ PNG, JPG, JPEG)</span>
+                </div>
+
+                <!-- Xem  ảnh -->
+                <div id="imagePreviewContainer" style="display: none; position: relative;">
+                    <img id="imagePreview" src="" alt="Ảnh xem trước" style="max-width: 100%; max-height: 180px; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);" />
+                    <br>
+                    <button type="button" onclick="event.stopPropagation(); removeSelectedImage();" 
+                            style="margin-top: 8px; background-color: #ef4444; color: white; border: none; padding: 4px 10px; border-radius: 4px; font-size: 12px; cursor: pointer;">
+                         Xóa ảnh
+                    </button>
+                </div>
+            </div>
+
+            <!-- Input file  -->
+            <input type="file" id="authImageFile" accept="image/*" style="display: none;" onchange="handleFileSelect(event)">
+        </div>
+
+        <!--  hiển thị kết quả Real-time -->
+        <div id="authResultLog" style="margin-top: 12px; font-size: 14px; color: #475569; min-height: 20px;"></div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+            <button type="button" onclick="closeAuthModal()" style="padding: 8px 16px; border-radius: 6px; border: 1px solid #cbd5e1; background: #f8fafc; cursor: pointer;">Hủy</button>
+            <button type="button" onclick="submitAuthData()" style="padding: 8px 16px; border-radius: 6px; border: none; background: #4f46e5; color: white; font-weight: 600; cursor: pointer;"> Quét </button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL 2: CẤU HÌNH XẾP LỊCH -->
+<div id="scheduleModal" class="modal-overlay">
+    <div class="modal-box" style="width: min(420px, 92vw);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
             <h3 style="margin: 0; font-size: 1.15rem; font-weight: 700; color: #0f172a;">Thông số sắp xếp lịch</h3>
             <button type="button" id="closeScheduleModalBtn" style="border:none; background:none; font-size: 1.5rem; cursor: pointer; color: #64748b;">&times;</button>
@@ -248,112 +423,281 @@
     </div>
 </div>
 
-<!-- 3 THẺ METRICS THEO ĐÚNG HÌNH 1 -->
-<div class="dashboard-metrics-grid">
-    <!-- Thẻ 1 -->
-    <div class="metric-card">
-        <div class="card-info">
-            <h4>TỔNG SỐ DÂN QUÂN</h4>
-            <div class="metric-value">{{ total_people if total_people is defined and total_people else 38 }}</div>
-            <div class="metric-subtext text-emerald">
-                <i class="mdi mdi-check"></i> Đạt 100% biên chế
-            </div>
-        </div>
-        <div class="metric-icon-box icon-box-blue">
-            <i class="mdi mdi-account-box-outline"></i>
-        </div>
-    </div>
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 
-    <!-- Thẻ 2 -->
-    <div class="metric-card">
-        <div class="card-info">
-            <h4>TOTAL</h4>
-            <div class="metric-value">{{ total_schedule if total_schedule is defined and total_schedule else 142 }}</div>
-            <div class="metric-subtext text-blue">
-                <i class="mdi mdi-layers-outline"></i> Tổng lượt ca trực đã xếp
-            </div>
-        </div>
-        <div class="metric-icon-box icon-box-purple">
-            <i class="mdi mdi-account-multiple"></i>
-        </div>
-    </div>
-
-    <!-- Thẻ 3 -->
-    <div class="metric-card">
-        <div class="card-info">
-            <h4>LỊCH LÀM TRONG TUẦN</h4>
-            <div class="metric-value">{{ week_schedule if week_schedule is defined and week_schedule else 28 }}</div>
-            <div class="metric-subtext text-emerald">
-                <i class="mdi mdi-shield-check-outline"></i> 4 ca / ngày x 7 ngày
-            </div>
-        </div>
-        <div class="metric-icon-box icon-box-green">
-            <i class="mdi mdi-calendar-check-outline"></i>
-        </div>
-    </div>
-</div>
-
-<!-- HÀNG 2: BIỂU ĐỒ CỘT VÀ BIỂU ĐỒ TRÒN -->
-<div class="dashboard-charts-grid">
-    <!-- CỘT TRÁI: BIỂU ĐỒ PHÂN BỔ CA TRỰC TRONG TUẦN -->
-    <div class="chart-panel">
-        <div class="chart-header">
-            <div class="chart-title-group">
-                <h3>Biểu đồ Phân Bổ Ca Trực Trong Tuần</h3>
-                <p>Số lượng lượt trực ca Sáng, Chiều và Tuần tra Đêm từ Thứ 2 đến Chủ Nhật</p>
-            </div>
-            <div class="chart-legend">
-                <div class="legend-item">
-                    <span class="legend-bullet" style="background-color: #3b82f6;"></span>
-                    <span>Sáng</span>
-                </div>
-                <div class="legend-item">
-                    <span class="legend-bullet" style="background-color: #60a5fa;"></span>
-                    <span>Chiều</span>
-                </div>
-                <div class="legend-item">
-                    <span class="legend-bullet" style="background-color: #f59e0b;"></span>
-                    <span>Đêm</span>
-                </div>
-            </div>
-        </div>
-        <div style="position: relative; height: 260px; width: 100%;">
-            <canvas id="shiftsBarChart"></canvas>
-        </div>
-    </div>
-
-    <!-- CỘT PHẢI: TỈ LỆ NGƯỜI ĐĂNG KÝ (DONUT CHART + BẢNG) -->
-    <div class="chart-panel">
-        <div class="chart-header">
-            <div class="chart-title-group">
-                <h3>Số Người Đăng Ký <span id="current-live-time" style="font-size: 0.85rem; font-weight: 500; color: #64748b;"></span></h3>
-                <p>Tỉ lệ đăng ký ca trực tuần hiện tại</p>
-            </div>
-        </div>
-        
-        <!-- DONUT CHART -->
-        <div style="position: relative; height: 160px; display: flex; justify-content: center; align-items: center;">
-            <canvas id="registrationPieChart"></canvas>
-        </div>
-
-        <!-- BẢNG TỔNG HỢP SỐ LIỆU -->
-        <table class="status-summary-table">
-            <tr>
-                <td>Đã đăng ký</td>
-                <td style="color: #10b981 !important;">{{ registered if registered is defined and registered else 32 }}</td>
-            </tr>
-            <tr>
-                <td>Chưa đăng ký</td>
-                <td style="color: #ef4444 !important;">{{ not_registered if not_registered is defined and not_registered else 6 }}</td>
-            </tr>
-        </table>
-    </div>
-</div>
-{% endblock %}
-
-{% block scripts %}
 <script>
-    // 1. ĐỒNG HỒ THỜI GIAN THỰC
+    const socket = io();
+    socket.on("online_users_update", function (data) {
+    const users = Array.isArray(data?.users) ? data.users : [];
+    const countElement = document.getElementById("onlineUserCount");
+    const listElement = document.getElementById("onlineUserList");
+
+    if (!countElement || !listElement) return;
+
+    countElement.textContent = String(users.length);
+    listElement.replaceChildren();
+
+    if (users.length === 0) {
+        const emptyMessage = document.createElement("span");
+        emptyMessage.style.color = "#64748b";
+        emptyMessage.textContent = "Hiện không có người dùng nào online.";
+        listElement.appendChild(emptyMessage);
+        return;
+    }
+
+    users.forEach(function (user) {
+        const item = document.createElement("div");
+        item.style.cssText =
+            "display:flex;align-items:center;gap:8px;" +
+            "border:1px solid #f1f5f9;border-radius:9px;padding:9px 12px;";
+
+        const dot = document.createElement("span");
+        dot.style.cssText =
+            "width:9px;height:9px;border-radius:50%;" +
+            "background:#10b981;display:inline-block;";
+
+        const name = document.createElement("span");
+        name.style.cssText = "color:#334155;font-size:.9rem;font-weight:600;";
+        name.textContent =
+            (user.name || "Người dùng") +
+            (Number(user.role_id) === 1 ? " (Admin)" : "");
+
+        item.append(dot, name);
+        listElement.appendChild(item);
+    });
+});
+    let currentBase64Image = "";
+
+    // Bắt sự kiện DOM đã sẵn sàng để đăng ký Event Listener an toàn
+    document.addEventListener('DOMContentLoaded', function() {
+        const btnOpenAuth = document.getElementById('btnOpenAuthModal');
+        if (btnOpenAuth) {
+            btnOpenAuth.addEventListener('click', function(e) {
+                e.preventDefault();
+                openAuthModal();
+            });
+        }
+
+        // Khởi tạo Biểu đồ Cột (Bar Chart)
+        const barCtx = document.getElementById('shiftsBarChart');
+        if (barCtx) {
+            new Chart(barCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ Nhật'],
+                    datasets: [
+                        { label: 'Sáng', data: [6, 6, 7, 6, 8, 8, 8], backgroundColor: '#3b82f6', borderRadius: 4 },
+                        { label: 'Chiều', data: [5, 5, 6, 5, 7, 7, 7], backgroundColor: '#60a5fa', borderRadius: 4 },
+                        { label: 'Đêm', data: [4, 4, 4, 4, 6, 6, 6], backgroundColor: '#f59e0b', borderRadius: 4 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { x: { grid: { display: false } }, y: { beginAtZero: true, max: 8 } }
+                }
+            });
+        }
+
+        // Khởi tạo Biểu đồ Tròn (Donut Chart)
+        const pieCtx = document.getElementById('registrationPieChart');
+        if (pieCtx) {
+            // Lấy dữ liệu Jinja2 truyền vào an toàn
+            const registeredVal = Number("{{ registered if registered is defined else 32 }}") || 32;
+            const notRegisteredVal = Number("{{ not_registered if not_registered is defined else 6 }}") || 6;
+
+            new Chart(pieCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Đã đăng ký', 'Chưa đăng ký'],
+                    datasets: [{
+                        data: [registeredVal, notRegisteredVal],
+                        backgroundColor: ['#10b981', '#ef4444'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '72%',
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+    });
+
+    // --- MODAL CẤP PHÉP EMAIL ---
+    function openAuthModal() {
+        const modal = document.getElementById('authModal');
+        if (modal) modal.style.display = 'flex';
+        const log = document.getElementById('authResultLog');
+        if (log) log.innerText = '';
+    }
+
+    function closeAuthModal() {
+        const modal = document.getElementById('authModal');
+        if (modal) modal.style.display = 'none';
+        resetAuthForm();
+    }
+
+    function toggleAuthInputType(type) {
+        const textBlock = document.getElementById('authTextBlock');
+        const imageBlock = document.getElementById('authImageBlock');
+        
+        if (textBlock && imageBlock) {
+            if (type === 'image') {
+                textBlock.style.display = 'none';
+                imageBlock.style.display = 'block';
+            } else {
+                textBlock.style.display = 'block';
+                imageBlock.style.display = 'none';
+            }
+        }
+    }
+
+    document.addEventListener('paste', function (event) {
+        const modal = document.getElementById('authModal');
+        if (!modal || modal.style.display === 'none') return;
+
+        if (document.activeElement && (document.activeElement.tagName === 'TEXTAREA' || document.activeElement.tagName === 'INPUT')) {
+            return;
+        }
+
+        const items = (event.clipboardData || event.originalEvent.clipboardData).items;
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].kind === 'file' && items[i].type.includes('image')) {
+                const blob = items[i].getAsFile();
+                const reader = new FileReader();
+                
+                reader.onload = function (e) {
+                    currentBase64Image = e.target.result;
+                    displayImagePreview(currentBase64Image);
+                };
+                reader.readAsDataURL(blob);
+                
+                const typeSelect = document.getElementById('authInputType');
+                if (typeSelect) {
+                    typeSelect.value = 'image';
+                    toggleAuthInputType('image');
+                }
+                break;
+            }
+        }
+    });
+
+    function handleFileSelect(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                currentBase64Image = e.target.result;
+                displayImagePreview(currentBase64Image);
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function displayImagePreview(base64Src) {
+        const img = document.getElementById('imagePreview');
+        const dropZone = document.getElementById('dropZonePrompt');
+        const container = document.getElementById('imagePreviewContainer');
+
+        if (img) img.src = base64Src;
+        if (dropZone) dropZone.style.display = 'none';
+        if (container) container.style.display = 'block';
+    }
+
+    function removeSelectedImage() {
+        currentBase64Image = "";
+        const fileInput = document.getElementById('authImageFile');
+        const img = document.getElementById('imagePreview');
+        const container = document.getElementById('imagePreviewContainer');
+        const dropZone = document.getElementById('dropZonePrompt');
+
+        if (fileInput) fileInput.value = "";
+        if (img) img.src = "";
+        if (container) container.style.display = 'none';
+        if (dropZone) dropZone.style.display = 'block';
+    }
+
+    function resetAuthForm() {
+        const rawText = document.getElementById('authRawText');
+        const log = document.getElementById('authResultLog');
+        if (rawText) rawText.value = '';
+        removeSelectedImage();
+        if (log) log.innerText = '';
+    }
+
+    function submitAuthData() {
+        const typeEl = document.getElementById('authInputType');
+        const logEl = document.getElementById('authResultLog');
+        if (!typeEl || !logEl) return;
+
+        const type = typeEl.value;
+        let content = "";
+
+        if (type === 'image') {
+            content = currentBase64Image;
+            if (!content) {
+                alert('Vui lòng dán (Ctrl+V) hoặc chọn 1 tệp ảnh!');
+                return;
+            }
+        } else {
+            const rawTextEl = document.getElementById('authRawText');
+            content = rawTextEl ? rawTextEl.value.trim() : "";
+            if (!content) {
+                alert('Vui lòng nhập văn bản chứa Email!');
+                return;
+            }
+        }
+
+        logEl.style.color = '#475569';
+        logEl.innerText = " Đang phân tích dữ liệu ";
+
+        socket.emit('admin_process_data', { type: type, content: content });
+    }
+
+    socket.on('admin_process_result', function(res) {
+        const logEl = document.getElementById('authResultLog');
+        if (!logEl) return;
+        
+        if (res.status === 'success') {
+            logEl.style.color = '#10b981';
+            logEl.innerText = `✅ ${res.message}`;
+
+            resetAuthForm();
+
+            setTimeout(function() {
+                closeAuthModal();
+            }, 1500);
+
+        } else if (res.status === 'warning') {
+            logEl.style.color = '#f59e0b';
+            logEl.innerText = `⚠️ ${res.message}`;
+        } else {
+            logEl.style.color = '#ef4444';
+            logEl.innerText = `❌ ${res.message}`;
+        }
+    });
+
+    // Cập nhật số liệu Real-time
+    socket.on('update_dashboard_metrics', function(data) {
+        if (data.total_people !== undefined) {
+            const elTotal = document.getElementById('metric-total-people');
+            if (elTotal) elTotal.innerText = data.total_people;
+        }
+        if (data.registered !== undefined) {
+            const elReg = document.getElementById('metric-registered');
+            if (elReg) elReg.innerText = data.registered;
+        }
+        if (data.not_registered !== undefined) {
+            const elNotReg = document.getElementById('metric-not-registered');
+            if (elNotReg) elNotReg.innerText = data.not_registered;
+        }
+    });
+
+    // Cập nhật đồng hồ Real-time
     function updateRealTimeClock() {
         const now = new Date();
         const day = String(now.getDate()).padStart(2, '0');
@@ -370,100 +714,7 @@
     updateRealTimeClock();
     setInterval(updateRealTimeClock, 1000);
 
-    // 2. KHỞI TẠO BIỂU ĐỒ CỘT (SHIFTS BAR CHART)
-    const barCtx = document.getElementById('shiftsBarChart');
-    if (barCtx) {
-        new Chart(barCtx, {
-            type: 'bar',
-            data: {
-                labels: ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ Nhật'],
-                datasets: [
-                    {
-                        label: 'Sáng',
-                        data: [6, 6, 7, 6, 8, 8, 8],
-                        backgroundColor: '#3b82f6',
-                        borderRadius: 4,
-                        barPercentage: 0.7,
-                        categoryPercentage: 0.8
-                    },
-                    {
-                        label: 'Chiều',
-                        data: [5, 5, 6, 5, 7, 7, 7],
-                        backgroundColor: '#60a5fa',
-                        borderRadius: 4,
-                        barPercentage: 0.7,
-                        categoryPercentage: 0.8
-                    },
-                    {
-                        label: 'Đêm',
-                        data: [4, 4, 4, 4, 6, 6, 6],
-                        backgroundColor: '#f59e0b',
-                        borderRadius: 4,
-                        barPercentage: 0.7,
-                        categoryPercentage: 0.8
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        backgroundColor: 'rgba(15, 23, 42, 0.9)',
-                        padding: 10,
-                        cornerRadius: 8
-                    }
-                },
-                scales: {
-                    x: {
-                        grid: { display: false }
-                    },
-                    y: {
-                        beginAtZero: true,
-                        max: 8,
-                        ticks: { stepSize: 2 },
-                        grid: { color: '#f1f5f9' }
-                    }
-                }
-            }
-        });
-    }
-
-    // 3. KHỞI TẠO BIỂU ĐỒ TRÒN (REGISTRATION DONUT CHART)
-    const regValue = Number("{{ registered if registered is defined and registered else 32 }}") || 32;
-    const notRegValue = Number("{{ not_registered if not_registered is defined and not_registered else 6 }}") || 6;
-
-    const pieCtx = document.getElementById('registrationPieChart');
-    if (pieCtx) {
-        new Chart(pieCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Đã đăng ký', 'Chưa đăng ký'],
-                datasets: [{
-                    data: [regValue, notRegValue],
-                    backgroundColor: ['#10b981', '#ef4444'],
-                    borderWidth: 0,
-                    hoverOffset: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: '72%',
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        backgroundColor: 'rgba(15, 23, 42, 0.9)',
-                        padding: 10,
-                        cornerRadius: 8
-                    }
-                }
-            }
-        });
-    }
-
-    // 4. MODAL GENERATE SCHEDULE
+    // --- CÁC HÀM XỬ LÝ MODAL TẠO LỊCH ---
     const scheduleModal = document.getElementById('scheduleModal');
     const openBtn = document.getElementById('openScheduleModalBtn');
     const closeBtn = document.getElementById('closeScheduleModalBtn');
@@ -484,8 +735,7 @@
     function handleGenerateSchedule(e) {
         if (e && e.preventDefault) e.preventDefault();
         closeModal();
-        alert('Đã chạy thuật toán xếp lịch trực cuối tuần thành công!');
+        alert('Đã chạy thuật toán xếp lịch trực thành công!');
     }
 </script>
 {% endblock %}
-

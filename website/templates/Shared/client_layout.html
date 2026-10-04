@@ -758,7 +758,13 @@
         });
     </script>
 
-    {% block scripts %}{% endblock %}
+    {% block scripts %}
+    {% if current_user.is_authenticated %}
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script>
+    window.clientPresenceSocket = io();
+</script>
+{% endif %}{% endblock %}
 
     <!-- Chatbot Widget -->
     <div id="chat-icon" onclick="toggleChat()" title="Mở hộp thoại hỗ trợ trực ban">

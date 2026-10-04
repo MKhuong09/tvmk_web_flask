@@ -364,7 +364,13 @@
                 <a href="{{ url_for('admin_views.admin_home') if url_for else '#' }}">
                     <i class="mdi mdi-chart-bar"></i> <span>Thống kê</span>
                 </a>
-            </li>          
+            </li>     
+            <li class="sidebar-item {{ 'active' if request and 'client-accounts' in request.path }}">
+    <a href="{{ url_for('admin_views.admin_client_accounts') }}">
+        <i class="mdi mdi-account-cog-outline"></i>
+        <span>Quản lý tài khoản</span>
+    </a>
+</li>     
 
             <li class="sidebar-item {{ 'active' if request and 'scheduleList' in request.path }}">
                 <a href="{{ url_for('admin_views.admin_scheduleList') if url_for else '#' }}">
@@ -429,5 +435,42 @@
         });
     </script>
     {% block scripts %}{% endblock %}
+    <div class="mobile-bottom-nav d-md-none fixed-bottom bg-white border-top shadow-sm py-2 px-1 d-flex justify-content-around align-items-center" style="z-index: 1050;">
+    <a href="/admin/home" class="text-primary text-center text-decoration-none" style="font-size: 11px; flex: 1;">
+        <i class="fas fa-home fa-lg d-block mb-1"></i>Tổng quan
+    </a>
+    <a href="/admin/history" class="text-muted text-center text-decoration-none" style="font-size: 11px; flex: 1;">
+        <i class="fas fa-calendar-alt fa-lg d-block mb-1"></i>Lịch trực
+    </a>
+    <a href="/admin/request" class="text-muted text-center text-decoration-none" style="font-size: 11px; flex: 1;">
+        <i class="fas fa-clipboard-list fa-lg d-block mb-1"></i>Yêu cầu
+    </a>
+    <a href="/admin/scheduleList" class="text-muted text-center text-decoration-none" style="font-size: 11px; flex: 1;">
+        <i class="fas fa-users fa-lg d-block mb-1"></i>Nhân sự
+    </a>
+    <a href="/admin/usershift" class="text-muted text-center text-decoration-none" style="font-size: 11px; flex: 1;">
+        <i class="fas fa-user-cog fa-lg d-block mb-1"></i>Cài đặt
+    </a>
+</div>
+
+<!-- 2. CSS bổ trợ tối ưu hiển thị Mobile -->
+<style>
+    @media (max-width: 768px) {
+        /* Đẩy nội dung lên để không bị thanh điều hướng đáy che khuất */
+        body {
+            padding-bottom: 75px !important;
+            background-color: #f8f9fa;
+        }
+        /* Thu nhỏ khoảng cách lề trên mobile cho thoáng */
+        .container-fluid {
+            padding-left: 10px !important;
+            padding-right: 10px !important;
+        }
+        /* Ẩn bớt sidebar mặc định của web trên màn hình nhỏ nếu cần thiết */
+        .sidebar {
+            display: none; 
+        }
+    }
+</style>
 </body>
 </html>

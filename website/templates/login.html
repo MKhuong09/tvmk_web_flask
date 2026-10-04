@@ -364,7 +364,7 @@
     </div>
     <span class="brand-tag">ẤP 15</span>
   </div>
-
+{% set auth_messages = get_flashed_messages(with_categories=true) %}
   <!-- CONTAINER TRƯỢT -->
   <div class="auth-container" id="authContainer">
 
@@ -375,19 +375,15 @@
         <p class="subtitle">Nhập tài khoản để xem lịch trực ban</p>
 
       
-        {% with messages = get_flashed_messages(with_categories=true) %}
-          {% if messages %}
-            {% set shown_messages = [] %}
-            {% for category, message in messages %}
-              {% if message not in shown_messages and "Please log in to access this page" not in message %}
-                <div class="flash-box {% if category == 'success' %}success{% endif %}">
-                  {{ message }}
-                </div>
-                {% set _ = shown_messages.append(message) %}
-              {% endif %}
-            {% endfor %}
-          {% endif %}
-        {% endwith %}
+        {% set shown_messages = [] %}
+{% for category, message in auth_messages %}
+  {% if message not in shown_messages and "Please log in to access this page" not in message %}
+    <div class="flash-box {% if category == 'success' %}success{% endif %}">
+      {{ message }}
+    </div>
+    {% set _ = shown_messages.append(message) %}
+  {% endif %}
+{% endfor %}
 
         <div class="input-group">
           <label>Tên đăng nhập</label>
@@ -422,6 +418,15 @@
     <!-- 2. ĐĂNG KÝ  -->
     <div class="form-box sign-up-box">
       <form method="POST" action="{{ url_for('auth.sign_up') }}">
+        {% set shown_messages = [] %}
+        {% for category, message in auth_messages %}
+          {% if message not in shown_messages and "Please log in to access this page" not in message %}
+            <div class="flash-box {% if category == 'success' %}success{% endif %}">
+              {{ message }}
+            </div>
+            {% set _ = shown_messages.append(message) %}
+          {% endif %}
+        {% endfor %}
         <h1>Tạo tài khoản mới 🌱</h1>
         <p class="subtitle">Tham gia SCHEDULE Hamlet ngay hôm nay</p>
 
@@ -474,6 +479,7 @@
           <span>Đăng ký tài khoản</span>
           <span>→</span>
         </button>
+        
       </form>
     </div>
 

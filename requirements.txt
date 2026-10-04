@@ -1,9 +1,12 @@
-flask
-flask-login
+Flask
+Flask-Login
+Flask-SocketIO
 firebase-admin
-ortools
-gunicorn
+openai
+python-dotenv
+pandas
 openpyxl
 pytz
-pandas
+ortools
 apscheduler
+gunicorn

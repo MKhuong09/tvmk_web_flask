@@ -1,12 +1,13 @@
 from datetime import datetime
 import random
 import time
-from flask import Blueprint, flash, redirect, render_template, request, session, url_for
+from flask import Blueprint, flash, redirect, render_template, request, session, url_for, jsonify
 from flask_login import current_user, login_required, login_user, logout_user
 from werkzeug.security import check_password_hash, generate_password_hash
 from firebase_admin import firestore
 from .models import User
 from .utils import send_mail_based_on_admin_config
+from typing import Any
 
 # Khởi tạo Firestore
 db = firestore.client()
@@ -15,36 +16,50 @@ auth = Blueprint('auth', __name__)
 
 @auth.route('/')
 def index():
-    return redirect(url_for('auth.login'))
+    return redirect('/login')
 
 @auth.route('/login.html', methods=['GET', 'POST'])
 @auth.route('/login', methods=['GET', 'POST'])
+@auth.route('/api/login', methods=['POST','OPTIONS'])
 def login():
-  if request.method == 'POST':
-    username = request.form.get('username')
-    password = request.form.get('password')
-    users_ref = (
-        db.collection('users').where('user_name', '==', username).limit(1).stream()
-    )
-    user = None
-    for doc in users_ref:
-      user = User(doc.id, doc.to_dict())
-      break
+    if request.method == 'OPTIONS':
+        return jsonify({'success': True}), 200
+    if request.method == 'POST':
+        is_api = request.is_json or request.headers.get('Content-Type') == 'application/json'
+        data = request.get_json() if is_api else request.form
+        
+        username = data.get('username')
+        password = data.get('password')
 
-    if user:
-      if check_password_hash(user.password, password):
-        login_user(user, remember=True)
-        flash('Logged in successfully!', category='success')
-        if user.role_id == 1 or user.role_id == 3:
-          return redirect(url_for('admin_views.admin_scheduleList'))
-        elif user.role_id == 2:
-          return redirect(url_for('client_views.home'))
-      else:
-        flash('Incorrect password, try again.', category='error')
-    else:
-      flash('User not found.', category='error')
+        users_ref = db.collection('users').where('user_name', '==', username).limit(1).stream()
+        user = None
+        user_id = None
+        for doc in users_ref:
+            user = User(doc.id, doc.to_dict())
+            user_id = doc.id
+            break
 
-  return render_template('login.html', user=current_user)
+        if user and check_password_hash(user.password, password):
+            if is_api:
+                return jsonify({
+                    'success': True,
+                    'message': 'Đăng nhập thành công',
+                    'user_id': user_id,
+                    'role_id': user.role_id
+                }), 200
+            else:
+                
+                login_user(user, remember=True)
+                if user.role_id in [1, 3]:
+                    return redirect(url_for('admin_views.admin_scheduleList'))
+                else:
+                    return redirect(url_for('client_views.home'))
+        else:
+            if is_api:
+                return jsonify({'success': False, 'message': 'Sai tài khoản hoặc mật khẩu'}), 401
+            else:
+                flash('Sai tài khoản hoặc mật khẩu', category='error')
+    return render_template('login.html', user=current_user)
 
 
 @auth.route('/logout')
@@ -54,51 +69,93 @@ def logout():
   return redirect(url_for('auth.login'))
 
 
-@auth.route('/sign-up', methods=['GET', 'POST'])
+@auth.route('/sign_up', methods=['GET', 'POST'])
 @auth.route('/sign_up.html', methods=['GET', 'POST'])
+@auth.route('/api/register', methods=['POST'])
+@auth.route('/sign_up', methods=['GET', 'POST'])
+@auth.route('/sign_up.html', methods=['GET', 'POST'])
+@auth.route('/api/register', methods=['POST'])
 def sign_up():
-  if request.method == 'POST':
-    username = request.form.get('username')
-    email = request.form.get('email')
-    full_name = request.form.get('full_name')
-    password = request.form.get('password')
-    confirm_password = request.form.get('confirm_password')
+    if request.method == 'POST':
+        is_api = request.is_json or request.headers.get('Content-Type') == 'application/json'
+        data = request.get_json() if is_api else request.form
 
-    # Kiểm tra xem username đã tồn tại trên Firestore chưa
-    existing_users = list(
-        db.collection('users').where('user_name', '==', username).limit(1).stream()
-    )
+        username = (data.get('username') or '').strip()
+        email = (data.get('email') or '').strip().lower()
+        full_name = (data.get('full_name') or '').strip()
+        password = data.get('password') or ''
 
-    if len(existing_users) > 0:
-      flash('Tên đăng nhập đã tồn tại.', category='error')
-    elif len(email) < 4:
-      flash('Email phải có ít nhất 4 ký tự.', category='error')
-    elif len(username) < 2:
-      flash('Tên đăng nhập phải có ít nhất 2 ký tự.', category='error')
-    elif password != confirm_password:
-      flash('Mật khẩu xác nhận không khớp.', category='error')
-    elif len(password) < 7:
-      flash('Mật khẩu phải có ít nhất 7 ký tự.', category='error')
-    else:
-      # Chuẩn bị dữ liệu dưới dạng dictionary cho Firestore
-      new_user_data = {
-          'user_name': username,
-          'email': email,
-          'full_name': full_name,
-          'password': generate_password_hash(password, method='pbkdf2:sha256'),
-          'role_id': 2,
-          'allowed_off_days': 2,
-          'is_verified': True,
-      }
+        existing_users = list(
+            db.collection('users')
+            .where('user_name', '==', username)
+            .limit(1)
+            .stream()
+        )
+        existing_email_users = []
 
-      # Lưu trực tiếp lên Firestore collection 
-      db.collection('users').add(new_user_data)
+        if email:
+            existing_email_users = list(
+                db.collection('users')
+                .where('email', '==', email)
+                .limit(1)
+                .stream()
+            )
+        # Email được admin duyệt có document ID là địa chỉ email viết thường
+        authorized_email_ref: Any = (
+    db.collection('authorized_emails').document(email)
+    if email else None
+)
+        authorized_email_doc = (
+            authorized_email_ref.get()
+            if authorized_email_ref else None
+        )
 
-      flash('Tạo tài khoản thành công! Hãy đăng nhập nhé 🌸', category='success')
-      return redirect(url_for('auth.login'))
+        if not username or not email or not password:
+            msg = 'Vui lòng nhập đầy đủ thông tin.'
+        elif existing_users:
+            msg = 'Tên đăng nhập đã tồn tại.'
+        elif existing_email_users:
+            msg = 'Email này đã được sử dụng.'
+        elif len(password) < 7:
+            msg = 'Mật khẩu phải có ít nhất 7 ký tự.'
+        elif not authorized_email_doc or not authorized_email_doc.exists:
+            msg = 'Email này chưa được admin cấp phép.'
+        elif (authorized_email_doc.to_dict() or {}).get('is_used', False):
+            msg = 'Email này đã được dùng để đăng ký.'
+        else:
+            msg = None
 
-  return render_template('sign_up.html', user=current_user)
+        if msg:
+            if is_api:
+                return jsonify({'success': False, 'message': msg}), 400
 
+            flash(msg, category='error')
+            return render_template('login.html', user=current_user)
+
+        new_user_data = {
+            'user_name': username,
+            'email': email,
+            'full_name': full_name,
+            'password': generate_password_hash(password, method='pbkdf2:sha256'),
+            'role_id': 2,
+            'allowed_off_days': 2,
+            'is_verified': True,
+        }
+
+        # Tạo tài khoản rồi đánh dấu email đã sử dụng
+        db.collection('users').add(new_user_data)
+        authorized_email_ref.delete()
+
+        if is_api:
+            return jsonify({
+                'success': True,
+                'message': 'Tạo tài khoản thành công!'
+            }), 201
+
+        flash('Tạo tài khoản thành công!', category='success')
+        return redirect('/login')
+
+    return render_template('login.html', user=current_user)
 @auth.route('/verify-otp', methods=['GET', 'POST'])
 def verify_otp():
   if 'temp_user' not in session:
@@ -166,7 +223,6 @@ def send_otp_ajax():
   body = f'Mã OTP xác nhận đăng ký tài khoản của bạn là: {otp}\nMã này có hiệu lực trong vòng 5 phút. 🌸'
 
   email_sent = send_mail_based_on_admin_config(subject, recipients, body)
-
   if email_sent:
     return {'success': True, 'message': 'Đã gửi mã OTP thành công!'}
   else:
