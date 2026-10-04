@@ -1,17 +1,13 @@
 import io
 import calendar
-<<<<<<< HEAD
 from datetime import datetime, timedelta, timezone 
 from flask import send_file
-from flask import Blueprint, render_template, redirect, request, url_for, flash, jsonify, session
-=======
 from flask import Blueprint, current_app, render_template, redirect, request, url_for, flash, jsonify, session
->>>>>>> 5e6e19ba4e101232541237788d8ce3a20b9bf9ab
 from flask_login import login_required, current_user
 from flask import send_file
 
 from mailAgent.mailbox import send_email
-from .models import ScheduleOutput, User, Registration, Status, db
+from .models import  User, Registration, Status, db
 from algorithms.schedule_agent import DayOfWeek, ScheduleAgent, UserData, convert_day_to_numeric
 
 from sqlalchemy import func
