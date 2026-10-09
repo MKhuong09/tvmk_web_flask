@@ -1,8 +1,10 @@
 from flask import current_app
 from flask_mail import Mail, Message
 from firebase_admin import firestore
+from datetime import datetime, timezone, timedelta
+import pytz
 
-from .models import SystemConfig
+# from .models import SystemConfig
 
 def send_mail_based_on_admin_config(subject, recipients, body):
     db = firestore.client()
@@ -18,9 +20,9 @@ def send_mail_based_on_admin_config(subject, recipients, body):
         config = ConfigObj(config_data)
         break
 
-    if not config or not config.smtp_email or not config.smtp_password:       
+    if not config or not config.smtp_email or not config.smtp_password:
         smtp_user = "danquanhocmon@gmail.com"
-        smtp_pass = "jqhk xscf ovll fvin"  
+        smtp_pass = "jqhk xscf ovll fvin"
     else:
         smtp_user = config.smtp_email
         smtp_pass = config.smtp_password
@@ -41,3 +43,17 @@ def send_mail_based_on_admin_config(subject, recipients, body):
     except Exception as e:
         print(f"Lỗi gửi email: {e}")
         return False
+
+VIETNAM_TZ = pytz.timezone('Asia/Ho_Chi_Minh')
+def get_year_week_num():
+    iso_year, iso_week, _ = datetime.now(VIETNAM_TZ).isocalendar()
+    return iso_year, iso_week
+
+def get_next_year_week_num():
+    next_week_date = datetime.now(VIETNAM_TZ) + timedelta(weeks=1)
+    
+    iso_year, iso_week, _ = next_week_date.isocalendar()
+    return iso_year, iso_week
+
+def get_datetime_now():
+    return datetime.now(timezone.utc)

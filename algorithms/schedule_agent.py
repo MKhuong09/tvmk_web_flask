@@ -20,16 +20,15 @@ Output
 ******
 A schedule for each user that meets the above constraints. The schedule should be in the form of a dictionary where the keys are the days and the values are lists of users scheduled for that day.
 '''
-import enum
+from enum import Enum
 import random
 from typing import List, Dict, Any
 import pandas as pd
 import openpyxl
-from website.models import User
 
 from ortools.sat.python import cp_model
 
-class DayOfWeek(enum.Enum):
+class DayOfWeek(Enum):
     MONDAY = 1
     TUESDAY = 2
     WEDNESDAY = 3
@@ -38,46 +37,69 @@ class DayOfWeek(enum.Enum):
     SATURDAY = 6
     SUNDAY = 7
 
+DAY_MAPPING = {
+    1: "monday",
+    2: "tuesday",
+    3: "wednesday",
+    4: "thursday",
+    5: "friday",
+    6: "saturday",
+    7: "sunday"
+}
 
-class UserData:
-    def __init__(self, name: str, email: str, userID: int, unavailable_days: List[int], max_days_per_week: int):
-        self.name = name
-        self.email = email
-        self.userID = userID
-        self.role = "user"
-        self.unavailable_days = unavailable_days or []
-        self.max_days_per_week = max_days_per_week
+class User:
+  def __init__(self, user_id, data):
+    self.id = user_id
+    self.email = data.get("email")
+    self.password = data.get("password")
+    self.user_name = data.get("user_name")
+    self.full_name = data.get("full_name")
+    self.role_id = data.get("role_id", 2)
+    self.allowed_off_days = data.get("allowed_off_days", 2)
+    self.is_verified = data.get("is_verified", False)
+    self.selected_days: List[int] = []
 
+class Registration:
+  def __init__(self, reg_id, data):
+    self.id = reg_id
+    self.selected_days = data.get("selected_days", [])
+    self.session = data.get("session")
+    self.week_number = data.get("week_number")
+    self.status_id = data.get("status_id")
+    self.user_id = data.get("user_id")
+    self.created_at = data.get("created_at")
 
 class ScheduleAgent:
     """Schedule generator using CP-SAT (OR-Tools). Falls back to simple greedy if OR-Tools not installed."""
+    
 
-    def __init__(self, users: List[User], NumOfSchedDays: int, NumOfUsersPerDay: int, last_week_schedule: Dict[int, List[Any]] | None = None):
+    def __init__(self, users: List[User], registrations: List[Registration], NumOfSchedDays: int, NumOfUsersPerDay: int, last_week_schedule: Dict[int, List[Any]] | None = None):
         self.users = users
+        self.registrations = registrations
         self.NumOfSchedDays = NumOfSchedDays
         self.NumOfUsersPerDay = NumOfUsersPerDay
-        self.schedule: Dict[int, List[User]] = {day: [] for day in range(1, NumOfSchedDays + 1)}
         self.last_week_schedule = last_week_schedule or {}
         
-    def to_json_dict(self) -> Dict[str, List[Dict[str, Any]]]:
+    def to_json_dict(daily_schedule: Dict[str, List[Any]]) -> Dict[str, List[Dict[str, Any]]]:
         """
-        Converts internal integer-keyed schedule into a JSON-serializable 
-        dictionary with readable day names and user dictionaries/strings.
+        Converts a daily schedule dictionary (mapping day strings like 'monday' 
+        to lists of User objects) into a fully JSON-serializable dictionary.
         """
         formatted_schedule = {}
-        for day_num, staff_list in self.schedule.items():
-            day_name = self.DAY_NAMES.get(day_num, f"Day {day_num}")
+
+        for day_name, staff_list in daily_schedule.items():
             formatted_schedule[day_name] = [
-                {
-                    "id": u.id,
-                    "name": u.fullname or u.user_name,
-                    "email": u.email
+                u.to_dict() if hasattr(u, "to_dict") else {
+                    "id": getattr(u, "id", None),
+                    "full_name": getattr(u, "full_name", getattr(u, "user_name", str(u))),
+                    "email": getattr(u, "email", None)
                 } if hasattr(u, "id") else str(u)
                 for u in staff_list
             ]
+
         return formatted_schedule
 
-    def create_schedule(self, solve_time_seconds: int = 5):
+    def generate_schedule(self, solve_time_seconds: int = 5):
         if cp_model is None:
             return self._create_schedule_greedy()
 
@@ -90,12 +112,19 @@ class ScheduleAgent:
         for u in range(n_users):
             for d in range(n_days):
                 x[(u, d)] = model.NewBoolVar(f"x_{u}_{d}")
+                
+        user_days_map = {
+            r.user_id: getattr(r, "selected_days", []) or []
+            for r in (self.registrations or [])
+        }
+        for u in self.users:
+            u.selected_days = user_days_map.get(u.id, [])
 
         # 1. Availability constraints
         for u, user in enumerate(self.users):
             for d in range(n_days):
                 daynum = d + 1
-                if daynum in user.unavailable_days:
+                if daynum in user.selected_days:
                     model.Add(x[(u, d)] == 0)
 
         # 2. Hard day limits
@@ -105,7 +134,7 @@ class ScheduleAgent:
 
         # 3. Max days per user
         for u, user in enumerate(self.users):
-            model.Add(sum(x[(u, d)] for d in range(n_days)) <= user.max_days_per_week)
+            model.Add(sum(x[(u, d)] for d in range(n_days)) <= 7 - user.allowed_off_days)
 
         # 4. Daily Balancing Penalties (Smooth out daily counts)
         TARGET_MIN = 2  # Target at least 2 users/day (e.g., Friday)
@@ -189,17 +218,26 @@ class ScheduleAgent:
         solver.parameters.random_seed = random.randrange(1, 1_000_000)
         solver.parameters.num_search_workers = 8
 
+        """Runs the CP-SAT solver and returns a daily_schedule dictionary mapped by day names."""
         result = solver.Solve(model)
+
         if result in (cp_model.OPTIMAL, cp_model.FEASIBLE):
+            daily_schedule = {day: [] for day in DayOfWeek}
+
             for d in range(n_days):
                 daynum = d + 1
+                day_name = DAY_MAPPING.get(daynum)
+                
                 scheduled = []
                 for u in range(n_users):
                     if solver.Value(x[(u, d)]) == 1:
                         scheduled.append(self.users[u])
-                self.schedule[daynum] = scheduled
+
+                if day_name:
+                    daily_schedule[day_name] = scheduled
+
             print(f"Schedule created using CP-SAT solver in {solver.WallTime()} seconds.")
-            return self.schedule
+            return daily_schedule
 
         # Fallback to greedy if solver didn't find a solution
         print(f"CP-SAT solver failed to find a solution, falling back to greedy algorithm.\nReason: {solver.StatusName(result)}")
@@ -218,7 +256,7 @@ class ScheduleAgent:
             random.shuffle(pool)
             ok = True
             for d in range(1, n_days + 1):
-                candidates = [u for u in pool if d not in u.unavailable_days and user_counts[u.userID] == u.max_days_per_week]
+                candidates = [u for u in pool if d not in u.allowed_off_days and user_counts[u.userID] == u.max_days_per_week]
                 # apply fairness: drop users who had weekend last week if today is weekend
                 if d in (DayOfWeek.SATURDAY.value, DayOfWeek.SUNDAY.value):
                     last_week_ids = set()
@@ -250,12 +288,13 @@ class ScheduleAgent:
             for u in self.users:
                 if len(assigned) >= self.NumOfUsersPerDay:
                     break
-                if d not in u.unavailable_days and sum(1 for dd in self.schedule.values() if u in dd) == u.max_days_per_week:
+                if d not in u.allowed_off_days and sum(1 for dd in self.schedule.values() if u in dd) == u.max_days_per_week:
                     assigned.append(u)
             self.schedule[d] = assigned
         return self.schedule
+    
 
-    def get_schedule(self) -> Dict[int, List[UserData]]:
+    def get_schedule(self) -> Dict[int, List[User]]:
         return self.schedule
     
     def print_schedule(self):
@@ -264,7 +303,7 @@ class ScheduleAgent:
     
     def validating_schedule_result(self, schedule):
         for user in self.users:
-            for dayoff in user.unavailable_days:
+            for dayoff in user.allowed_off_days:
                 if user.userID in schedule[dayoff]:
                     return False
                 if sum(1 for d in schedule if user.userID in schedule[d]) > user.max_days_per_week:
@@ -300,35 +339,35 @@ if __name__ == "__main__":
     # Quick local example (run after installing ortools or will fall back to greedy)
     users = [
         UserData(fullname="Vinh", email="a@example.com", id=1,
-                 unavailable_days=[DayOfWeek.MONDAY.value, DayOfWeek.WEDNESDAY.value,DayOfWeek.FRIDAY.value,DayOfWeek.SUNDAY.value], 
+                 allowed_off_days=[DayOfWeek.MONDAY.value, DayOfWeek.WEDNESDAY.value,DayOfWeek.FRIDAY.value,DayOfWeek.SUNDAY.value], 
                  max_days_per_week=3),
         
         UserData(fullname="Nhan", email="b@example.com", id=2,
-                 unavailable_days=[DayOfWeek.THURSDAY.value, DayOfWeek.FRIDAY.value,DayOfWeek.SATURDAY.value,DayOfWeek.SUNDAY.value]
+                 allowed_off_days=[DayOfWeek.THURSDAY.value, DayOfWeek.FRIDAY.value,DayOfWeek.SATURDAY.value,DayOfWeek.SUNDAY.value]
                  , max_days_per_week=3),
         
         UserData(fullname="Nam", email="c@example.com", id=3,
-                 unavailable_days=[DayOfWeek.MONDAY.value,DayOfWeek.FRIDAY.value],
+                 allowed_off_days=[DayOfWeek.MONDAY.value,DayOfWeek.FRIDAY.value],
                  max_days_per_week=1),
         
         UserData(fullname="Son", email="d@example.com", id=4,
-                 unavailable_days=[DayOfWeek.THURSDAY.value, DayOfWeek.FRIDAY.value,DayOfWeek.SATURDAY.value,DayOfWeek.SUNDAY.value],
+                 allowed_off_days=[DayOfWeek.THURSDAY.value, DayOfWeek.FRIDAY.value,DayOfWeek.SATURDAY.value,DayOfWeek.SUNDAY.value],
                  max_days_per_week=3),
         
         UserData(fullname="Huy", email="e@example.com", id=5,
-                 unavailable_days=[],
+                 allowed_off_days=[],
                  max_days_per_week=2),
         
         UserData(fullname="Giang", email="f@example.com", id=6,
-                 unavailable_days=[],
+                 allowed_off_days=[],
                  max_days_per_week=2),
         
         UserData(fullname="Khoa", email="g@example.com", id=7,
-                 unavailable_days=[],
+                 allowed_off_days=[],
                  max_days_per_week=2),
         
         UserData(fullname="Khuong", email="k@example.com", id=8,
-                 unavailable_days=[DayOfWeek.WEDNESDAY.value,DayOfWeek.THURSDAY.value, DayOfWeek.FRIDAY.value,DayOfWeek.SATURDAY.value,DayOfWeek.SUNDAY.value],
+                 allowed_off_days=[DayOfWeek.WEDNESDAY.value,DayOfWeek.THURSDAY.value, DayOfWeek.FRIDAY.value,DayOfWeek.SATURDAY.value,DayOfWeek.SUNDAY.value],
                  max_days_per_week=2),
     ]
     

@@ -13,12 +13,14 @@
         flex-wrap: wrap;
         gap: 15px;
     }
+
     .page-title {
         font-size: 1.6rem;
         font-weight: 600;
         color: #1a202c;
-        margin-bottom: 25px;
+        margin-bottom: 0 !important;
     }
+
     .page-subtitle {
         color: #64748b;
         font-size: 0.95rem;
@@ -40,6 +42,7 @@
         cursor: pointer;
         transition: all 0.2s;
     }
+
     .btn-generate-schedule:hover {
         background-color: #1d4ed8;
         transform: translateY(-1px);
@@ -101,8 +104,14 @@
         align-items: center;
         gap: 5px;
     }
-    .metric-subtext.text-emerald { color: #059669; }
-    .metric-subtext.text-blue { color: #2563eb; }
+
+    .metric-subtext.text-emerald {
+        color: #059669;
+    }
+
+    .metric-subtext.text-blue {
+        color: #2563eb;
+    }
 
     .metric-icon-box {
         width: 48px;
@@ -113,9 +122,21 @@
         justify-content: center;
         font-size: 1.5rem;
     }
-    .icon-box-blue { background-color: #eff6ff; color: #3b82f6; }
-    .icon-box-purple { background-color: #f5f3ff; color: #6366f1; }
-    .icon-box-green { background-color: #f0fdf4; color: #10b981; }
+
+    .icon-box-blue {
+        background-color: #eff6ff;
+        color: #3b82f6;
+    }
+
+    .icon-box-purple {
+        background-color: #f5f3ff;
+        color: #6366f1;
+    }
+
+    .icon-box-green {
+        background-color: #f0fdf4;
+        color: #10b981;
+    }
 
     /* HÀNG 2: 2 KHỐI BIỂU ĐỒ NẰM KẾ NHAU */
     .dashboard-charts-grid {
@@ -124,6 +145,7 @@
         gap: 20px;
         margin-bottom: 25px;
     }
+
     @media (max-width: 992px) {
         .dashboard-charts-grid {
             grid-template-columns: 1fr;
@@ -135,10 +157,11 @@
         border: 1px solid #e2e8f0;
         border-radius: 12px;
         padding: 24px;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
         display: flex;
         flex-direction: column;
     }
+
     .chart-header {
         display: flex;
         justify-content: space-between;
@@ -147,17 +170,20 @@
         flex-wrap: wrap;
         gap: 10px;
     }
+
     .chart-title-group h3 {
         font-size: 1.05rem;
         font-weight: 700;
         color: #0f172a;
         margin: 0 0 4px 0;
     }
+
     .chart-title-group p {
         font-size: 0.85rem;
         color: #64748b;
         margin: 0;
     }
+
     .chart-legend {
         display: flex;
         align-items: center;
@@ -166,11 +192,13 @@
         font-weight: 600;
         color: #475569;
     }
+
     .legend-item {
         display: flex;
         align-items: center;
         gap: 6px;
     }
+
     .legend-bullet {
         width: 10px;
         height: 10px;
@@ -184,15 +212,18 @@
         margin-top: 20px;
         border-top: 1px solid #f1f5f9;
     }
+
     .status-summary-table td {
         padding: 14px 16px;
         font-size: 0.95rem;
         border-bottom: 1px solid #f1f5f9;
     }
+
     .status-summary-table tr td:first-child {
         color: #334155;
         font-weight: 600;
     }
+
     .status-summary-table tr td:last-child {
         text-align: right;
         font-weight: 800;
@@ -210,6 +241,7 @@
         justify-content: center;
         z-index: 9999;
     }
+
     .schedule-modal-content {
         width: min(420px, 92vw);
         background: #ffffff;
@@ -267,7 +299,7 @@
         width: 50%;
     }
 
-    /* ===== Lịch Làm Trong Tuần — board ngang / dọc ===== */
+    /* ===== lịch trực Trong Tuần — board ngang / dọc ===== */
     .schedule-section-title {
         font-size: 1rem;
         color: #1a202c;
@@ -350,8 +382,14 @@
     }
 
     .day-sublabel {
-        font-size: 0.72rem;
+        padding: 5px 15px;
+        border-radius: 10px;
+        font-size: 0.9rem;
         color: #a0aec0;
+    }
+    .day-sublabel.cur-day {
+        color: #fff;
+        background: #11cc00fd;
     }
 
     .day-head-right {
@@ -559,56 +597,340 @@
             width: 100%;
         }
     }
+    .modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.modal-content {
+  background: #ffffff;
+  padding: 24px;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  text-align: center;
+}
+
+.modal-content h3 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  font-size: 1.25rem;
+}
+
+.modal-content p {
+  color: #555;
+  margin-bottom: 20px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.btn-secondary {
+  background-color: #e0e0e0;
+  color: #333;
+}
+
+.btn-secondary:hover {
+  background-color: #d0d0d0;
+}
+
+.btn-danger {
+  background-color: #dc3545;
+  color: #ffffff;
+}
+
+.btn-danger:hover {
+  background-color: #c82333;
+}
+/* Modal Overlays & Content */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.modal-content-lg {
+  background: #ffffff;
+  padding: 20px 24px;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 480px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #888;
+}
+
+.close-btn:hover {
+  color: #000;
+}
+
+/* Search Bar */
+.search-box {
+  margin-bottom: 12px;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  box-sizing: border-box;
+}
+
+/* User List Scrollable Area */
+.user-list {
+  flex: 1;
+  overflow-y: auto;
+  max-height: 320px;
+  border: 1px solid #eee;
+  border-radius: 6px;
+  margin-bottom: 16px;
+}
+
+.user-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.user-item:last-child {
+  border-bottom: none;
+}
+
+.user-item:hover {
+  background-color: #f5f8ff;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-name {
+  font-weight: 600;
+  color: #222;
+  font-size: 0.95rem;
+}
+
+.user-meta {
+  font-size: 0.8rem;
+  color: #777;
+}
+
+.add-action-badge {
+  font-size: 0.85rem;
+  color: #007bff;
+  font-weight: 500;
+}
+
+/* Modal Buttons */
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.btn-secondary {
+  background-color: #e0e0e0;
+  color: #333;
+}
+
+.btn-secondary:hover {
+  background-color: #d0d0d0;
+}
 </style>
 
 <!-- TIÊU ĐỀ TRANG VÀ NÚT TẠO LỊCH -->
 <div class="page-header-container">
-    <div>
+    <div class="d-flex align-items-center gap-2">
         <h2 class="page-title">Thống kê</h2>
-        <p class="page-subtitle">Tổng hợp quân số, tình hình đăng ký và phân bổ ca trực Ban CHQS</p>
+        <span class="page-subtitle">(Tổng hợp quân số, tình hình đăng ký và phân bổ ca trực Ban CHQS)</span>
+    </div>
+</div>
+<!-- ===== SECTION LỊCH TRỰC (2 TUẦN) ===== -->
+<section class="schedule-dashboard-card p-4 mb-4 rounded border bg-white shadow-sm">
+  
+  <!-- Header Section chính -->
+  <div class="d-flex align-items-center justify-content-between pb-3 mb-4 border-bottom">
+    <div class="d-flex flex-column gap-1">
+      <h2 class="schedule-section-title m-0 h4 fw-bold text-primary">
+        <i class="mdi mdi-calendar-clock me-2"></i>Quản Lý Lịch Trực
+      </h2>
+      <div class="schedule-hint text-muted fs-7 d-flex align-items-center gap-1" id="scheduleHint">
+        <i class="mdi mdi-cursor-default-click-outline"></i>
+        <span>Bấm chọn một người, rồi bấm vào ngày muốn chuyển tới.</span>
+      </div>
     </div>
 
-    <button type="button" class="btn-generate-schedule" id="openScheduleModalBtn">
-        <i class="mdi mdi-calendar-clock"></i> Generate Weekend Schedule
+    <!-- Nút Tạo lại lịch (Chỉ hiển thị khi đã có ít nhất 1 tuần) -->
+    {% if currentSchedule %}
+    <div class="d-flex gap-2">
+      <button type="button" class="btn btn-outline-danger btn-sm" onclick="regenerateSchedule()">
+        <i class="mdi mdi-refresh me-1"></i> Tạo lại lịch hiện tại
+      </button>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- ===== TUẦN HIỆN TẠI ===== -->
+  <div class="week-schedule-block mb-4">
+    <div class="week-header d-flex align-items-center mb-3 px-2">
+      <h3 class="h5 m-0 fw-bold text-dark d-flex align-items-center gap-2">
+        <span class="badge bg-primary">
+          Tuần {{ currentSchedule.week if currentSchedule else None }}
+        </span>
+        Lịch Trực Tuần Hiện Tại
+      </h3>
+    </div>
+
+    <div class="schedule-board-wrapper">
+      <div class="schedule-board" id="scheduleBoardCurrent"></div>
+    </div>
+  </div>
+
+  <!-- HÀNG PHÂN CÁCH (Chỉ hiện khi đã có tuần hiện tại) -->
+  {% if currentSchedule %}
+  <hr class="my-4 text-muted opacity-25" />
+
+  <!-- ===== TUẦN KẾ TIẾP ===== -->
+  <div class="week-schedule-block">
+    <div class="week-header d-flex align-items-center justify-content-between mb-3 px-2">
+      <h3 class="h5 m-0 fw-bold text-dark d-flex align-items-center gap-2">
+        <span class="badge bg-secondary">
+          Tuần {{ nextSchedule.week if nextSchedule else None }}
+        </span>
+        Lịch Trực Tuần Tiếp Theo
+      </h3>
+    </div>
+
+    <div class="schedule-board-wrapper">
+      <div class="schedule-board" id="scheduleBoardNext"></div>
+    </div>
+  </div>
+  {% endif %}
+
+</section>
+
+
+<!-- ===== NÚT TẠO LỊCH ĐỘNG DỰA TRÊN TRẠNG THÁI ===== -->
+{% if not currentSchedule %}
+  <!-- TH 1: Chưa có tuần hiện tại -> Cho phép tạo Tuần Hiện Tại -->
+  <div class="d-flex justify-content-center align-items-center m-4">
+    <button type="button" class="btn-generate-schedule" id="openScheduleModalBtn" onclick="openCreateModal('current')">
+      <i class="mdi mdi-calendar-plus me-1"></i> Tạo lịch cho tuần này
     </button>
-</div>
-
-<!-- ===== Lịch Làm Trong Tuần ===== -->
-<h3 class="schedule-section-title">Lịch Làm Trong Tuần</h3>
-<div class="schedule-hint" id="scheduleHint">
-    <i class="mdi mdi-cursor-default-click-outline"></i>Bấm chọn một người, rồi bấm vào ngày muốn chuyển tới.
-</div>
-
-<div class="schedule-board" id="scheduleBoard"></div>
+  </div>
+{% elif currentSchedule and not nextSchedule %}
+  <!-- TH 2: Đã có tuần hiện tại, CHƯA có tuần kế tiếp -> Cho phép tạo Tuần Kế Tiếp -->
+  <div class="d-flex justify-content-center align-items-center m-4">
+    <button type="button" class="btn-generate-schedule" id="openScheduleModalBtn" onclick="openCreateModal('next')">
+      <i class="mdi mdi-calendar-clock me-1"></i> Tạo lịch cho tuần kế tiếp
+    </button>
+  </div>
+{% endif %}
+<!-- TH 3: Đã có đủ cả 2 tuần (schedule và next_schedule) -> Nút bấm tự động ẩn hoàn toàn -->
 
 
 <!-- MODAL CẤU HÌNH XẾP LỊCH -->
 <div id="scheduleModal" class="schedule-modal" style="display: none;">
-    <div class="schedule-modal-content">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
-            <h3 style="margin: 0; font-size: 1.15rem; font-weight: 700; color: #0f172a;">Thông số sắp xếp lịch</h3>
-            <button type="button" id="closeScheduleModalBtn" style="border:none; background:none; font-size: 1.5rem; cursor: pointer; color: #64748b;">&times;</button>
-        </div>
-
-        <form action="{{ url_for('admin_views.generate_schedule') if url_for else '#' }}" method="POST" id="generateScheduleForm" onsubmit="handleGenerateSchedule(event)">
-            <div style="margin-bottom: 16px;">
-                <label style="display: block; font-weight: 600; font-size: 0.9rem; margin-bottom: 6px; color: #334155;">Số ngày trực</label>
-                <input type="number" id="num_days" name="num_days" min="1" max="7" value="7" style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.95rem;" required>
-            </div>
-
-            <div style="margin-bottom: 20px;">
-                <label style="display: block; font-weight: 600; font-size: 0.9rem; margin-bottom: 6px; color: #334155;">Quân số tối đa trong 1 ngày</label>
-                <input type="number" id="num_users_per_day" name="num_users_per_day" min="1" max="20" value="2" style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.95rem;" required>
-            </div>
-
-            <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                <button type="button" class="btn btn-secondary" id="cancelScheduleModalBtn" style="border-radius: 6px; font-weight: 600;">Hủy</button>
-                <button type="submit" class="btn btn-primary" style="border-radius: 6px; font-weight: 600; background-color: #2563eb;">Tạo Lịch</button>
-            </div>
-        </form>
+  <div class="schedule-modal-content">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
+      <h3 id="modalTitle" style="margin: 0; font-size: 1.15rem; font-weight: 700; color: #0f172a;">Thông số sắp xếp lịch</h3>
+      <button type="button" id="closeScheduleModalBtn" onclick="closeScheduleModal()"
+        style="border:none; background:none; font-size: 1.5rem; cursor: pointer; color: #64748b;">&times;</button>
     </div>
-</div>
 
+    <form action="{{ url_for('admin_views.generate_schedule') if url_for else '#' }}" method="POST" id="generateScheduleForm">
+      
+      <!-- Hidden input để gửi target week type ('current' hoặc 'next') về backend -->
+      <input type="hidden" id="target_week_type" name="target_week_type" value="current">
+
+      <div style="margin-bottom: 16px;">
+        <label style="display: block; font-weight: 600; font-size: 0.9rem; margin-bottom: 6px; color: #334155;">
+          Số ngày trực
+        </label>
+        <input type="number" id="num_days" name="num_days" min="1" max="7" value="7"
+          style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.95rem;" required>
+      </div>
+
+      <div style="margin-bottom: 20px;">
+        <label style="display: block; font-weight: 600; font-size: 0.9rem; margin-bottom: 6px; color: #334155;">
+          Quân số tối đa trong 1 ngày
+        </label>
+        <input type="number" id="num_users_per_day" name="num_users_per_day" min="1" max="20" value="2"
+          style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.95rem;" required>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px;">
+        <button type="button" class="btn btn-secondary" onclick="closeScheduleModal()"
+          style="border-radius: 6px; font-weight: 600;">Hủy</button>
+        <button type="submit" class="btn btn-primary"
+          style="border-radius: 6px; font-weight: 600; background-color: #2563eb;">Tạo Lịch</button>
+      </div>
+    </form>
+  </div>
+</div>
 <!-- 3 THẺ METRICS THEO ĐÚNG HÌNH 1 -->
 <div class="dashboard-metrics-grid">
     <!-- Thẻ 1 -->
@@ -629,7 +951,8 @@
     <div class="metric-card">
         <div class="card-info">
             <h4>TOTAL</h4>
-            <div class="metric-value">{{ total_schedule if total_schedule is defined and total_schedule else 142 }}</div>
+            <div class="metric-value">{{ registered_count if registered_count is defined and registered_count else 0 }}
+            </div>
             <div class="metric-subtext text-blue">
                 <i class="mdi mdi-layers-outline"></i> Tổng lượt ca trực đã xếp
             </div>
@@ -642,8 +965,8 @@
     <!-- Thẻ 3 -->
     <div class="metric-card">
         <div class="card-info">
-            <h4>LỊCH LÀM TRONG TUẦN</h4>
-            <div class="metric-value">{{ week_schedule if week_schedule is defined and week_schedule else 28 }}</div>
+            <h4>LỊCH TRỰC TRONG TUẦN</h4>
+            <div class="metric-value">{{ schedule.week_number if schedule is defined and schedule else 28 }}</div>
             <div class="metric-subtext text-emerald">
                 <i class="mdi mdi-shield-check-outline"></i> 4 ca / ngày x 7 ngày
             </div>
@@ -687,11 +1010,12 @@
     <div class="chart-panel">
         <div class="chart-header">
             <div class="chart-title-group">
-                <h3>Số Người Đăng Ký <span id="current-live-time" style="font-size: 0.85rem; font-weight: 500; color: #64748b;"></span></h3>
+                <h3>Số Người Đăng Ký <span id="current-live-time"
+                        style="font-size: 0.85rem; font-weight: 500; color: #64748b;"></span></h3>
                 <p>Tỉ lệ đăng ký ca trực tuần hiện tại</p>
             </div>
         </div>
-        
+
         <!-- DONUT CHART -->
         <div style="position: relative; height: 160px; display: flex; justify-content: center; align-items: center;">
             <canvas id="registrationPieChart"></canvas>
@@ -701,20 +1025,90 @@
         <table class="status-summary-table">
             <tr>
                 <td>Đã đăng ký</td>
-                <td style="color: #10b981 !important;">{{ registered if registered is defined and registered else 32 }}</td>
+                <td style="color: #10b981 !important;">{{ registered_count if registered_count is defined and
+                    registered_count else 0}}
+                </td>
             </tr>
             <tr>
                 <td>Chưa đăng ký</td>
-                <td style="color: #ef4444 !important;">{{ not_registered if not_registered is defined and not_registered else 6 }}</td>
+                <td style="color: #ef4444 !important;">{{ unregistered_count if unregistered_count is
+                    defined and unregistered_count else 0}}</td>
             </tr>
         </table>
     </div>
+</div>
+
+<!-- Confirmation Remove Modal -->
+<div id="confirm-remove-modal" class="modal-overlay" style="display: none;">
+  <div class="modal-content">
+    <h3>Xác nhận xóa</h3>
+    <p id="confirm-remove-message">Bạn có chắc chắn muốn xóa dân quân này khỏi lịch trực?</p>
+    <div class="modal-actions">
+      <button id="cancel-remove-btn" class="btn btn-secondary">Hủy</button>
+      <button id="confirm-remove-btn" class="btn btn-danger">Xóa</button>
+    </div>
+  </div>
+</div>
+
+<!-- User Selection Modal -->
+<div id="user-select-modal" class="modal-overlay" style="display: none;">
+  <div class="modal-content modal-content-lg">
+    <div class="modal-header">
+      <h3 id="user-select-modal-title">Chọn nhân viên vào lịch</h3>
+      <button type="button" class="close-btn" onclick="closeUserSelectModal()">&times;</button>
+    </div>
+    
+    <!-- Search Bar -->
+    <!-- <div class="search-box">
+      <input 
+        type="text" 
+        id="user-search-input" 
+        placeholder="Tìm kiếm nhân viên theo tên hoặc ID..." 
+        oninput="filterUserList()"
+      />
+    </div> -->
+
+    <!-- User List Container -->
+    <div id="user-list-container" class="user-list">
+      <!-- User items will be rendered dynamically -->
+    </div>
+
+    <div class="modal-actions">
+        <button 
+        type="button" 
+        id="user-modal-submit-btn" 
+        class="btn btn-primary" 
+        onclick="handleBatchAddUsers()" 
+        disabled
+      >
+        Thêm
+      </button>
+      <button type="button" class="btn btn-secondary" onclick="closeUserSelectModal()">Hủy</button>
+    </div>
+  </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-// 1. ĐỒNG HỒ THỜI GIAN THỰC
+    const dayKeyMap = {
+        '1': 'monday',
+        '2': 'tuesday',
+        '3': 'wednesday',
+        '4': 'thursday',
+        '5': 'friday',
+        '6': 'saturday',
+        '7': 'sunday'
+    };
+    const registrations = {{ registrations | tojson }};
+    const users = {{ users | tojson }};
+    // Dữ liệu lịch tuần lấy từ backend (Flask truyền qua context, biến `weekly_schedule`).
+    // Mỗi phần tử: { day, label, icon, staff: [...], weekend: true/false }
+    const currentSchedule = {{ current_schedule | tojson }};
+    const nextSchedule = {{ next_schedule | tojson }};
+    // Người đang được chọn để chuyển ngày: { day, name } hoặc null
+    let selected = null;
+    // 1. ĐỒNG HỒ THỜI GIAN THỰC
     function updateRealTimeClock() {
         const now = new Date();
         const day = String(now.getDate()).padStart(2, '0');
@@ -755,7 +1149,7 @@
                         barPercentage: 0.7,
                         categoryPercentage: 0.8
                     },
-                    {
+                    {   
                         label: 'Đêm',
                         data: [4, 4, 4, 4, 6, 6, 6],
                         backgroundColor: '#f59e0b',
@@ -792,8 +1186,8 @@
     }
 
     // 3. KHỞI TẠO BIỂU ĐỒ TRÒN (REGISTRATION DONUT CHART)
-    const regValue = Number("{{ registered if registered is defined and registered else 32 }}") || 32;
-    const notRegValue = Number("{{ not_registered if not_registered is defined and not_registered else 6 }}") || 6;
+    const regValue = Number("{{ registered_count if registered_count is defined and registered_count else 0 }}");
+    const notRegValue = Number("{{ unregistered_count if unregistered_count is defined and unregistered_count else 0 }}");
 
     const pieCtx = document.getElementById('registrationPieChart');
     if (pieCtx) {
@@ -837,9 +1231,14 @@
     if (closeBtn) closeBtn.addEventListener('click', closeModal);
     if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
     if (scheduleModal) {
-        scheduleModal.addEventListener('click', function(e) {
+        scheduleModal.addEventListener('click', function (e) {
             if (e.target === scheduleModal) closeModal();
         });
+    }
+
+    function getCurrentDayNum() {
+        const todayIndex = new Date().getDay(); // 0 = Sunday, 1 = Monday, ...
+        return todayIndex === 0 ? 7 : todayIndex; // Convert Sunday from 0 to 7
     }
 
     function handleGenerateSchedule(e) {
@@ -847,149 +1246,380 @@
         closeModal();
         alert('Đã chạy thuật toán xếp lịch trực cuối tuần thành công!');
     }
-    
-    // Dữ liệu lịch tuần lấy từ backend (Flask truyền qua context, biến `weekly_schedule`).
-    // Mỗi phần tử: { day, label, icon, staff: [...], weekend: true/false }
-    const schedule = JSON.parse('{{ schedule | tojson | safe }}');
 
-    // Người đang được chọn để chuyển ngày: { day, name } hoặc null
-    let selected = null;
 
     function initials(name) {
         return name.trim().slice(0, 2).toUpperCase();
     }
 
-    console.log(schedule);
+    // Open Modal with correct target week context ('current' vs 'next')
+    function openCreateModal(targetType) {
+        const modal = document.getElementById('scheduleModal');
+        const targetInput = document.getElementById('target_week_type');
+        const titleEl = document.getElementById('modalTitle');
 
+        if (targetInput) targetInput.value = targetType;
+        if (titleEl) {
+            titleEl.textContent = targetType === 'next' 
+                ? 'Cấu hình lịch trực Tuần Kế Tiếp' 
+                : 'Cấu hình lịch trực Tuần Hiện Tại';
+        }
 
-    function getRosterNames() {
-        // return [...new Set(Object.values(schedule).flat())].sort();
-        // Danh sách tất cả tên duy nhất đang có trong lịch tuần, dùng cho panel "+"
-
-        const set = new Set();
-
-        schedule.forEach(d => d.staff.forEach(n => set.add(n)));
-
-        return [...set].sort();
+        if (modal) modal.style.display = 'flex';
     }
 
-    function findDay(day) {
-        // return schedule[day] || [];
-        return schedule.find(d => d.day === day);
+    function closeScheduleModal() {
+        const modal = document.getElementById('scheduleModal');
+        if (modal) modal.style.display = 'none';
     }
 
-    function staffBoxHtml(day, name) {
-        const isSelected = selected && selected.day === day && selected.name === name;
+    // Safely render both boards on load
+    function renderAllBoards() {
+        // 1. Render current week if present, else show placeholder inside current board
+        if (typeof currentSchedule !== 'undefined' && currentSchedule && currentSchedule.daily_schedule) {
+            renderBoard('scheduleBoardCurrent', currentSchedule);
+        } else {
+            const curBoard = document.getElementById('scheduleBoardCurrent');
+            if (curBoard) {
+                curBoard.innerHTML = `
+                    <div class="text-center text-muted p-4 border rounded bg-light w-100">
+                        <i class="mdi mdi-calendar-remove fs-3 d-block mb-1"></i>
+                        Chưa có lịch trực cho tuần hiện tại. Bấm nút bên dưới để tạo lịch.
+                    </div>
+                `;
+            }
+        }
+
+        // 2. Render next week if present
+        if (typeof next_schedule !== 'undefined' && next_schedule && next_schedule.daily_schedule) {
+            renderBoard('scheduleBoardNext', next_schedule);
+        } else {
+            const nextBoard = document.getElementById('scheduleBoardNext');
+            if (nextBoard) {
+                nextBoard.innerHTML = `
+                    <div class="text-center text-muted p-4 border rounded bg-light w-100">
+                        <i class="mdi mdi-calendar-blank-outline fs-3 d-block mb-1"></i>
+                        Chưa tạo lịch cho tuần kế tiếp.
+                    </div>
+                `;
+            }
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', renderAllBoards);
+
+    function findDay(schedule, day) {
+        const key = dayKeyMap[day] || String(day).toLowerCase();
+
+        // Return array of assigned staff for that day, or [] if empty/not found
+        return (schedule && schedule.daily_schedule && schedule.daily_schedule[key]) || [];
+    }
+
+    function staffBoxHtml(day, user) {
+        const name = user.full_name || user.user_name || user;
+        const isSelected = selected && selected.day === day && selected.userId === user.id;
+
+        const userReg = registrations?.find(r => r.user_id === user.id);
+        const status = userReg?.status_id ?? 'Chưa đăng ký <<';
+
+        const isRegistered = Boolean(userReg);
+
         return `
-            <li class="staff-box${isSelected ? ' selected' : ''}"
-                data-name="${name}"
-                onclick="onStaffClick(event, '${day}', '${name}')">
-                <span class="avatar-dot">${initials(name)}</span>
-                <span>${name}</span>
-                <i class="mdi mdi-close remove-x" onclick="onRemoveClick(event, '${day}', '${name}')" title="Xoá khỏi ngày này"></i>
+            <li class="d-flex flex-column staff-box${isSelected ? ' selected' : ''}"
+                onclick="onStaffClick(event, ${day}, '${user.id}')">
+                <div
+                class="d-flex align-items-center gap-2"
+                data-name="${name}">
+                    <span class="avatar-dot">${initials(name)}</span>
+                    <span>${name}</span>
+                    <i class="mdi mdi-close remove-x" onclick="onRemoveClick(event, '${day}', '${user.id}')" title="Xoá khỏi ngày này"></i>
+                </div>
+                    ${!isRegistered ? `<span class="badge bg-warning-subtle text-warning border border-warning-subtle"><i class="mdi mdi-alert text-warning fs-6"></i> Chưa đăng ký</span>` : `<span>${registrationStatus}</span>`}
             </li>`;
     }
 
-    function renderBoard() {
-        const board = document.getElementById('scheduleBoard');
+    const DAYS_CONFIG = [
+            { day: 1, label: 'Thứ Hai', icon: 'mdi-calendar-today', weekend: false },
+            { day: 2, label: 'Thứ Ba', icon: 'mdi-calendar-today', weekend: false },
+            { day: 3, label: 'Thứ Tư', icon: 'mdi-calendar-today', weekend: false },
+            { day: 4, label: 'Thứ Năm', icon: 'mdi-calendar-today', weekend: false },
+            { day: 5, label: 'Thứ Sáu', icon: 'mdi-calendar-today', weekend: false },
+            { day: 6, label: 'Thứ Bảy', icon: 'mdi-calendar-weekend', weekend: true },
+            { day: 7, label: 'Chủ Nhật', icon: 'mdi-calendar-weekend', weekend: true },
+        ];
+
+    function renderBoard(containerId = 'scheduleBoardCurrent', scheduleData = schedule) {
+        const board = document.getElementById(containerId);
+        if (!board) return;
+
         board.innerHTML = '';
 
-        schedule.forEach(d => {
+        // 1. Safe check if scheduleData or its daily_schedule is missing/empty
+        if (!scheduleData || !scheduleData.daily_schedule || Object.keys(scheduleData.daily_schedule).length === 0) {
+            board.innerHTML = `
+                <div style="text-align: center; padding: 40px; border: 1px dashed #ccc; border-radius: 8px; width: 100%;">
+                    <p style="font-size: 16px; color: #666; margin: 0;">
+                        📅 Chưa có dữ liệu lịch trực cho tuần này.
+                    </p>
+                </div>
+            `;
+            return;
+        }
+
+        // 2. Render each day column
+        DAYS_CONFIG.forEach(d => {
+            const key = dayKeyMap[d.day] || String(d.day).toLowerCase();
+            const staff = scheduleData.daily_schedule[key] || [];
+
             const col = document.createElement('div');
             col.className = 'day-card';
             col.dataset.day = d.day;
-            // Nếu đang có người được chọn và đây không phải ngày gốc -> đánh dấu là điểm đến hợp lệ
-            if (selected && selected.day !== d.day) {
+            
+            if (typeof selected !== 'undefined' && selected && selected.day != d.day) {
                 col.classList.add('drop-target');
             }
-            col.onclick = (e) => onDayClick(e, d.day, d.label);
+
+            // Pass containerId/week context if onDayClick needs to differentiate between weeks
+            col.onclick = (e) => onDayClick(e, d.day, d.label, scheduleData.week_number);
 
             col.innerHTML = `
                 <div class="day-head">
-                    <div>
-                        <div class="day-name">${d.day}</div>
-                        <div class="day-sublabel">${d.label}</div>
-                    </div>
+                    <div class="day-sublabel ${d.day === getCurrentDayNum() ? 'cur-day' : ''}">${d.label}</div>
                     <div class="day-head-right">
                         <div class="day-icon"><i class="mdi ${d.icon}"></i></div>
-                        <div class="day-add-btn" title="Thêm người cho ngày này" onclick="toggleAddPanel(event, '${d.day}')">
+                        <div class="day-add-btn" title="Thêm người cho ngày này" onclick="openUserSelectModal('${d.day}', ${scheduleData.week_number})">
                             <i class="mdi mdi-plus"></i>
                         </div>
                     </div>
                 </div>
-                <div class="day-count" data-count="${d.day}">${d.staff.length}</div>
+                <div class="day-count" data-count="${d.day}">${staff.length}</div>
                 ${d.weekend ? `<span class="weekend-flag">CUỐI TUẦN</span>` : ''}
                 <ul class="staff-list" data-day="${d.day}"></ul>
-                <div class="add-panel" id="add-panel-${d.day}"></div>
-            `;
+                <div class="add-panel" id="add-panel-${d.day}"></div>`;
+
             board.appendChild(col);
 
             const list = col.querySelector('.staff-list');
-            if (d.staff.length === 0) {
+            if (staff.length === 0) {
                 list.insertAdjacentHTML('beforeend', `<div class="empty-note">Chưa phân công</div>`);
             } else {
-                d.staff.forEach(name => list.insertAdjacentHTML('beforeend', staffBoxHtml(d.day, name)));
+                staff.forEach(userId => {
+                    // Handle both primitive IDs ('123') and user objects ({ id: '123', ... })
+                    const targetUser = getUser(userId)
+                    list.insertAdjacentHTML('beforeend', staffBoxHtml(d.day, targetUser || { id: userId, name: `User #${userId}` }));
+                });
             }
         });
 
-        updateHint();
+        if (typeof updateHint === 'function') {
+            updateHint();
+        }
+    }
+
+    // Master function to render both boards
+    function renderAllBoards() {
+        renderBoard('scheduleBoardCurrent', window.schedule);
+        renderBoard('scheduleBoardNext', window.next_schedule);
     }
 
     // Bấm vào một người -> chọn (hoặc bấm lại -> bỏ chọn)
-    function onStaffClick(event, day, name) {
+    function onStaffClick(event, day, userId) {
         event.stopPropagation();
-        if (selected && selected.day === day && selected.name === name) {
+        if (selected && selected.day === day && selected.userId === userId) {
             selected = null;
         } else {
-            selected = { day, name };
+            selected = { day, userId };
         }
         renderBoard();
+    }
+
+    function showRemoveConfirmModal(userName) {
+        return new Promise((resolve) => {
+            const modal = document.getElementById('confirm-remove-modal');
+            const messageEl = document.getElementById('confirm-remove-message');
+            const confirmBtn = document.getElementById('confirm-remove-btn');
+            const cancelBtn = document.getElementById('cancel-remove-btn');
+
+            messageEl.textContent = `Bạn có chắc chắn muốn xóa "${userName ? userName : "dân quân"}" khỏi lịch trực?`;
+
+            modal.style.display = 'flex';
+
+            function cleanup() {
+                modal.style.display = 'none';
+                confirmBtn.removeEventListener('click', onConfirm);
+                cancelBtn.removeEventListener('click', onCancel);
+            }
+
+            function onConfirm() {
+                cleanup();
+                resolve(true);
+            }
+
+            function onCancel() {
+                cleanup();
+                resolve(false);
+            }
+
+            confirmBtn.addEventListener('click', onConfirm);
+            cancelBtn.addEventListener('click', onCancel);
+        });
     }
 
     // Bấm nút "x" trên một người -> xoá khỏi ngày đó
-    function onRemoveClick(event, day, name) {
-        event.stopPropagation();
-        const entry = findDay(day);
-        entry.staff = entry.staff.filter(n => n !== name);
-        if (selected && selected.day === day && selected.name === name) {
-            selected = null;
+    async function onRemoveClick(event, day, userId, schedule) {
+        if (event && event.stopPropagation) {
+            event.stopPropagation();
         }
-        renderBoard();
-        syncSchedule();
+        const key = dayKeyMap[day] || String(day).toLowerCase();
+
+        if (!schedule?.daily_schedule?.[key]) return;
+
+        const selectedIdStr = String(userId);
+        const userIndex = schedule.daily_schedule[key].findIndex(
+            u => String(typeof u === 'object' ? u.id : u) === selectedIdStr
+        );
+
+        if (userIndex === -1) return;
+        // Get user display name for modal prompt
+        const targetUser = getUser(schedule.daily_schedule[key][userIndex]);
+        const userName = typeof targetUser === 'object'
+            ? (targetUser.full_name || targetUser.user_name || targetUser.name)
+            : null;
+
+        // 1. Show modal confirmation prompt
+        const confirmed = await showRemoveConfirmModal(userName);
+        if (!confirmed) return; // User canceled
+
+        try {
+            const response = await fetch('/admin/schedule/remove-user', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    user_id: userId,
+                    day_of_week: day,
+                    year: schedule.year,
+                    week: schedule.week || currentWeekNum
+                })
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.status === 'success') {
+                // Remove user from local state upon server success
+                schedule.daily_schedule[key].splice(userIndex, 1);
+
+                // Clear selection if removing currently selected user
+                if (selected && selected.day === day && String(selected.userId) === selectedIdStr) {
+                    selected = null;
+                }
+
+                // Re-render UI and sync local state if needed
+                renderBoard();
+                if (typeof syncSchedule === 'function') syncSchedule();
+            } else {
+                alert(result.message || 'Lỗi khi xóa dân quân khỏi lịch trực!');
+            }
+        } catch (error) {
+            console.error('API Error:', error);
+            alert('Đã xảy ra lỗi kết nối máy chủ!');
+        }
     }
 
-    // Bấm vào một ngày (khoảng trống của thẻ) -> nếu đang có người được chọn thì chuyển họ tới đây
-    function onDayClick(event, day, label) {
-        // Bỏ qua nếu click đến từ nút/panel bên trong thẻ (đã stopPropagation ở các handler riêng)
-        if (!selected) return;
-        if (selected.day === day) {
-            // Bấm lại ngày gốc -> huỷ chọn
+    async function onDayClick(event, day, label, schedule) {
+        if (!selected || !selected.userId) return;
+
+        const currentDay = selected.day;
+        const selectedDay = day;
+        const userId = selected.userId;
+
+        // Bấm lại ngày gốc -> hủy chọn
+        if (currentDay === selectedDay) {
             selected = null;
             renderBoard();
             return;
         }
 
-        const fromDay = findDay(selected.day);
-        const toDay = findDay(day);
+        const fromKey = dayKeyMap[currentDay] || String(currentDay).toLowerCase();
+        const toKey = dayKeyMap[selectedDay] || String(selectedDay).toLowerCase();
 
-        if (toDay.staff.includes(selected.name)) {
-            // Người này đã có ở ngày đích rồi -> chỉ huỷ chọn, không cần thêm trùng
-            alert(selected.name + " đã có lịch trực ngày " + label)
+        // Đảm bảo cấu trúc daily_schedule tồn tại
+        if (!schedule.daily_schedule) schedule.daily_schedule = {};
+        if (!schedule.daily_schedule[fromKey]) schedule.daily_schedule[fromKey] = [];
+        if (!schedule.daily_schedule[toKey]) schedule.daily_schedule[toKey] = [];
+
+        const selectedIdStr = String(userId);
+
+        // 1. Tìm đối tượng user đang chọn ở ngày cũ
+        const userIndex = schedule.daily_schedule[fromKey].findIndex(
+            u => String(typeof u === 'object' ? u.id : u) === selectedIdStr
+        );
+
+        if (userIndex === -1) {
             selected = null;
             renderBoard();
             return;
         }
 
-        fromDay.staff = fromDay.staff.filter(n => n !== selected.name);
-        toDay.staff.push(selected.name);
-        selected = null;
+        const userToMove = getUser(schedule.daily_schedule[fromKey][userIndex]);
 
-        renderBoard();
-        syncSchedule();
+        // 2. Kiểm tra xem người này đã có ở ngày mới chưa
+        const isAlreadyInToDay = schedule.daily_schedule[toKey].some(
+            u => String(typeof u === 'object' ? u.id : u) === selectedIdStr
+        );
+
+        if (isAlreadyInToDay) {
+            const userName = userToMove.full_name || userToMove.user_name || 'Dân quân';
+            alert(`${userName} đã có lịch trực ngày ${label}`);
+            selected = null;
+            renderBoard();
+            return;
+        }
+
+        // 3. Gọi API backend di chuyển người dùng sang ngày mới
+        try {
+            const response = await fetch('/admin/schedule/move-user', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    user_id: userId,
+                    current_day_of_week: currentDay,      // Lấy từ selected.day
+                    selected_day_of_week: selectedDay,    // Lấy từ tham số day
+                    year: schedule.year,
+                    week: schedule.week || currentWeekNum
+                })
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.status === 'success') {
+                // Cập nhật local state sau khi backend xử lý thành công
+                schedule.daily_schedule[fromKey].splice(userIndex, 1);
+                schedule.daily_schedule[toKey].push(userToMove.id);
+
+                // Reset trạng thái chọn & Render lại UI
+                selected = null;
+                renderBoard();
+
+                if (typeof syncSchedule === 'function') syncSchedule();
+            } else {
+                alert(result.message || 'Lỗi khi di chuyển lịch trực!');
+                selected = null;
+                renderBoard();
+            }
+        } catch (error) {
+            console.error('API Error:', error);
+            alert('Đã xảy ra lỗi kết nối máy chủ!');
+            selected = null;
+            renderBoard();
+        }
     }
 
     // Mở/đóng panel "+" để thêm người vào một ngày cụ thể
-    function toggleAddPanel(event, day) {
+    function toggleAddPanel(event, day, week_num) {
         event.stopPropagation();
         const panel = document.getElementById(`add-panel-${day}`);
         const wasOpen = panel.classList.contains('open');
@@ -999,34 +1629,241 @@
 
         if (wasOpen) return;
 
-        const entry = findDay(day);
-        const roster = getRosterNames().filter(n => !entry.staff.includes(n));
+        // Lấy danh sách nhân viên hiện tại của ngày đó
+        const currentStaff = findDay(day) || [];
+        const assignedUserIds = currentStaff.map(u => typeof u === 'object' ? u.id : u);
+
+        // Giả sử getRoster() trả về mảng tất cả các user objects
+        // Lọc ra danh sách những người CHƯA có trong ngày này
+        const allUsers = typeof getRoster === 'function' ? getRoster() : [];
+        const availableUsers = allUsers.filter(u => !assignedUserIds.includes(u.id));
 
         panel.innerHTML = `
-            <div class="add-chip-row">
-                ${roster.length
-                ? roster.map(n => `<span class="add-chip" onclick="addToDay(event, '${day}', '${n}')">${n}</span>`).join('')
+        <div class="add-chip-row">
+            ${availableUsers.length
+                ? availableUsers.map(u => {
+                    const name = u.full_name || u.user_name || u;
+                    return `<span class="add-chip" onclick="addToDay(event, '${u.id}', '${day}', '${week_num}')">${name}</span>`;
+                }).join('')
                 : `<span class="empty-note">Không còn ai khác trong danh sách</span>`}
-            </div>
-            <div class="add-input-row">
-                <input type="text" placeholder="Tên nhân viên mới..." id="add-input-${day}"
-                       onclick="event.stopPropagation()"
-                       onkeydown="if(event.key==='Enter'){ addNewNameToDay(event, '${day}'); }">
-                <button onclick="addNewNameToDay(event, '${day}')">Thêm</button>
-            </div>
-        `;
+        </div>
+        <div class="add-input-row">
+            <input type="text" placeholder="Tên nhân viên mới..." id="add-input-${day}"
+                   onclick="event.stopPropagation()"
+                   onkeydown="if(event.key==='Enter'){ addNewNameToDay(event, '${day}'); }">
+            <button onclick="addNewNameToDay(event, '${day}')">Thêm</button>
+        </div>
+    `;
         panel.classList.add('open');
     }
 
-    function addToDay(event, day, name) {
-        event.stopPropagation();
-        const entry = findDay(day);
-        if (!entry.staff.includes(name)) {
-            entry.staff.push(name);
+    // Stores current target day when modal opens
+let activeTargetDay = null;
+let cachedUsers = [];
+
+/**
+ * Open the user selection modal for a target day
+ * @param {string|number} day - Day key or integer ('1'..'7')
+ * @param {Array} [availableUsers] - Optional users array (defaults to getRoster() or window.users)
+ */
+function openUserSelectModal(day) {
+    activeTargetDay = day;
+
+    // Use provided roster/users or fallback to global roster/users array
+
+    const modal = document.getElementById('user-select-modal');
+    const searchInput = document.getElementById('user-search-input');
+    
+    if (searchInput) searchInput.value = '';
+
+    renderModalUserList(users);
+    if (modal) modal.style.display = 'flex';
+}
+
+/**
+ * Close modal and clear target day state
+ */
+function closeUserSelectModal() {
+    const modal = document.getElementById('user-select-modal');
+    if (modal) modal.style.display = 'none';
+    activeTargetDay = null;
+}
+
+/**
+ * Filter users live based on search input query
+ */
+function filterUserList() {
+    const query = (document.getElementById('user-search-input')?.value || '').toLowerCase().trim();
+    if (!query) {
+        renderModalUserList(cachedUsers);
+        return;
+    }
+
+    const filtered = cachedUsers.filter(u => {
+        const name = (u.full_name || u.user_name || u.name || '').toLowerCase();
+        const id = String(u.id || '').toLowerCase();
+        return name.includes(query) || id.includes(query);
+    });
+
+    renderModalUserList(filtered);
+}
+
+/**
+ * Render user cards inside modal container
+ */
+    function renderModalUserList(userList) {
+    const container = document.getElementById('user-list-container');
+    if (!container) return;
+
+    if (!userList || userList.length === 0) {
+        container.innerHTML = '<div style="padding: 16px; text-align: center; color: #888;">Không tìm thấy dân quân</div>';
+        return;
+    }
+
+    const dayKey = dayKeyMap[activeTargetDay] || String(activeTargetDay).toLowerCase();
+    const existingDayStaff = schedule?.daily_schedule?.[dayKey] || [];
+
+    const html = userList.map(user => {
+        const userIdStr = String(user.id);
+        const isAlreadyAdded = existingDayStaff.some(
+            u => String(typeof u === 'object' ? u.id : u) === userIdStr
+        );
+
+        const name = user.full_name || user.user_name || user.name || `User #${user.id}`;
+        const role = user.role_name || user.position || '';
+
+        if (isAlreadyAdded) {
+            return `
+                <div class="user-item disabled" style="opacity: 0.5; cursor: not-allowed; display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-bottom: 1px solid #f0f0f0;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <input type="checkbox" disabled checked />
+                        <div class="user-info">
+                            <span class="user-name" style="font-weight: 600;">${name}</span>
+                            <span class="user-meta" style="font-size: 0.8rem; color: #777; display: block;">${role}</span>
+                        </div>
+                    </div>
+                    <span class="add-action-badge" style="color: #6c757d; font-size: 0.85rem;">Đã có trong lịch</span>
+                </div>
+            `;
         }
-        document.getElementById(`add-panel-${day}`).classList.remove('open');
-        renderBoard();
-        syncSchedule();
+
+        return `
+            <label class="user-item" style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-bottom: 1px solid #f0f0f0; cursor: pointer;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <input type="checkbox" class="user-select-checkbox" value="${user.id}" onchange="updateSelectedUserCount()" />
+                    <div class="user-info">
+                        <span class="user-name" style="font-weight: 600;">${name}</span>
+                        <span class="user-meta" style="font-size: 0.8rem; color: #777; display: block;">${role}</span>
+                    </div>
+                </div>
+            </label>
+        `;
+    }).join('');
+
+    container.innerHTML = html;
+    updateSelectedUserCount();
+}
+
+    // Updates the count on the submit button
+    function updateSelectedUserCount() {
+        const checked = document.querySelectorAll('.user-select-checkbox:checked');
+        const submitBtn = document.getElementById('user-modal-submit-btn');
+        if (submitBtn) {
+            submitBtn.textContent = checked.length > 0 ? `Thêm (${checked.length})` : 'Thêm';
+            submitBtn.disabled = checked.length === 0;
+        }
+    }
+
+    // Submits all selected users sequentially or in parallel
+    async function handleBatchAddUsers(schedule) {
+        const checkboxes = document.querySelectorAll('.user-select-checkbox:checked');
+        const selectedUserIds = Array.from(checkboxes).map(cb => cb.value);
+
+        if (selectedUserIds.length === 0 || !activeTargetDay) return;
+
+        
+        // Loop through each selected user and call addToDay
+        console.log(selectedUserIds);
+        await addToDay(null, selectedUserIds, activeTargetDay, schedule);
+        closeUserSelectModal();
+    }
+
+    async function addToDay(event, userIds, day, schedule) {
+        if (event && event.stopPropagation) {
+            event.stopPropagation();
+        }
+
+        // Đảm bảo userIds luôn là một mảng
+        const idsToAdd = Array.isArray(userIds) ? userIds : [userIds];
+        if (idsToAdd.length === 0) return;
+
+        // 1. Ánh xạ ngày ('1'..'7') sang key tiếng Anh ('monday', 'tuesday', ...)
+        const key = dayKeyMap[day] || String(day).toLowerCase();
+
+        if (!schedule.daily_schedule) {
+            schedule.daily_schedule = {};
+        }
+        if (!schedule.daily_schedule[key]) {
+            schedule.daily_schedule[key] = [];
+        }
+
+        const currentStaff = schedule.daily_schedule[key];
+
+        // 2. Lọc ra các ID chưa có trong ngày đó (tránh gửi ID trùng lặp lên backend)
+        const newIds = idsToAdd.filter(id => {
+            const idStr = String(id);
+            return !currentStaff.some(u => String(typeof u === 'object' ? u.id : u) === idStr);
+        });
+
+        if (newIds.length === 0) {
+            console.warn('Tất cả dân quân đã chọn đều đã có trong ngày này.');
+            return;
+        }
+
+        // 3. Tra cứu object người dùng tương ứng từ roster để cập nhật UI sau này
+        const roster = typeof getRoster === 'function' ? getRoster() : (window.users || []);
+        const objectsToAdd = newIds.map(id => {
+            const found = roster.find(u => String(u.id) === String(id));
+            return found || id;
+        });
+
+        // 4. Gọi API backend thêm mảng người dùng vào Firestore
+        try {
+            const response = await fetch('/admin/schedule/add-users', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    user_ids: newIds, // Gửi toàn bộ mảng ID hợp lệ
+                    day_of_week: day,
+                    year: schedule.year,
+                    week: schedule.week 
+                })
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.status === 'success') {
+                // Cập nhật local state UI bằng các object vừa được lọc thành công
+                currentStaff.push(...objectsToAdd);
+
+                // Đóng panel chọn staff (nếu có)
+                const panel = document.getElementById(`add-panel-${day}`);
+                if (panel) panel.classList.remove('open');
+
+                // Render lại giao diện & đồng bộ
+                renderBoard();
+                if (typeof syncSchedule === 'function') {
+                    syncSchedule();
+                }
+            } else {
+                alert(result.message || 'Lỗi khi thêm dân quân vào lịch!');
+            }
+        } catch (error) {
+            console.error('API Error:', error);
+            alert('Đã xảy ra lỗi kết nối máy chủ!');
+        }
     }
 
     function addNewNameToDay(event, day) {
@@ -1034,22 +1871,42 @@
         const input = document.getElementById(`add-input-${day}`);
         const name = input.value.trim();
         if (!name) return;
-        addToDay(event, day, name);
+
+        // Tạo nhanh 1 object user tạm thời nếu nhập tên tay
+        const tempUser = {
+            id: 'temp_' + Date.now(),
+            full_name: name,
+            user_name: name
+        };
+
+        // addToDay(event, day, tempUser);
     }
 
     function updateHint() {
         const hint = document.getElementById('scheduleHint');
-        if (selected) {
+        if (!hint) return;
+
+        if (selected && selected.userId) {
+            // Tìm tên nhân viên dựa trên selected.userId từ danh sách Roster
+            let displayName = 'Nhân viên';
+            if (typeof getRoster === 'function') {
+                const user = getRoster().find(u => u.id === selected.userId);
+                if (user) {
+                    displayName = user.full_name || user.user_name || displayName;
+                }
+            }
+
             hint.classList.add('is-active');
-            hint.innerHTML = `<i class="mdi mdi-account-arrow-right"></i>Đang chọn <b>${selected.name}</b> — bấm vào ngày muốn chuyển tới.
-                <span class="cancel-link" onclick="cancelSelection()">Huỷ chọn</span>`;
+            hint.innerHTML = `<i class="mdi mdi-account-arrow-right"></i>Đang chọn <b>${displayName}</b> — bấm vào ngày muốn chuyển tới.
+            <span class="cancel-link" onclick="cancelSelection(event)">Huỷ chọn</span>`;
         } else {
             hint.classList.remove('is-active');
             hint.innerHTML = `<i class="mdi mdi-cursor-default-click-outline"></i>Bấm chọn một người, rồi bấm vào ngày muốn chuyển tới.`;
         }
     }
 
-    function cancelSelection() {
+    function cancelSelection(event) {
+        if (event) event.stopPropagation();
         selected = null;
         renderBoard();
     }
@@ -1061,14 +1918,10 @@
 
     // Gửi lịch mới xuống backend sau mỗi thay đổi (chuyển ngày / thêm / xoá)
     function syncSchedule() {
-        const payload = schedule.map(d => ({ day: d.day, staff: d.staff }));
+    }
 
-        // TODO: gọi API lưu lịch mới, ví dụ:
-        // fetch("{{ url_for('admin_views.update_schedule') }}", {
-        //     method: "POST",
-        //     headers: { "Content-Type": "application/json" },
-        //     body: JSON.stringify({ schedule: payload })
-        // });
+    function getUser(userId) {
+        return users.find(u => u.id === userId)
     }
 
     renderBoard();

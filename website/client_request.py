@@ -4,7 +4,7 @@ from datetime import datetime
 from .models import Registration, Notification
 from . import db  # Import đối tượng db Firestore đã khởi tạo ở __init__.py
 from website.models import Registration, Notification, User, db
-from mailAgent.mailbox import send_email
+# from mailAgent.mailbox import send_email
 
 client_request = Blueprint('client_request', __name__)
 
@@ -82,12 +82,12 @@ def submit_shift_adjustment(id):
         user.email for user in User.query.filter(User.role_id.in_([1, 3])).all()
         if user.email
     ]
-    send_email(
-        current_app,
-        admin_emails,
-        f'Yêu cầu thay đổi lịch từ {current_user.user_name}',
-        new_request_notif.message,
-    )
+    # send_email(
+    #     current_app,
+    #     admin_emails,
+    #     f'Yêu cầu thay đổi lịch từ {current_user.user_name}',
+    #     new_request_notif.message,
+    # )
     
     flash('Gửi phiếu yêu cầu thay đổi lịch thành công!', 'success')
     return redirect(url_for('client_views.client_detailshift'))
