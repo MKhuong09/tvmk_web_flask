@@ -206,6 +206,7 @@ class Schedule:
   def __init__(self, doc_id, data):
       self.id = doc_id
       self.week = data.get("week")
+      self.year = data.get("year")
       self.status = data.get("status", "draft")
       self.created_at = data.get("created_at")
       raw_daily_schedule = data.get("daily_schedule", {})
@@ -231,6 +232,7 @@ class Schedule:
       return {
           "id": self.id,
           "week": self.week,
+          "year": self.year,
           "status": self.status,
           "created_at": self.created_at,
           "daily_schedule": serialized_daily_schedule

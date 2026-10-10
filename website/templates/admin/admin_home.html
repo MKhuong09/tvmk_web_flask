@@ -1054,7 +1054,7 @@
 <div id="user-select-modal" class="modal-overlay" style="display: none;">
   <div class="modal-content modal-content-lg">
     <div class="modal-header">
-      <h3 id="user-select-modal-title">Chọn nhân viên vào lịch</h3>
+      <h3 id="user-select-modal-title">Chọn dân quân vào lịch</h3>
       <button type="button" class="close-btn" onclick="closeUserSelectModal()">&times;</button>
     </div>
     
@@ -1237,8 +1237,8 @@
     }
 
     function getCurrentDayNum() {
-        const todayIndex = new Date().getDay(); // 0 = Sunday, 1 = Monday, ...
-        return todayIndex === 0 ? 7 : todayIndex; // Convert Sunday from 0 to 7
+        const todayIndex = new Date().getDay();
+        return todayIndex === 0 ? 7 : todayIndex;
     }
 
     function handleGenerateSchedule(e) {
@@ -1260,8 +1260,8 @@
 
         if (targetInput) targetInput.value = targetType;
         if (titleEl) {
-            titleEl.textContent = targetType === 'next' 
-                ? 'Cấu hình lịch trực Tuần Kế Tiếp' 
+            titleEl.textContent = targetType === 'next'
+                ? 'Cấu hình lịch trực Tuần Kế Tiếp'
                 : 'Cấu hình lịch trực Tuần Hiện Tại';
         }
 
@@ -1276,6 +1276,7 @@
     // Safely render both boards on load
     function renderAllBoards() {
         // 1. Render current week if present, else show placeholder inside current board
+        
         if (typeof currentSchedule !== 'undefined' && currentSchedule && currentSchedule.daily_schedule) {
             renderBoard('scheduleBoardCurrent', currentSchedule);
         } else {
@@ -1315,9 +1316,9 @@
         return (schedule && schedule.daily_schedule && schedule.daily_schedule[key]) || [];
     }
 
-    function staffBoxHtml(day, user) {
+    function staffBoxHtml(day, user, containerId, schedule) {
         const name = user.full_name || user.user_name || user;
-        const isSelected = selected && selected.day === day && selected.userId === user.id;
+        const isSelected = selected && selected.day === day && selected.week === week && selected.year === year && selected.userId === user.id;
 
         const userReg = registrations?.find(r => r.user_id === user.id);
         const status = userReg?.status_id ?? 'Chưa đăng ký <<';
@@ -1326,13 +1327,13 @@
 
         return `
             <li class="d-flex flex-column staff-box${isSelected ? ' selected' : ''}"
-                onclick="onStaffClick(event, ${day}, '${user.id}')">
+                onclick="onStaffClick(event, ${day}, ${schedule.week}, ${schedule.year}, '${user.id}', ${containerId}, ${schedule})">
                 <div
                 class="d-flex align-items-center gap-2"
                 data-name="${name}">
                     <span class="avatar-dot">${initials(name)}</span>
                     <span>${name}</span>
-                    <i class="mdi mdi-close remove-x" onclick="onRemoveClick(event, '${day}', '${user.id}')" title="Xoá khỏi ngày này"></i>
+                    <i class="mdi mdi-close remove-x" onclick="onRemoveClick(event, '${day}', '${user.id}', ${containerId}, ${schedule})" title="Xoá khỏi ngày này"></i>
                 </div>
                     ${!isRegistered ? `<span class="badge bg-warning-subtle text-warning border border-warning-subtle"><i class="mdi mdi-alert text-warning fs-6"></i> Chưa đăng ký</span>` : `<span>${registrationStatus}</span>`}
             </li>`;
@@ -1348,14 +1349,14 @@
             { day: 7, label: 'Chủ Nhật', icon: 'mdi-calendar-weekend', weekend: true },
         ];
 
-    function renderBoard(containerId = 'scheduleBoardCurrent', scheduleData = schedule) {
+    function renderBoard(containerId, schedule) {
         const board = document.getElementById(containerId);
         if (!board) return;
 
         board.innerHTML = '';
 
         // 1. Safe check if scheduleData or its daily_schedule is missing/empty
-        if (!scheduleData || !scheduleData.daily_schedule || Object.keys(scheduleData.daily_schedule).length === 0) {
+        if (!schedule || !schedule.daily_schedule || Object.keys(schedule.daily_schedule).length === 0) {
             board.innerHTML = `
                 <div style="text-align: center; padding: 40px; border: 1px dashed #ccc; border-radius: 8px; width: 100%;">
                     <p style="font-size: 16px; color: #666; margin: 0;">
@@ -1369,7 +1370,7 @@
         // 2. Render each day column
         DAYS_CONFIG.forEach(d => {
             const key = dayKeyMap[d.day] || String(d.day).toLowerCase();
-            const staff = scheduleData.daily_schedule[key] || [];
+            const staff = schedule.daily_schedule[key] || [];
 
             const col = document.createElement('div');
             col.className = 'day-card';
@@ -1380,14 +1381,14 @@
             }
 
             // Pass containerId/week context if onDayClick needs to differentiate between weeks
-            col.onclick = (e) => onDayClick(e, d.day, d.label, scheduleData.week_number);
+            col.onclick = (e) => onDayClick(e, d.day, d.label, containerId, schedule);
 
             col.innerHTML = `
                 <div class="day-head">
                     <div class="day-sublabel ${d.day === getCurrentDayNum() ? 'cur-day' : ''}">${d.label}</div>
                     <div class="day-head-right">
                         <div class="day-icon"><i class="mdi ${d.icon}"></i></div>
-                        <div class="day-add-btn" title="Thêm người cho ngày này" onclick="openUserSelectModal('${d.day}', ${scheduleData.week_number})">
+                        <div class="day-add-btn" title="Thêm người cho ngày này" onclick="openUserSelectModal('${d.day}')">
                             <i class="mdi mdi-plus"></i>
                         </div>
                     </div>
@@ -1406,34 +1407,34 @@
                 staff.forEach(userId => {
                     // Handle both primitive IDs ('123') and user objects ({ id: '123', ... })
                     const targetUser = getUser(userId)
-                    list.insertAdjacentHTML('beforeend', staffBoxHtml(d.day, targetUser || { id: userId, name: `User #${userId}` }));
+                    list.insertAdjacentHTML('beforeend', staffBoxHtml(d.day, targetUser || { id: userId, name: `User #${userId}`, containerId, schedule }));
                 });
             }
         });
 
         if (typeof updateHint === 'function') {
-            updateHint();
+            updateHint(containerId, schedule);
         }
     }
 
     // Master function to render both boards
     function renderAllBoards() {
-        renderBoard('scheduleBoardCurrent', window.schedule);
-        renderBoard('scheduleBoardNext', window.next_schedule);
+        renderBoard('scheduleBoardCurrent',currentSchedule);
+        renderBoard('scheduleBoardNext', nextSchedule);
     }
 
     // Bấm vào một người -> chọn (hoặc bấm lại -> bỏ chọn)
-    function onStaffClick(event, day, userId) {
+    function onStaffClick(event, day, week, year, userId, cotainerId, schedule) {
         event.stopPropagation();
-        if (selected && selected.day === day && selected.userId === userId) {
+        if (selected && selected.day === day && selected.week === week && selected.year === year && selected.userId === userId) {
             selected = null;
         } else {
-            selected = { day, userId };
+            selected = { day, week, year, userId };
         }
-        renderBoard();
+        renderBoard(containerId, schedule);
     }
 
-    function showRemoveConfirmModal(userName) {
+    function showRemoveConfirmModal(userName, containerId, schedule) {
         return new Promise((resolve) => {
             const modal = document.getElementById('confirm-remove-modal');
             const messageEl = document.getElementById('confirm-remove-message');
@@ -1466,7 +1467,7 @@
     }
 
     // Bấm nút "x" trên một người -> xoá khỏi ngày đó
-    async function onRemoveClick(event, day, userId, schedule) {
+    async function onRemoveClick(event, day, userId, containerId, schedule) {
         if (event && event.stopPropagation) {
             event.stopPropagation();
         }
@@ -1487,7 +1488,7 @@
             : null;
 
         // 1. Show modal confirmation prompt
-        const confirmed = await showRemoveConfirmModal(userName);
+        const confirmed = await showRemoveConfirmModal(userName, containerId, schedule);
         if (!confirmed) return; // User canceled
 
         try {
@@ -1516,7 +1517,7 @@
                 }
 
                 // Re-render UI and sync local state if needed
-                renderBoard();
+                renderBoard(containerId, schedule);
                 if (typeof syncSchedule === 'function') syncSchedule();
             } else {
                 alert(result.message || 'Lỗi khi xóa dân quân khỏi lịch trực!');
@@ -1527,7 +1528,7 @@
         }
     }
 
-    async function onDayClick(event, day, label, schedule) {
+    async function onDayClick(event, day, label, containerId, schedule) {
         if (!selected || !selected.userId) return;
 
         const currentDay = selected.day;
@@ -1537,7 +1538,7 @@
         // Bấm lại ngày gốc -> hủy chọn
         if (currentDay === selectedDay) {
             selected = null;
-            renderBoard();
+            renderBoard(containerId, schedule);
             return;
         }
 
@@ -1558,7 +1559,7 @@
 
         if (userIndex === -1) {
             selected = null;
-            renderBoard();
+            renderBoard(containerId, schedule);
             return;
         }
 
@@ -1602,24 +1603,22 @@
 
                 // Reset trạng thái chọn & Render lại UI
                 selected = null;
-                renderBoard();
 
                 if (typeof syncSchedule === 'function') syncSchedule();
             } else {
                 alert(result.message || 'Lỗi khi di chuyển lịch trực!');
                 selected = null;
-                renderBoard();
             }
         } catch (error) {
             console.error('API Error:', error);
             alert('Đã xảy ra lỗi kết nối máy chủ!');
             selected = null;
-            renderBoard();
         }
+        renderBoard(containerId, schedule);
     }
 
     // Mở/đóng panel "+" để thêm người vào một ngày cụ thể
-    function toggleAddPanel(event, day, week_num) {
+    function toggleAddPanel(event, day, containerId, schedule) {
         event.stopPropagation();
         const panel = document.getElementById(`add-panel-${day}`);
         const wasOpen = panel.classList.contains('open');
@@ -1643,7 +1642,7 @@
             ${availableUsers.length
                 ? availableUsers.map(u => {
                     const name = u.full_name || u.user_name || u;
-                    return `<span class="add-chip" onclick="addToDay(event, '${u.id}', '${day}', '${week_num}')">${name}</span>`;
+                    return `<span class="add-chip" onclick="addToDay(event, '${u.id}', '${day}', ${containerId}, ${schedule})">${name}</span>`;
                 }).join('')
                 : `<span class="empty-note">Không còn ai khác trong danh sách</span>`}
         </div>
@@ -1711,7 +1710,7 @@ function filterUserList() {
 /**
  * Render user cards inside modal container
  */
-    function renderModalUserList(userList) {
+    function renderModalUserList(userList, schedule) {
     const container = document.getElementById('user-list-container');
     if (!container) return;
 
@@ -1775,20 +1774,18 @@ function filterUserList() {
     }
 
     // Submits all selected users sequentially or in parallel
-    async function handleBatchAddUsers(schedule) {
+    async function handleBatchAddUsers(containerId, schedule) {
         const checkboxes = document.querySelectorAll('.user-select-checkbox:checked');
         const selectedUserIds = Array.from(checkboxes).map(cb => cb.value);
 
         if (selectedUserIds.length === 0 || !activeTargetDay) return;
 
-        
         // Loop through each selected user and call addToDay
-        console.log(selectedUserIds);
-        await addToDay(null, selectedUserIds, activeTargetDay, schedule);
+        await addToDay(null, selectedUserIds, activeTargetDay, containerId, schedule);
         closeUserSelectModal();
     }
 
-    async function addToDay(event, userIds, day, schedule) {
+    async function addToDay(event, userIds, day, containerId, schedule) {
         if (event && event.stopPropagation) {
             event.stopPropagation();
         }
@@ -1853,7 +1850,7 @@ function filterUserList() {
                 if (panel) panel.classList.remove('open');
 
                 // Render lại giao diện & đồng bộ
-                renderBoard();
+                renderBoard(containerId, schedule);
                 if (typeof syncSchedule === 'function') {
                     syncSchedule();
                 }
@@ -1882,7 +1879,7 @@ function filterUserList() {
         // addToDay(event, day, tempUser);
     }
 
-    function updateHint() {
+    function updateHint(containerId, schedule) {
         const hint = document.getElementById('scheduleHint');
         if (!hint) return;
 
@@ -1898,17 +1895,17 @@ function filterUserList() {
 
             hint.classList.add('is-active');
             hint.innerHTML = `<i class="mdi mdi-account-arrow-right"></i>Đang chọn <b>${displayName}</b> — bấm vào ngày muốn chuyển tới.
-            <span class="cancel-link" onclick="cancelSelection(event)">Huỷ chọn</span>`;
+            <span class="cancel-link" onclick="cancelSelection(event, ${containerId}, ${schedule})">Huỷ chọn</span>`;
         } else {
             hint.classList.remove('is-active');
             hint.innerHTML = `<i class="mdi mdi-cursor-default-click-outline"></i>Bấm chọn một người, rồi bấm vào ngày muốn chuyển tới.`;
         }
     }
 
-    function cancelSelection(event) {
+    function cancelSelection(event, containerId, schedule) {
         if (event) event.stopPropagation();
         selected = null;
-        renderBoard();
+        renderBoard(containerId, schedule);
     }
 
     // Đóng panel "+" nếu bấm ra ngoài
@@ -1924,6 +1921,5 @@ function filterUserList() {
         return users.find(u => u.id === userId)
     }
 
-    renderBoard();
 </script>
 {% endblock %}

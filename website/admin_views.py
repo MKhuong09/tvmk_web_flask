@@ -85,7 +85,7 @@ def admin_home():
         users=all_users,
         total_people=total_people,unregistered_count=unregistered_count,
         registered_count=registered_count,
-        cur_schedule=current_schedule,
+        current_schedule=current_schedule,
         next_schedule=next_schedule,
         registrations=registrations,
         statuses = statuses
