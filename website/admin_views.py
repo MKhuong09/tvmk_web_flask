@@ -282,12 +282,11 @@ def schedule_add_users():
 
         user_ids = data.get('user_ids')
         day_of_week = data.get('day_of_week')
-        week_num = data.get('week_num') or data.get('week_number')
+        week = data.get('week')
+        year = data.get('year')
         
-        print(user_ids, day_of_week, week_num)
-
         # Validate required inputs
-        if not user_ids or day_of_week is None or not week_num:
+        if not user_ids or day_of_week is None or not week:
             return jsonify({
                 'status': 'error',
                 'message': 'Thiếu thông tin bắt buộc (user_ids day_of_week, week_num)!'
@@ -297,7 +296,8 @@ def schedule_add_users():
         success = Schedule.add_users(
             user_ids=user_ids,
             day_of_week=day_of_week,
-            week_num=int(week_num)
+            year=int(year),
+            week=int(week)
         )
 
         if success:
@@ -324,20 +324,22 @@ def schedule_remove_user():
 
         user_id = data.get('user_id')
         day_of_week = data.get('day_of_week')
-        week_num = data.get('week_num') or data.get('week_number')
+        week = data.get('week')
+        year = data.get('year')
 
         # Validate required inputs
-        if not user_id or day_of_week is None or not week_num:
+        if not user_id or day_of_week is None or not week:
             return jsonify({
                 'status': 'error',
-                'message': 'Thiếu thông tin bắt buộc (user_id, day_of_week, week_num)!'
+                'message': 'Thiếu thông tin bắt buộc (user_id, day_of_week, week, year)!'
             }), 400
 
         # Execute class static method
         success = Schedule.remove_user(
             user_id=user_id,
             day_of_week=day_of_week,
-            week_num=int(week_num)
+            year=int(year),
+            week=int(week)
         )
 
         if success:
@@ -365,12 +367,13 @@ def schedule_move_user():
         user_id = data.get('user_id')
         current_day = data.get('current_day_of_week')
         selected_day = data.get('selected_day_of_week')
-        week_num = data.get('week_num') or data.get('week_number')
+        week = data.get('week')
+        year = data.get('year')
 
-        if not user_id or current_day is None or selected_day is None or not week_num:
+        if not user_id or current_day is None or selected_day is None or not week or not year:
             return jsonify({
                 'status': 'error',
-                'message': 'Thiếu thông tin bắt buộc (user_id, current_day_of_week, selected_day_of_week, week_num)!'
+                'message': 'Thiếu thông tin bắt buộc (user_id, current_day_of_week, selected_day_of_week, week, year)!'
             }), 400
 
         # Execute Schedule class method
@@ -378,7 +381,8 @@ def schedule_move_user():
             user_id=user_id,
             current_day_of_week=current_day,
             selected_day_of_week=selected_day,
-            week_num=int(week_num)
+            year=int(year),
+            week=int(week)
         )
 
         if success:

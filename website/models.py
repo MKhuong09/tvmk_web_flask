@@ -339,9 +339,9 @@ class Schedule:
     return str(day_val).lower() if day_val else None
 
   @staticmethod
-  def remove_user(user_id, day_of_week, week):
+  def remove_user(user_id, day_of_week, year, week):
     """Removes a user_id from the specified day in the schedule for a given week."""
-    schedule_doc = Schedule.get_week(week)
+    schedule_doc = Schedule.get_schedule(year, week)
     if not schedule_doc:
       return False
 
@@ -366,9 +366,9 @@ class Schedule:
     return False
 
   @staticmethod
-  def add_users(user_ids, day_of_week, week):
+  def add_users(user_ids, day_of_week, year, week):
     """Adds a user_id to the specified day in the schedule for a given week."""
-    schedule_doc = Schedule.get_week(week)
+    schedule_doc = Schedule.get_schedule(year, week)
     if not schedule_doc:
       return False
 
@@ -404,12 +404,13 @@ class Schedule:
     return False
   
   @staticmethod
-  def move_user(user_id, current_day_of_week, selected_day_of_week, week):
+  def move_user(user_id, current_day_of_week, selected_day_of_week, year, week):
+    print(user_id, current_day_of_week, selected_day_of_week, year, week)
     # 1. Remove user from current day
-    removed = Schedule.remove_user(user_id, current_day_of_week, week)
+    removed = Schedule.remove_user(user_id, current_day_of_week, year, week)
     
     # 2. Add user to new selected day
-    added = Schedule.add_users(user_id, selected_day_of_week, week)
+    added = Schedule.add_users(user_id, selected_day_of_week, year, week)
     
     return removed and added
     
