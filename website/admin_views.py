@@ -407,13 +407,18 @@ def generate_schedule():
         return redirect(url_for('admin_views.admin_home'))
 
     action = request.form.get('action_generate') or request.form.get('action_confirm') or request.form.get('action_cancel')
+    data = request.get_json(silent=True) or request.form
     db = get_db()
     
-    schedule_obj = Schedule.create()
+    target_week_type = data.get('target_week_type')
+    is_next_week = True if target_week_type == 'next' else False
+    
+    schedule_obj = Schedule.create(is_next_week)
+    # schedule_obj = False
     current_week = get_year_week_num()
             
     if schedule_obj:
-        flash(f'Đã generate lịch tuần {current_week}.', 'info')
+        flash(f'Đã generate lịch.', 'info')
     return redirect(url_for('admin_views.admin_home'))
 
     try:

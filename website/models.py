@@ -241,7 +241,7 @@ class Schedule:
   @staticmethod
   def create(is_next_week):
     """
-    Creates a new schedule document in Firestore. 
+    Creates a new schedule document in Firestore.
     If daily_schedule is None, it triggers ScheduleAgent to compute it automatically.
     """
     # 1. Check if a schedule already exists for this week before running solver or saving
@@ -252,10 +252,55 @@ class Schedule:
       return None
 
     # 2. If daily_schedule was not passed, generate it using ScheduleAgent
-    all_users = User.get_all()  # Fetch users automatically if not provided
+    all_users = User.get_all()
+    all_role_2_users = [u for u in all_users if int(u.role_id) == 2]
+    
     registrations = Registration.get_current_week()
     
-    agent = ScheduleAgent(all_users, registrations, NumOfSchedDays=7, NumOfUsersPerDay=3)
+    agent = ScheduleAgent(all_role_2_users, registrations, NumOfSchedDays=7, NumOfUsersPerDay=3)
+    daily_schedule = agent.generate_schedule()  # Calls solver method below
+
+    if not daily_schedule:
+      print("Solver could not find a feasible schedule.")
+      return None
+
+    # 3. Serialize User objects to dicts for each day
+    serialized_daily_schedule = {}
+    for day in Schedule.DAYS_OF_WEEK:
+        day_users = daily_schedule.get(day, [])
+        serialized_daily_schedule[day] = [
+            user.id if isinstance(user, User) else user
+            for user in day_users
+        ]
+
+    # 4. Save to Firestore
+    doc_ref = db.collection("schedules").document()
+    schedule_data = {
+      "year": year,
+      "week": week,
+      "status": "Published",
+      "created_at": datetime.now(timezone.utc),
+      "daily_schedule": serialized_daily_schedule
+    }
+
+    doc_ref.set(schedule_data)
+    return Schedule(doc_ref.id, schedule_data)
+  
+  @staticmethod
+  def regenerate(user_ids, year, week):
+    # 1. Check if a schedule already exists for this week before running solver or saving
+
+    if Schedule.is_existed(year, week):
+      print(f"Schedule for week {week} and year {year} already exists. Skipping creation.")
+      return None
+
+    # 2. If daily_schedule was not passed, generate it using ScheduleAgent
+    all_users = User.get_all()
+    all_role_2_users = [u for u in all_users if int(u.role_id) == 2]
+    
+    registrations = Registration.get_current_week()
+    
+    agent = ScheduleAgent(all_role_2_users, registrations, NumOfSchedDays=7, NumOfUsersPerDay=3)
     daily_schedule = agent.generate_schedule()  # Calls solver method below
 
     if not daily_schedule:

@@ -387,6 +387,7 @@
         font-size: 0.9rem;
         color: #a0aec0;
     }
+
     .day-sublabel.cur-day {
         color: #fff;
         background: #11cc00fd;
@@ -597,208 +598,210 @@
             width: 100%;
         }
     }
+
     .modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-}
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    }
 
-.modal-content {
-  background: #ffffff;
-  padding: 24px;
-  border-radius: 8px;
-  width: 100%;
-  max-width: 400px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  text-align: center;
-}
+    .modal-content {
+        background: #ffffff;
+        padding: 24px;
+        border-radius: 8px;
+        width: 100%;
+        max-width: 400px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        text-align: center;
+    }
 
-.modal-content h3 {
-  margin-top: 0;
-  margin-bottom: 12px;
-  font-size: 1.25rem;
-}
+    .modal-content h3 {
+        margin-top: 0;
+        margin-bottom: 12px;
+        font-size: 1.25rem;
+    }
 
-.modal-content p {
-  color: #555;
-  margin-bottom: 20px;
-}
+    .modal-content p {
+        color: #555;
+        margin-bottom: 20px;
+    }
 
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-}
+    .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
 
-.btn {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 500;
-}
+    .btn {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 500;
+    }
 
-.btn-secondary {
-  background-color: #e0e0e0;
-  color: #333;
-}
+    .btn-secondary {
+        background-color: #e0e0e0;
+        color: #333;
+    }
 
-.btn-secondary:hover {
-  background-color: #d0d0d0;
-}
+    .btn-secondary:hover {
+        background-color: #d0d0d0;
+    }
 
-.btn-danger {
-  background-color: #dc3545;
-  color: #ffffff;
-}
+    .btn-danger {
+        background-color: #dc3545;
+        color: #ffffff;
+    }
 
-.btn-danger:hover {
-  background-color: #c82333;
-}
-/* Modal Overlays & Content */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-}
+    .btn-danger:hover {
+        background-color: #c82333;
+    }
 
-.modal-content-lg {
-  background: #ffffff;
-  padding: 20px 24px;
-  border-radius: 8px;
-  width: 100%;
-  max-width: 480px;
-  max-height: 80vh;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-}
+    /* Modal Overlays & Content */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    }
 
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
+    .modal-content-lg {
+        background: #ffffff;
+        padding: 20px 24px;
+        border-radius: 8px;
+        width: 100%;
+        max-width: 480px;
+        max-height: 80vh;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    }
 
-.modal-header h3 {
-  margin: 0;
-  font-size: 1.2rem;
-  color: #333;
-}
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+    }
 
-.close-btn {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-  color: #888;
-}
+    .modal-header h3 {
+        margin: 0;
+        font-size: 1.2rem;
+        color: #333;
+    }
 
-.close-btn:hover {
-  color: #000;
-}
+    .close-btn {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: #888;
+    }
 
-/* Search Bar */
-.search-box {
-  margin-bottom: 12px;
-}
+    .close-btn:hover {
+        color: #000;
+    }
 
-.search-box input {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 0.95rem;
-  box-sizing: border-box;
-}
+    /* Search Bar */
+    .search-box {
+        margin-bottom: 12px;
+    }
 
-/* User List Scrollable Area */
-.user-list {
-  flex: 1;
-  overflow-y: auto;
-  max-height: 320px;
-  border: 1px solid #eee;
-  border-radius: 6px;
-  margin-bottom: 16px;
-}
+    .search-box input {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 0.95rem;
+        box-sizing: border-box;
+    }
 
-.user-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 14px;
-  border-bottom: 1px solid #f0f0f0;
-  cursor: pointer;
-  transition: background-color 0.15s ease;
-}
+    /* User List Scrollable Area */
+    .user-list {
+        flex: 1;
+        overflow-y: auto;
+        max-height: 320px;
+        border: 1px solid #eee;
+        border-radius: 6px;
+        margin-bottom: 16px;
+    }
 
-.user-item:last-child {
-  border-bottom: none;
-}
+    .user-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 14px;
+        border-bottom: 1px solid #f0f0f0;
+        cursor: pointer;
+        transition: background-color 0.15s ease;
+    }
 
-.user-item:hover {
-  background-color: #f5f8ff;
-}
+    .user-item:last-child {
+        border-bottom: none;
+    }
 
-.user-info {
-  display: flex;
-  flex-direction: column;
-}
+    .user-item:hover {
+        background-color: #f5f8ff;
+    }
 
-.user-name {
-  font-weight: 600;
-  color: #222;
-  font-size: 0.95rem;
-}
+    .user-info {
+        display: flex;
+        flex-direction: column;
+    }
 
-.user-meta {
-  font-size: 0.8rem;
-  color: #777;
-}
+    .user-name {
+        font-weight: 600;
+        color: #222;
+        font-size: 0.95rem;
+    }
 
-.add-action-badge {
-  font-size: 0.85rem;
-  color: #007bff;
-  font-weight: 500;
-}
+    .user-meta {
+        font-size: 0.8rem;
+        color: #777;
+    }
 
-/* Modal Buttons */
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-}
+    .add-action-badge {
+        font-size: 0.85rem;
+        color: #007bff;
+        font-weight: 500;
+    }
 
-.btn {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 500;
-}
+    /* Modal Buttons */
+    .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+    }
 
-.btn-secondary {
-  background-color: #e0e0e0;
-  color: #333;
-}
+    .btn {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 500;
+    }
 
-.btn-secondary:hover {
-  background-color: #d0d0d0;
-}
+    .btn-secondary {
+        background-color: #e0e0e0;
+        color: #333;
+    }
+
+    .btn-secondary:hover {
+        background-color: #d0d0d0;
+    }
 </style>
 
 <!-- TIÊU ĐỀ TRANG VÀ NÚT TẠO LỊCH -->
@@ -810,126 +813,141 @@
 </div>
 <!-- ===== SECTION LỊCH TRỰC (2 TUẦN) ===== -->
 <section class="schedule-dashboard-card p-4 mb-4 rounded border bg-white shadow-sm">
-  
-  <!-- Header Section chính -->
-  <div class="d-flex align-items-center justify-content-between pb-3 mb-4 border-bottom">
-    <div class="d-flex flex-column gap-1">
-      <h2 class="schedule-section-title m-0 h4 fw-bold text-primary">
-        <i class="mdi mdi-calendar-clock me-2"></i>Quản Lý Lịch Trực
-      </h2>
-      <div class="schedule-hint text-muted fs-7 d-flex align-items-center gap-1" id="scheduleHint">
-        <i class="mdi mdi-cursor-default-click-outline"></i>
-        <span>Bấm chọn một người, rồi bấm vào ngày muốn chuyển tới.</span>
-      </div>
+
+    <!-- Header Section chính -->
+    <div class="d-flex align-items-center justify-content-between pb-3 mb-4 border-bottom">
+        <div class="d-flex flex-column gap-1">
+            <h2 class="schedule-section-title m-0 h4 fw-bold text-primary">
+                <i class="mdi mdi-calendar-clock me-2"></i>Quản Lý Lịch Trực
+            </h2>
+            <div class="schedule-hint text-muted fs-7 d-flex align-items-center gap-1" id="scheduleHint">
+                <i class="mdi mdi-cursor-default-click-outline"></i>
+                <span>Bấm chọn một người, rồi bấm vào ngày muốn chuyển tới.</span>
+            </div>
+        </div>
+
     </div>
 
-    <!-- Nút Tạo lại lịch (Chỉ hiển thị khi đã có ít nhất 1 tuần) -->
+    <!-- ===== TUẦN HIỆN TẠI ===== -->
+    <div class="week-schedule-block mb-4">
+        <div class="week-header d-flex justify-content-between mb-3 px-2">
+            <h3 class="h5 m-0 fw-bold text-dark d-flex align-items-center gap-2">
+                <span class="badge bg-primary">
+                    Tuần {{ current_schedule.week }} Năm {{ current_schedule.year if current_schedule else 0 }}
+                </span>
+                Lịch Trực Tuần Hiện Tại
+            </h3>
+
+
+            <!-- Nút Tạo lại lịch (Chỉ hiển thị khi đã có ít nhất 1 tuần) -->
+            {% if current_schedule %}
+            <div class="mr-auto d-flex gap-2">
+                <button type="button" class="btn btn-outline-danger btn-sm"
+                    onclick="regenerateSchedule('scheduleBoardCurrent')">
+                    <i class="mdi mdi-refresh me-1"></i> Tạo lại lịch
+                </button>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="schedule-board-wrapper">
+            <div class="schedule-board" id="scheduleBoardCurrent"></div>
+        </div>
+    </div>
+
+    <!-- HÀNG PHÂN CÁCH (Chỉ hiện khi đã có tuần hiện tại) -->
     {% if current_schedule %}
-    <div class="d-flex gap-2">
-      <button type="button" class="btn btn-outline-danger btn-sm" onclick="regenerateSchedule()">
-        <i class="mdi mdi-refresh me-1"></i> Tạo lại lịch hiện tại
-      </button>
+    <hr class="my-4 text-muted opacity-25" />
+
+    <!-- ===== TUẦN KẾ TIẾP ===== -->
+    <div class="week-schedule-block">
+        <div class="week-header d-flex  justify-content-between mb-3 px-2">
+            <h3 class="h5 m-0 fw-bold text-dark d-flex align-items-center gap-2">
+                <span class="badge bg-secondary">
+                    Tuần {{ next_schedule.week }} Năm {{ next_schedule.year if next_schedule else 0 }}
+                </span>
+                Lịch Trực Tuần Tiếp Theo
+            </h3>
+            {% if current_schedule %}
+            <div class="mr-auto d-flex gap-2">
+                <button type="button" class="btn btn-outline-danger btn-sm"
+                    onclick="regenerateSchedule('scheduleBoardCurrent')">
+                    <i class="mdi mdi-refresh me-1"></i> Tạo lại lịch
+                </button>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="schedule-board-wrapper">
+            <div class="schedule-board" id="scheduleBoardNext"></div>
+        </div>
     </div>
     {% endif %}
-  </div>
-
-  <!-- ===== TUẦN HIỆN TẠI ===== -->
-  <div class="week-schedule-block mb-4">
-    <div class="week-header d-flex align-items-center mb-3 px-2">
-      <h3 class="h5 m-0 fw-bold text-dark d-flex align-items-center gap-2">
-        <span class="badge bg-primary">
-          Tuần {{ current_schedule.week }} Năm {{ current_schedule.year if current_schedule else 0 }}
-        </span>
-        Lịch Trực Tuần Hiện Tại
-      </h3>
-    </div>
-
-    <div class="schedule-board-wrapper">
-      <div class="schedule-board" id="scheduleBoardCurrent"></div>
-    </div>
-  </div>
-
-  <!-- HÀNG PHÂN CÁCH (Chỉ hiện khi đã có tuần hiện tại) -->
-  {% if current_schedule %}
-  <hr class="my-4 text-muted opacity-25" />
-
-  <!-- ===== TUẦN KẾ TIẾP ===== -->
-  <div class="week-schedule-block">
-    <div class="week-header d-flex align-items-center justify-content-between mb-3 px-2">
-      <h3 class="h5 m-0 fw-bold text-dark d-flex align-items-center gap-2">
-        <span class="badge bg-secondary">
-          Tuần {{ next_schedule.week }} Năm {{ next_schedule.year if next_schedule else 0 }}
-        </span>
-        Lịch Trực Tuần Tiếp Theo
-      </h3>
-    </div>
-
-    <div class="schedule-board-wrapper">
-      <div class="schedule-board" id="scheduleBoardNext"></div>
-    </div>
-  </div>
-  {% endif %}
 
 </section>
 
 
 <!-- ===== NÚT TẠO LỊCH ĐỘNG DỰA TRÊN TRẠNG THÁI ===== -->
 {% if not current_schedule %}
-  <!-- TH 1: Chưa có tuần hiện tại -> Cho phép tạo Tuần Hiện Tại -->
-  <div class="d-flex justify-content-center align-items-center m-4">
+<!-- TH 1: Chưa có tuần hiện tại -> Cho phép tạo Tuần Hiện Tại -->
+<div class="d-flex justify-content-center align-items-center m-4">
     <button type="button" class="btn-generate-schedule" id="openScheduleModalBtn" onclick="openCreateModal('current')">
-      <i class="mdi mdi-calendar-plus me-1"></i> Tạo lịch cho tuần này
+        <i class="mdi mdi-calendar-plus me-1"></i> Tạo lịch cho tuần này
     </button>
-  </div>
+</div>
 {% elif current_schedule and not next_schedule %}
-  <!-- TH 2: Đã có tuần hiện tại, CHƯA có tuần kế tiếp -> Cho phép tạo Tuần Kế Tiếp -->
-  <div class="d-flex justify-content-center align-items-center m-4">
+<!-- TH 2: Đã có tuần hiện tại, CHƯA có tuần kế tiếp -> Cho phép tạo Tuần Kế Tiếp -->
+<div class="d-flex justify-content-center align-items-center m-4">
     <button type="button" class="btn-generate-schedule" id="openScheduleModalBtn" onclick="openCreateModal('next')">
-      <i class="mdi mdi-calendar-clock me-1"></i> Tạo lịch cho tuần kế tiếp
+        <i class="mdi mdi-calendar-clock me-1"></i> Tạo lịch cho tuần kế tiếp
     </button>
-  </div>
+</div>
 {% endif %}
 <!-- TH 3: Đã có đủ cả 2 tuần (schedule và next_schedule) -> Nút bấm tự động ẩn hoàn toàn -->
 
 
 <!-- MODAL CẤU HÌNH XẾP LỊCH -->
 <div id="scheduleModal" class="schedule-modal" style="display: none;">
-  <div class="schedule-modal-content">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
-      <h3 id="modalTitle" style="margin: 0; font-size: 1.15rem; font-weight: 700; color: #0f172a;">Thông số sắp xếp lịch</h3>
-      <button type="button" id="closeScheduleModalBtn" onclick="closeScheduleModal()"
-        style="border:none; background:none; font-size: 1.5rem; cursor: pointer; color: #64748b;">&times;</button>
+    <div class="schedule-modal-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
+            <h3 id="modalTitle" style="margin: 0; font-size: 1.15rem; font-weight: 700; color: #0f172a;">Thông số sắp
+                xếp lịch</h3>
+            <button type="button" id="closeScheduleModalBtn" onclick="closeScheduleModal()"
+                style="border:none; background:none; font-size: 1.5rem; cursor: pointer; color: #64748b;">&times;</button>
+        </div>
+
+        <form action="{{ url_for('admin_views.generate_schedule') if url_for else '#' }}" method="POST"
+            id="generateScheduleForm">
+
+            <!-- Hidden input để gửi target week type ('current' hoặc 'next') về backend -->
+            <input type="hidden" id="target_week_type" name="target_week_type" value="current">
+
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; font-weight: 600; font-size: 0.9rem; margin-bottom: 6px; color: #334155;">
+                    Số ngày trực
+                </label>
+                <input type="number" id="num_days" name="num_days" min="1" max="7" value="7"
+                    style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.95rem;"
+                    required>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; font-weight: 600; font-size: 0.9rem; margin-bottom: 6px; color: #334155;">
+                    Quân số tối đa trong 1 ngày
+                </label>
+                <input type="number" id="num_users_per_day" name="num_users_per_day" min="1" max="20" value="2"
+                    style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.95rem;"
+                    required>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" class="btn btn-secondary" onclick="closeScheduleModal()"
+                    style="border-radius: 6px; font-weight: 600;">Hủy</button>
+                <button type="submit" class="btn btn-primary"
+                    style="border-radius: 6px; font-weight: 600; background-color: #2563eb;">Tạo Lịch</button>
+            </div>
+        </form>
     </div>
-
-    <form action="{{ url_for('admin_views.generate_schedule') if url_for else '#' }}" method="POST" id="generateScheduleForm">
-      
-      <!-- Hidden input để gửi target week type ('current' hoặc 'next') về backend -->
-      <input type="hidden" id="target_week_type" name="target_week_type" value="current">
-
-      <div style="margin-bottom: 16px;">
-        <label style="display: block; font-weight: 600; font-size: 0.9rem; margin-bottom: 6px; color: #334155;">
-          Số ngày trực
-        </label>
-        <input type="number" id="num_days" name="num_days" min="1" max="7" value="7"
-          style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.95rem;" required>
-      </div>
-
-      <div style="margin-bottom: 20px;">
-        <label style="display: block; font-weight: 600; font-size: 0.9rem; margin-bottom: 6px; color: #334155;">
-          Quân số tối đa trong 1 ngày
-        </label>
-        <input type="number" id="num_users_per_day" name="num_users_per_day" min="1" max="20" value="2"
-          style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.95rem;" required>
-      </div>
-
-      <div style="display: flex; justify-content: flex-end; gap: 10px;">
-        <button type="button" class="btn btn-secondary" onclick="closeScheduleModal()"
-          style="border-radius: 6px; font-weight: 600;">Hủy</button>
-        <button type="submit" class="btn btn-primary"
-          style="border-radius: 6px; font-weight: 600; background-color: #2563eb;">Tạo Lịch</button>
-      </div>
-    </form>
-  </div>
 </div>
 <!-- 3 THẺ METRICS THEO ĐÚNG HÌNH 1 -->
 <div class="dashboard-metrics-grid">
@@ -1040,14 +1058,14 @@
 
 <!-- Confirmation Remove Modal -->
 <div id="confirm-remove-modal" class="modal-overlay" style="display: none;">
-  <div class="modal-content">
-    <h3>Xác nhận xóa</h3>
-    <p id="confirm-remove-message">Bạn có chắc chắn muốn xóa dân quân này khỏi lịch trực?</p>
-    <div class="modal-actions">
-      <button id="cancel-remove-btn" class="btn btn-secondary">Hủy</button>
-      <button id="confirm-remove-btn" class="btn btn-danger">Xóa</button>
+    <div class="modal-content">
+        <h3>Xác nhận xóa</h3>
+        <p id="confirm-remove-message">Bạn có chắc chắn muốn xóa dân quân này khỏi lịch trực?</p>
+        <div class="modal-actions">
+            <button id="cancel-remove-btn" class="btn btn-secondary">Hủy</button>
+            <button id="confirm-remove-btn" class="btn btn-danger">Xóa</button>
+        </div>
     </div>
-  </div>
 </div>
 {% endblock %}
 
@@ -1111,7 +1129,7 @@
                         barPercentage: 0.7,
                         categoryPercentage: 0.8
                     },
-                    {   
+                    {
                         label: 'Đêm',
                         data: [4, 4, 4, 4, 6, 6, 6],
                         backgroundColor: '#f59e0b',
@@ -1203,6 +1221,15 @@
         return todayIndex === 0 ? 7 : todayIndex;
     }
 
+    function getCurrentWeekNum() {
+        const d = new Date();
+        d.setHours(0, 0, 0, 0);
+        d.setDate(d.getDate() + 3 - (d.getDay() + 6) % 7);
+        const year = d.getFullYear();
+        const week1 = new Date(year, 0, 4);
+        return 1 + Math.round(((d.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
+    }
+
     function handleGenerateSchedule(e) {
         if (e && e.preventDefault) e.preventDefault();
         closeModal();
@@ -1238,7 +1265,7 @@
     // Safely render both boards on load
     function renderAllBoards() {
         // 1. Render current week if present, else show placeholder inside current board
-        
+
         if (typeof currentSchedule !== 'undefined' && currentSchedule && currentSchedule.daily_schedule) {
             renderBoard('scheduleBoardCurrent');
         } else {
@@ -1282,7 +1309,7 @@
         const schedule = getScheduleFromContainerId(containerId);
         const name = user.full_name || user.user_name || user;
         // const isSelected = selected && selected.day === day && selected.week === week && selected.year === year && selected.userId === user.id;
-        
+
         const isSelected = selected && selected.day === day && selected.userId === user.id;
 
         const userReg = registrations?.find(r => r.user_id === user.id);
@@ -1317,13 +1344,13 @@
     function renderBoard(containerId) {
         const board = document.getElementById(containerId);
         const schedule = getScheduleFromContainerId(containerId)
-        
+
         if (!board || !schedule) return;
 
         board.innerHTML = '';
 
         // 1. Safe check if scheduleData or its daily_schedule is missing/empty
-        
+
         if (!schedule || !schedule.daily_schedule || Object.keys(schedule.daily_schedule).length === 0) {
             board.innerHTML = `
                 <div style="text-align: center; padding: 40px; border: 1px dashed #ccc; border-radius: 8px; width: 100%;">
@@ -1343,7 +1370,7 @@
             const col = document.createElement('div');
             col.className = 'day-card';
             col.dataset.day = d.day;
-            
+
             if (typeof selected !== 'undefined' && selected && selected.day != d.day) {
                 col.classList.add('drop-target');
             }
@@ -1351,20 +1378,20 @@
             // Pass containerId/week context if onDayClick needs to differentiate between weeks
             col.onclick = (e) => onDayClick(e, d, containerId);
 
-            
-                    // <!-- Search Bar -->
-                    // <!-- <div class="search-box">
-                    // <input 
-                    //     type="text" 
-                    //     id="user-search-input" 
-                    //     placeholder="Tìm kiếm nhân viên theo tên hoặc ID..." 
-                    //     oninput="filterUserList()"
-                    // />
-                    // </div> -->
+
+            // <!-- Search Bar -->
+            // <!-- <div class="search-box">
+            // <input 
+            //     type="text" 
+            //     id="user-search-input" 
+            //     placeholder="Tìm kiếm nhân viên theo tên hoặc ID..." 
+            //     oninput="filterUserList()"
+            // />
+            // </div> -->
 
             col.innerHTML = `
                 <div class="day-head">
-                    <div class="day-sublabel ${d.day === getCurrentDayNum() ? 'cur-day' : ''}">${d.label}</div>
+                    <div class="day-sublabel ${d.day === getCurrentDayNum() && schedule.week === getCurrentWeekNum() ? 'cur-day' : ''}">${d.label}</div>
                     <div class="day-head-right">
                         <div class="day-icon"><i class="mdi ${d.icon}"></i></div>
                         <div class="day-add-btn" title="Thêm người cho ngày này" onclick="openUserSelectModal(${d.day}, '${containerId}')">
@@ -1392,11 +1419,11 @@
                     </div>
 
                     <div class="modal-actions">
-                        <button 
-                        type="button" 
-                        id="user-modal-submit-btn" 
-                        class="btn btn-primary" 
-                        onclick="handleBatchAddUsers('${containerId}')" 
+                        <button
+                        type="button"
+                        id="user-modal-submit-btn"
+                        class="btn btn-primary"
+                        onclick="handleBatchAddUsers('${containerId}')"
                         disabled
                     >
                         Thêm
@@ -1404,7 +1431,36 @@
                     <button type="button" class="btn btn-secondary" onclick="closeUserSelectModal()">Hủy</button>
                     </div>
                 </div>
-                </div>`;
+                </div>
+                <!-- User Selection Modal -->
+                <div id="generate-user-select-modal" class="modal-overlay" style="display: none;">
+                    <div class="modal-content modal-content-lg">
+                        <div class="modal-header">
+                            <h3 id="user-select-modal-title">Chọn dân quân vào lịch</h3>
+                            <button type="button" class="close-btn" onclick="closeGenerateUserSelectModal()">&times;</button>
+                        </div>
+                    
+                        <!-- User List Container -->
+                        <div id="generate-user-list-container" class="user-list">
+                        <!-- User items will be rendered dynamically -->
+                        </div>
+
+                        <div class="modal-actions">
+                            <button
+                            type="button"
+                            id="user-modal-submit-btn"
+                            class="btn btn-primary"
+                            onclick="handleBatchAddUsersGenerate('${containerId}')"
+                            disabled
+                        >
+                            Tạo lịch
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="closeGenerateUserSelectModal()">Hủy</button>
+                        </div>
+                    </div>
+                </div>
+                </div>
+                `;
 
             board.appendChild(col);
 
@@ -1414,7 +1470,7 @@
             } else {
                 staff.forEach(userId => {
                     const targetUser = getUser(userId)
-                    list.insertAdjacentHTML('beforeend', staffBoxHtml(d.day, schedule.week, schedule.year, targetUser, containerId ));
+                    list.insertAdjacentHTML('beforeend', staffBoxHtml(d.day, schedule.week, schedule.year, targetUser, containerId));
                 });
             }
         });
@@ -1433,10 +1489,10 @@
     // Bấm vào một người -> chọn (hoặc bấm lại -> bỏ chọn)
     function onStaffClick(event, day, week, year, userId, containerId) {
         event.stopPropagation();
-        
+
         if (selected && selected?.day === day && selected?.week === week && selected?.year === year && selected?.userId === userId) {
             selected = null;
-            
+
         } else {
             selected = { day, week, year, userId };
         }
@@ -1552,7 +1608,7 @@
         // Xử lý cấu trúc đối tượng day (dayObj có thể là { d: 1, label: 'Thứ Hai', ... } hoặc chỉ là số)
         const selectedDay = typeof dayObj === 'object' ? (dayObj.d || dayObj.day) : dayObj;
         const label = typeof dayObj === 'object' ? dayObj.label : `Ngày ${selectedDay}`;
-        
+
         const currentDay = selected.day;
         const userId = selected.userId;
 
@@ -1636,7 +1692,7 @@
             alert('Đã xảy ra lỗi kết nối máy chủ!');
             selected = null;
         }
-        
+
         // Render lại đúng container kèm dữ liệu schedule
         renderBoard(containerId);
     }
@@ -1681,118 +1737,169 @@
     }
 
     // Stores current target day when modal opens
-let activeTargetDay = null;
-let cachedUsers = [];
+    let activeTargetDay = null;
+    let cachedUsers = [];
 
-/**
- * Open the user selection modal for a target day
- * @param {string|number} day - Day key or integer ('1'..'7')
- * @param {Array} [availableUsers] - Optional users array (defaults to getRoster() or window.users)
- */
-function openUserSelectModal(day, containerId) {
-    activeTargetDay = day;
+    /**
+     * Open the user selection modal for a target day
+     * @param {string|number} day - Day key or integer ('1'..'7')
+     * @param {Array} [availableUsers] - Optional users array (defaults to getRoster() or window.users)
+     */
+    function openUserSelectModal(day, containerId) {
+        activeTargetDay = day;
 
-    // Use provided roster/users or fallback to global roster/users array
+        // Use provided roster/users or fallback to global roster/users array
 
-    const modal = document.getElementById('user-select-modal');
-    const searchInput = document.getElementById('user-search-input');
-    
-    if (searchInput) searchInput.value = '';    
+        const modal = document.getElementById('user-select-modal');
+        const searchInput = document.getElementById('user-search-input');
 
-    renderModalUserList(users, containerId);
-    if (modal) modal.style.display = 'flex';
-}
+        if (searchInput) searchInput.value = '';
 
-/**
- * Close modal and clear target day state
- */
-function closeUserSelectModal() {
-    const modal = document.getElementById('user-select-modal');
-    if (modal) modal.style.display = 'none';
-    activeTargetDay = null;
-}
-
-/**
- * Filter users live based on search input query
- */
-function filterUserList() {
-    const query = (document.getElementById('user-search-input')?.value || '').toLowerCase().trim();
-    if (!query) {
-        renderModalUserList(cachedUsers);
-        return;
+        renderModalUserList(users, containerId);
+        if (modal) modal.style.display = 'flex';
     }
 
-    const filtered = cachedUsers.filter(u => {
-        const name = (u.full_name || u.user_name || u.name || '').toLowerCase();
-        const id = String(u.id || '').toLowerCase();
-        return name.includes(query) || id.includes(query);
-    });
+    /**
+     * Close modal and clear target day state
+     */
+    function closeUserSelectModal() {
+        const modal = document.getElementById('user-select-modal');
+        if (modal) modal.style.display = 'none';
+        activeTargetDay = null;
+    }
+    function closeGenerateUserSelectModal() {
+        const modal = document.getElementById('generate-user-select-modal');
+        if (modal) modal.style.display = 'none';
+        activeTargetDay = null;
+    }
 
-    renderModalUserList(filtered);
-}
+    /**
+     * Filter users live based on search input query
+     */
+    function filterUserList() {
+        const query = (document.getElementById('user-search-input')?.value || '').toLowerCase().trim();
+        if (!query) {
+            renderModalUserList(cachedUsers);
+            return;
+        }
 
-/**
- * Render user cards inside modal container
- */
+        const filtered = cachedUsers.filter(u => {
+            const name = (u.full_name || u.user_name || u.name || '').toLowerCase();
+            const id = String(u.id || '').toLowerCase();
+            return name.includes(query) || id.includes(query);
+        });
+
+        renderModalUserList(filtered);
+    }
+
+    /**
+     * Render user cards inside modal container
+     */
     function renderModalUserList(userList, containerId) {
-    const container = document.getElementById('user-list-container');
-    const schedule = getScheduleFromContainerId(containerId)
-    if (!container) return;
+        const container = document.getElementById('user-list-container');
+        const schedule = getScheduleFromContainerId(containerId)
+        if (!container) return;
 
-    if (!userList || userList.length === 0) {
-        container.innerHTML = '<div style="padding: 16px; text-align: center; color: #888;">Không tìm thấy dân quân</div>';
-        return;
-    }
+        if (!userList || userList.length === 0) {
+            container.innerHTML = '<div style="padding: 16px; text-align: center; color: #888;">Không tìm thấy dân quân</div>';
+            return;
+        }
 
-    const dayKey = dayKeyMap[activeTargetDay] || String(activeTargetDay).toLowerCase();
-    
-    const existingDayStaff = schedule.daily_schedule[dayKey] || [];
+        const dayKey = dayKeyMap[activeTargetDay] || String(activeTargetDay).toLowerCase();
 
-    const html = userList.map(user => {
-        const userIdStr = String(user.id);
-        const isAlreadyAdded = existingDayStaff.some(
-            u => u === userIdStr
-        );
+        const existingDayStaff = schedule.daily_schedule[dayKey] || [];
 
-        const name = user.full_name || user.user_name || user.name || `User #${user.id}`;
-        const role = user.role_name || user.position || '';
+        const html = userList.map(user => {
+            const userIdStr = String(user.id);
+            const isAlreadyAdded = existingDayStaff.some(
+                u => u === userIdStr
+            );
 
-        if (isAlreadyAdded) {
+            const name = user.full_name || user.user_name || user.name || `User #${user.id}`;
+            const role = user.role_name || user.position || '';
+
+            if (isAlreadyAdded) {
+                return `
+                    <div class="user-item disabled" style="opacity: 0.5; cursor: not-allowed; display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-bottom: 1px solid #f0f0f0;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <input type="checkbox" disabled checked />
+                            <div class="user-info">
+                                <span class="user-name" style="font-weight: 600;">${name}</span>
+                                <span class="user-meta" style="font-size: 0.8rem; color: #777; display: block;">${role}</span>
+                            </div>
+                        </div>
+                        <span class="add-action-badge" style="color: #6c757d; font-size: 0.85rem;">Đã có trong lịch</span>
+                    </div>
+                `;
+            }
+
             return `
-                <div class="user-item disabled" style="opacity: 0.5; cursor: not-allowed; display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-bottom: 1px solid #f0f0f0;">
+                <label class="user-item" style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-bottom: 1px solid #f0f0f0; cursor: pointer;">
                     <div style="display: flex; align-items: center; gap: 10px;">
-                        <input type="checkbox" disabled checked />
+                        <input type="checkbox" class="user-select-checkbox" value="${user.id}" onchange="updateSelectedUserCount()" />
                         <div class="user-info">
                             <span class="user-name" style="font-weight: 600;">${name}</span>
                             <span class="user-meta" style="font-size: 0.8rem; color: #777; display: block;">${role}</span>
                         </div>
                     </div>
-                    <span class="add-action-badge" style="color: #6c757d; font-size: 0.85rem;">Đã có trong lịch</span>
-                </div>
+                </label>
             `;
+        }).join('');
+
+        container.innerHTML = html;
+        updateSelectedUserCount();
+    }
+    function renderModalGenerateUserList(userList, containerId) {
+        const container = document.getElementById('generate-user-list-container');
+        const schedule = getScheduleFromContainerId(containerId)
+        if (!container) return;
+
+        if (!userList || userList.length === 0) {
+            container.innerHTML = '<div style="padding: 16px; text-align: center; color: #888;">Không tìm thấy dân quân</div>';
+            return;
         }
 
-        return `
-            <label class="user-item" style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-bottom: 1px solid #f0f0f0; cursor: pointer;">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <input type="checkbox" class="user-select-checkbox" value="${user.id}" onchange="updateSelectedUserCount()" />
-                    <div class="user-info">
-                        <span class="user-name" style="font-weight: 600;">${name}</span>
-                        <span class="user-meta" style="font-size: 0.8rem; color: #777; display: block;">${role}</span>
-                    </div>
-                </div>
-            </label>
-        `;
-    }).join('');
+        const dayKey = dayKeyMap[activeTargetDay] || String(activeTargetDay).toLowerCase();
 
-    container.innerHTML = html;
-    updateSelectedUserCount();
-}
+        const existingDayStaff = schedule.daily_schedule[dayKey] || [];
+
+        const html = userList.map(user => {
+            const userIdStr = String(user.id);
+
+            const name = user.full_name || user.user_name || user.name || `User #${user.id}`;
+            const role = user.role_name || user.position || '';
+
+            return `
+                <label class="user-item" style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-bottom: 1px solid #f0f0f0; cursor: pointer;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <input type="checkbox" class="generate-user-select-checkbox" value="${user.id}" onchange="updateGenerateSelectedUserCount()"
+                        checked />
+                        <div class="user-info">
+                            <span class="user-name" style="font-weight: 600;">${name}</span>
+                            <span class="user-meta" style="font-size: 0.8rem; color: #777; display: block;">${role}</span>
+                        </div>
+                    </div>
+                </label>
+            `;
+        }).join('');
+
+        container.innerHTML = html;
+        updateSelectedUserCount();
+    }
 
     // Updates the count on the submit button
     function updateSelectedUserCount() {
         const checked = document.querySelectorAll('.user-select-checkbox:checked');
         const submitBtn = document.getElementById('user-modal-submit-btn');
+        if (submitBtn) {
+            submitBtn.textContent = checked.length > 0 ? `Thêm (${checked.length})` : 'Thêm';
+            submitBtn.disabled = checked.length === 0;
+        }
+    }
+
+    function updateGenerateSelectedUserCount() {
+        const checked = document.querySelectorAll('.generate-user-select-checkbox:checked');
+        const submitBtn = document.getElementById('generate-user-modal-submit-btn');
         if (submitBtn) {
             submitBtn.textContent = checked.length > 0 ? `Thêm (${checked.length})` : 'Thêm';
             submitBtn.disabled = checked.length === 0;
@@ -1811,7 +1918,97 @@ function filterUserList() {
         closeUserSelectModal();
     }
 
+    async function handleBatchAddUsersGenerate(containerId) {
+        const checkboxes = document.querySelectorAll('.generate-user-select-checkbox:checked');
+        const selectedUserIds = Array.from(checkboxes).map(cb => cb.value);
+
+        if (selectedUserIds.length === 0 || !activeTargetDay) return;
+
+        // Loop through each selected user and call addToDay
+        await regenerateSchedule(null, selectedUserIds, activeTargetDay, containerId);
+        closeUserSelectModal();
+    }
+
     async function addToDay(event, userIds, day, containerId) {
+        if (event && event.stopPropagation) {
+            event.stopPropagation();
+        }
+
+        const schedule = getScheduleFromContainerId(containerId)
+
+        // Đảm bảo userIds luôn là một mảng
+        const idsToAdd = Array.isArray(userIds) ? userIds : [userIds];
+        if (idsToAdd.length === 0) return;
+
+        // 1. Ánh xạ ngày ('1'..'7') sang key tiếng Anh ('monday', 'tuesday', ...)
+        const key = dayKeyMap[day] || String(day).toLowerCase();
+
+        if (!schedule.daily_schedule) {
+            schedule.daily_schedule = {};
+        }
+        if (!schedule.daily_schedule[key]) {
+            schedule.daily_schedule[key] = [];
+        }
+
+        const currentStaff = schedule.daily_schedule[key];
+
+        // 2. Lọc ra các ID chưa có trong ngày đó (tránh gửi ID trùng lặp lên backend)
+        const newIds = idsToAdd.filter(id => {
+            const idStr = String(id);
+            return !currentStaff.some(u => String(typeof u === 'object' ? u.id : u) === idStr);
+        });
+
+        if (newIds.length === 0) {
+            console.warn('Tất cả dân quân đã chọn đều đã có trong ngày này.');
+            return;
+        }
+
+        // 3. Tra cứu object người dùng tương ứng từ roster để cập nhật UI sau này
+        const roster = typeof getRoster === 'function' ? getRoster() : (window.users || []);
+        const objectsToAdd = newIds.map(id => {
+            const found = roster.find(u => String(u.id) === String(id));
+            return found || id;
+        });
+
+        // 4. Gọi API backend thêm mảng người dùng vào Firestore
+        try {
+            const response = await fetch('/admin/schedule/add-users', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    user_ids: newIds, // Gửi toàn bộ mảng ID hợp lệ
+                    day_of_week: day,
+                    year: schedule.year,
+                    week: schedule.week
+                })
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.status === 'success') {
+                // Cập nhật local state UI bằng các object vừa được lọc thành công
+                currentStaff.push(...objectsToAdd);
+
+                // Đóng panel chọn staff (nếu có)
+                const panel = document.getElementById(`add-panel-${day}`);
+                if (panel) panel.classList.remove('open');
+
+                // Render lại giao diện & đồng bộ
+                renderBoard(containerId);
+                if (typeof syncSchedule === 'function') {
+                    syncSchedule();
+                }
+            } else {
+                alert(result.message || 'Lỗi khi thêm dân quân vào lịch!');
+            }
+        } catch (error) {
+            console.error('API Error:', error);
+            alert('Đã xảy ra lỗi kết nối máy chủ!');
+        }
+    }
+    async function regenerateSchedule(event, userIds, containerId) {
         if (event && event.stopPropagation) {
             event.stopPropagation();
         }
@@ -1951,6 +2148,18 @@ function filterUserList() {
 
     function getScheduleFromContainerId(containerId) {
         return containerId === "scheduleBoardCurrent" ? currentSchedule : (containerId === "scheduleBoardNext" ? nextSchedule : "");
+    }
+
+    function regenerateSchedule(containerId) {
+        const modal = document.getElementById('generate-user-select-modal');
+        const searchInput = document.getElementById('generate-user-search-input');
+
+        if (searchInput) searchInput.value = '';
+
+        renderModalGenerateUserList(users, containerId);
+        if (modal) {
+            modal.style.display = 'flex';
+        }
     }
 
 </script>
