@@ -43,13 +43,15 @@ def get_week_date_range(year, week_number):
 @admin_views.route('/home')
 @login_required
 def admin_home():
-    db = get_db()
-    users_ref = db.collection('users').stream()
+    users_ref = User.get_all()
     all_users = []
+
     for doc in users_ref:
         u_data = doc.to_dict() or {}
-        u_data['id'] = doc.id
-        all_users.append(u_data)
+        # Check if role_id is 2 (safe conversion to int in case it's stored as a string/int)
+        if int(u_data.get('role_id', 0)) == 2:
+            u_data['id'] = doc.id
+            all_users.append(u_data)
         
     total_people = len(all_users)
 
@@ -394,6 +396,46 @@ def schedule_move_user():
             return jsonify({
                 'status': 'error',
                 'message': 'Di chuyển lịch thất bại!'
+            }), 400
+
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@admin_views.route('/schedule/regenerate', methods=['POST'])
+@login_required
+def schedule_regenerate():
+    if current_user.role_id != 1:
+        return jsonify({'status': 'error', 'message': 'Bạn không có quyền thực hiện thao tác này!'}), 403
+
+    try:
+        data = request.get_json(silent=True) or request.form
+
+        user_ids = data.get('user_ids')
+        year = data.get('year')
+        week = data.get('week')
+
+        if not user_ids or not week or not year:
+            return jsonify({
+                'status': 'error',
+                'message': 'Thiếu thông tin bắt buộc (user_ids, week, year)!'
+            }), 400
+
+        # Execute Schedule class method
+        success = Schedule.regenerate(
+            user_ids=user_ids,
+            year=int(year),
+            week=int(week)
+        )
+
+        if success:
+            return jsonify({
+                'status': 'success',
+                'message': 'Tạo lại lịch trực thành công!'
+            }), 200
+        else:
+            return jsonify({
+                'status': 'error',
+                'message': 'Tạo lại lịch trực thất bại!'
             }), 400
 
     except Exception as e:

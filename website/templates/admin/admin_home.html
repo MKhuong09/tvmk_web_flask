@@ -1448,10 +1448,9 @@
                         <div class="modal-actions">
                             <button
                             type="button"
-                            id="user-modal-submit-btn"
+                            id="regenerate-modal-submit-btn"
                             class="btn btn-primary"
                             onclick="handleBatchAddUsersGenerate('${containerId}')"
-                            disabled
                         >
                             Tạo lịch
                             </button>
@@ -1899,9 +1898,8 @@
 
     function updateGenerateSelectedUserCount() {
         const checked = document.querySelectorAll('.generate-user-select-checkbox:checked');
-        const submitBtn = document.getElementById('generate-user-modal-submit-btn');
+        const submitBtn = document.getElementById('regenerate-modal-submit-btn');
         if (submitBtn) {
-            submitBtn.textContent = checked.length > 0 ? `Thêm (${checked.length})` : 'Thêm';
             submitBtn.disabled = checked.length === 0;
         }
     }
@@ -1922,11 +1920,12 @@
         const checkboxes = document.querySelectorAll('.generate-user-select-checkbox:checked');
         const selectedUserIds = Array.from(checkboxes).map(cb => cb.value);
 
-        if (selectedUserIds.length === 0 || !activeTargetDay) return;
+
+        if (selectedUserIds.length === 0) return;
 
         // Loop through each selected user and call addToDay
-        await regenerateSchedule(null, selectedUserIds, activeTargetDay, containerId);
-        closeUserSelectModal();
+        await handleRegenerateSchedule(null, selectedUserIds, containerId);
+        closeGenerateUserSelectModal();
     }
 
     async function addToDay(event, userIds, day, containerId) {
@@ -2008,57 +2007,32 @@
             alert('Đã xảy ra lỗi kết nối máy chủ!');
         }
     }
-    async function regenerateSchedule(event, userIds, containerId) {
+    async function handleRegenerateSchedule(event, userIds, containerId) {
         if (event && event.stopPropagation) {
             event.stopPropagation();
         }
 
+        console.log(1);
+        
         const schedule = getScheduleFromContainerId(containerId)
 
         // Đảm bảo userIds luôn là một mảng
         const idsToAdd = Array.isArray(userIds) ? userIds : [userIds];
-        if (idsToAdd.length === 0) return;
 
-        // 1. Ánh xạ ngày ('1'..'7') sang key tiếng Anh ('monday', 'tuesday', ...)
-        const key = dayKeyMap[day] || String(day).toLowerCase();
-
-        if (!schedule.daily_schedule) {
-            schedule.daily_schedule = {};
-        }
-        if (!schedule.daily_schedule[key]) {
-            schedule.daily_schedule[key] = [];
-        }
-
-        const currentStaff = schedule.daily_schedule[key];
-
-        // 2. Lọc ra các ID chưa có trong ngày đó (tránh gửi ID trùng lặp lên backend)
-        const newIds = idsToAdd.filter(id => {
-            const idStr = String(id);
-            return !currentStaff.some(u => String(typeof u === 'object' ? u.id : u) === idStr);
-        });
-
-        if (newIds.length === 0) {
-            console.warn('Tất cả dân quân đã chọn đều đã có trong ngày này.');
+        if (idsToAdd.length === 0) {
+            console.warn('Hãy chọn dân quân để tạo lịch trực.');
             return;
         }
 
-        // 3. Tra cứu object người dùng tương ứng từ roster để cập nhật UI sau này
-        const roster = typeof getRoster === 'function' ? getRoster() : (window.users || []);
-        const objectsToAdd = newIds.map(id => {
-            const found = roster.find(u => String(u.id) === String(id));
-            return found || id;
-        });
-
         // 4. Gọi API backend thêm mảng người dùng vào Firestore
         try {
-            const response = await fetch('/admin/schedule/add-users', {
+            const response = await fetch('/admin/schedule/regenerate', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    user_ids: newIds, // Gửi toàn bộ mảng ID hợp lệ
-                    day_of_week: day,
+                    user_ids: idsToAdd, // Gửi toàn bộ mảng ID hợp lệ
                     year: schedule.year,
                     week: schedule.week
                 })
@@ -2067,20 +2041,9 @@
             const result = await response.json();
 
             if (response.ok && result.status === 'success') {
-                // Cập nhật local state UI bằng các object vừa được lọc thành công
-                currentStaff.push(...objectsToAdd);
-
-                // Đóng panel chọn staff (nếu có)
-                const panel = document.getElementById(`add-panel-${day}`);
-                if (panel) panel.classList.remove('open');
-
-                // Render lại giao diện & đồng bộ
                 renderBoard(containerId);
-                if (typeof syncSchedule === 'function') {
-                    syncSchedule();
-                }
             } else {
-                alert(result.message || 'Lỗi khi thêm dân quân vào lịch!');
+                alert(result.message || 'Lỗi khi tạo lại lịch trực!');
             }
         } catch (error) {
             console.error('API Error:', error);
