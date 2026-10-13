@@ -176,7 +176,7 @@ class ScheduleAgent:
         # 5. Objective: Maximize random preferences MINUS balancing penalties + Random preferences + Weekend Bonus - Target Penalties
         weights = {}
         objective_terms = []
-        WEEKEND_BONUS = 200  # Extra reward per user assigned to weekend
+        WEEKEND_BONUS = 100  # Extra reward per user assigned to weekend
         
         for u in range(n_users):
             for d in range(n_days):
