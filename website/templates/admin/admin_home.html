@@ -871,7 +871,7 @@
             {% if current_schedule %}
             <div class="mr-auto d-flex gap-2">
                 <button type="button" class="btn btn-outline-danger btn-sm"
-                    onclick="regenerateSchedule('scheduleBoardCurrent')">
+                    onclick="regenerateSchedule('scheduleBoardNext')">
                     <i class="mdi mdi-refresh me-1"></i> Tạo lại lịch
                 </button>
             </div>
@@ -1084,8 +1084,8 @@
     const users = {{ users | tojson }};
     // Dữ liệu lịch tuần lấy từ backend (Flask truyền qua context, biến `weekly_schedule`).
     // Mỗi phần tử: { day, label, icon, staff: [...], weekend: true/false }
-    const currentSchedule = {{ current_schedule | tojson }};
-    const nextSchedule = {{ next_schedule | tojson }};
+    let currentSchedule = {{ current_schedule | tojson }};
+    let nextSchedule = {{ next_schedule | tojson }};
     // Người đang được chọn để chuyển ngày: { day, name } hoặc null
     let selected = null;
     // 1. ĐỒNG HỒ THỜI GIAN THỰC
@@ -1305,6 +1305,10 @@
         return (schedule && schedule.daily_schedule && schedule.daily_schedule[key]) || [];
     }
 
+    function registerStatus(userReg) {
+        
+    }
+
     function staffBoxHtml(day, week, year, user, containerId) {
         const schedule = getScheduleFromContainerId(containerId);
         const name = user.full_name || user.user_name || user;
@@ -1417,7 +1421,7 @@
                     <div id="user-list-container" class="user-list">
                     <!-- User items will be rendered dynamically -->
                     </div>
-
+                
                     <div class="modal-actions">
                         <button
                         type="button"
@@ -1433,31 +1437,32 @@
                 </div>
                 </div>
                 <!-- User Selection Modal -->
-                <div id="generate-user-select-modal" class="modal-overlay" style="display: none;">
-                    <div class="modal-content modal-content-lg">
-                        <div class="modal-header">
-                            <h3 id="user-select-modal-title">Chọn dân quân vào lịch</h3>
-                            <button type="button" class="close-btn" onclick="closeGenerateUserSelectModal()">&times;</button>
-                        </div>
-                    
-                        <!-- User List Container -->
-                        <div id="generate-user-list-container" class="user-list">
-                        <!-- User items will be rendered dynamically -->
-                        </div>
-
-                        <div class="modal-actions">
-                            <button
-                            type="button"
-                            id="regenerate-modal-submit-btn"
-                            class="btn btn-primary"
-                            onclick="handleBatchAddUsersGenerate('${containerId}')"
-                        >
-                            Tạo lịch
-                            </button>
-                            <button type="button" class="btn btn-secondary" onclick="closeGenerateUserSelectModal()">Hủy</button>
-                        </div>
-                    </div>
-                </div>
+                
+                <div id="generate-user-select-modal-${containerId}" class="modal-overlay" style="display: none;">
+    <div class="modal-content modal-content-lg">
+        <div class="modal-header">
+            <h3 id="user-select-modal-title">Chọn dân quân vào lịch</h3>
+            <button type="button" class="close-btn" onclick="closeGenerateUserSelectModal('${containerId}')">&times;</button>
+        </div>
+    
+        <!-- User List Container -->
+        <div id="generate-user-list-container-${containerId}" class="user-list">
+            <!-- User items will be rendered dynamically -->
+        </div>
+        
+        <div class="modal-actions">
+            <button
+                type="button"
+                id="regenerate-modal-submit-btn-${containerId}"
+                class="btn btn-primary"
+                onclick="handleBatchAddUsersGenerate('${containerId}')"
+            >
+                Tạo lịch
+            </button>
+            <button type="button" class="btn btn-secondary" onclick="closeGenerateUserSelectModal('${containerId}')">Hủy</button>
+        </div>
+    </div>
+</div>
                 </div>
                 `;
 
@@ -1766,12 +1771,6 @@
         if (modal) modal.style.display = 'none';
         activeTargetDay = null;
     }
-    function closeGenerateUserSelectModal() {
-        const modal = document.getElementById('generate-user-select-modal');
-        if (modal) modal.style.display = 'none';
-        activeTargetDay = null;
-    }
-
     /**
      * Filter users live based on search input query
      */
@@ -1849,8 +1848,9 @@
         updateSelectedUserCount();
     }
     function renderModalGenerateUserList(userList, containerId) {
-        const container = document.getElementById('generate-user-list-container');
-        const schedule = getScheduleFromContainerId(containerId)
+        const container = document.getElementById(`generate-user-list-container-${containerId}`);
+        const schedule = getScheduleFromContainerId(containerId);
+        
         if (!container) return;
 
         if (!userList || userList.length === 0) {
@@ -1858,21 +1858,14 @@
             return;
         }
 
-        const dayKey = dayKeyMap[activeTargetDay] || String(activeTargetDay).toLowerCase();
-
-        const existingDayStaff = schedule.daily_schedule[dayKey] || [];
-
         const html = userList.map(user => {
-            const userIdStr = String(user.id);
-
             const name = user.full_name || user.user_name || user.name || `User #${user.id}`;
             const role = user.role_name || user.position || '';
 
             return `
                 <label class="user-item" style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-bottom: 1px solid #f0f0f0; cursor: pointer;">
                     <div style="display: flex; align-items: center; gap: 10px;">
-                        <input type="checkbox" class="generate-user-select-checkbox" value="${user.id}" onchange="updateGenerateSelectedUserCount()"
-                        checked />
+                        <input type="checkbox" class="generate-user-select-checkbox" value="${user.id}" onchange="updateGenerateSelectedUserCount()" checked />
                         <div class="user-info">
                             <span class="user-name" style="font-weight: 600;">${name}</span>
                             <span class="user-meta" style="font-size: 0.8rem; color: #777; display: block;">${role}</span>
@@ -1883,7 +1876,7 @@
         }).join('');
 
         container.innerHTML = html;
-        updateSelectedUserCount();
+        updateGenerateSelectedUserCount();
     }
 
     // Updates the count on the submit button
@@ -1925,7 +1918,7 @@
 
         // Loop through each selected user and call addToDay
         await handleRegenerateSchedule(null, selectedUserIds, containerId);
-        closeGenerateUserSelectModal();
+        closeGenerateUserSelectModal(containerId);
     }
 
     async function addToDay(event, userIds, day, containerId) {
@@ -2012,8 +2005,6 @@
             event.stopPropagation();
         }
 
-        console.log(1);
-        
         const schedule = getScheduleFromContainerId(containerId)
 
         // Đảm bảo userIds luôn là một mảng
@@ -2041,6 +2032,11 @@
             const result = await response.json();
 
             if (response.ok && result.status === 'success') {
+                if (containerId === "scheduleBoardCurrent") {
+                    currentSchedule = result.schedule
+                } else {
+                    nextSchedule = result.schedule
+                }
                 renderBoard(containerId);
             } else {
                 alert(result.message || 'Lỗi khi tạo lại lịch trực!');
@@ -2114,15 +2110,55 @@
     }
 
     function regenerateSchedule(containerId) {
-        const modal = document.getElementById('generate-user-select-modal');
-        const searchInput = document.getElementById('generate-user-search-input');
+        // Target the specific modal for this containerId
+        const modal = document.getElementById(`generate-user-select-modal-${containerId}`);
+        const searchInput = document.getElementById(`generate-user-search-input-${containerId}`);
 
         if (searchInput) searchInput.value = '';
 
         renderModalGenerateUserList(users, containerId);
+        
         if (modal) {
             modal.style.display = 'flex';
         }
+    }
+
+    function closeGenerateUserSelectModal(containerId) {
+        const modal = document.getElementById(`generate-user-select-modal-${containerId}`);
+        if (modal) {
+            modal.style.display = 'none';
+        }
+    }
+
+    function renderModalGenerateUserList(userList, containerId) {
+        // Target the specific list container for this containerId
+        const container = document.getElementById(`generate-user-list-container-${containerId}`);
+        if (!container) return;
+
+        if (!userList || userList.length === 0) {
+            container.innerHTML = '<div style="padding: 16px; text-align: center; color: #888;">Không tìm thấy dân quân</div>';
+            return;
+        }
+
+        const html = userList.map(user => {
+            const name = user.full_name || user.user_name || user.name || `User #${user.id}`;
+            const role = user.role_name || user.position || '';
+
+            return `
+                <label class="user-item" style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-bottom: 1px solid #f0f0f0; cursor: pointer;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <input type="checkbox" class="generate-user-select-checkbox" value="${user.id}" onchange="updateGenerateSelectedUserCount()" checked />
+                        <div class="user-info">
+                            <span class="user-name" style="font-weight: 600;">${name}</span>
+                            <span class="user-meta" style="font-size: 0.8rem; color: #777; display: block;">${role}</span>
+                        </div>
+                    </div>
+                </label>
+            `;
+        }).join('');
+
+        container.innerHTML = html;
+        updateGenerateSelectedUserCount();
     }
 
 </script>

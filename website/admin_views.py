@@ -426,11 +426,12 @@ def schedule_regenerate():
             year=int(year),
             week=int(week)
         )
-
+        
         if success:
             return jsonify({
                 'status': 'success',
-                'message': 'Tạo lại lịch trực thành công!'
+                'message': 'Tạo lại lịch trực thành công!',
+                'schedule': success.to_dict(),
             }), 200
         else:
             return jsonify({
