@@ -268,17 +268,33 @@ def register_schedule():
             for reg in confirmed_regs:
                 if not reg:
                     continue
+                # r_off_days = reg.get("selected_days")
+                # if r_off_days:
+                #     r_off = [
+                #         d.strip()
+                #         .replace("Thứ ", "T")
+                #         .replace("Chủ Nhật", "CN")
+                #         for d in r_off_days.split(",")
+                #     ]
+                #     r_work = [
+                #         d for d in all_days_in_week if d not in r_off
+                #     ]
+                #     for d in r_work:
+                #         if d in current_counts:
+                #             current_counts[d] += 1
                 r_off_days = reg.get("selected_days")
                 if r_off_days:
+                    # Map integers (1-7) to the corresponding day string in all_days_in_week
                     r_off = [
-                        d.strip()
-                        .replace("Thứ ", "T")
-                        .replace("Chủ Nhật", "CN")
-                        for d in r_off_days.split(",")
+                        all_days_in_week[d - 1]
+                        for d in r_off_days
+                        if isinstance(d, int) and 1 <= d <= len(all_days_in_week)
                     ]
+                    
                     r_work = [
                         d for d in all_days_in_week if d not in r_off
                     ]
+                    
                     for d in r_work:
                         if d in current_counts:
                             current_counts[d] += 1

@@ -1305,8 +1305,26 @@
         return (schedule && schedule.daily_schedule && schedule.daily_schedule[key]) || [];
     }
 
-    function registerStatus(userReg) {
-        
+    function getStatusReg(userReg) {
+        if (userReg === 0) return {id: 0, text: "Chưa đăng ký"}
+        if (userReg === 1) return {id: 1, text: "Chưa duyệt"}
+        if (userReg === 2) return {id: 2, text: "Đã duyệt"}
+    }
+    
+    function renderStatusBadge(status) {
+        const config = {
+            0: { color: 'danger', icon: 'mdi-close-circle' },
+            1: { color: 'warning', icon: 'mdi-alert' },
+            2: { color: 'success', icon: 'mdi-check-circle' }
+        };
+
+        const currentConfig = config[status.id] || config[1];
+
+        return `
+            <span class="d-flex align-items-center badge bg-${currentConfig.color}-subtle text-${currentConfig.color} border border-${currentConfig.color}-subtle">
+                <i class="mdi ${currentConfig.icon} text-${currentConfig.color} fs-6"></i>&nbsp; ${status.text}
+            </span>
+        `;
     }
 
     function staffBoxHtml(day, week, year, user, containerId) {
@@ -1317,9 +1335,8 @@
         const isSelected = selected && selected.day === day && selected.userId === user.id;
 
         const userReg = registrations?.find(r => r.user_id === user.id);
-        const status = userReg?.status_id ?? 'Chưa đăng ký <<';
-
-        const isRegistered = Boolean(userReg);
+        const tmpReg = userReg ? (userReg?.isAccepted ? 2 : 1) : 0;
+        const status = getStatusReg(tmpReg)
 
         return `
             <li class="d-flex flex-column staff-box${isSelected ? ' selected' : ''}"
@@ -1331,7 +1348,7 @@
                     <span>${name}</span>
                     <i class="mdi mdi-close remove-x" onclick="onRemoveClick(event, ${day}, '${user.id}', '${containerId}')" title="Xoá khỏi ngày này"></i>
                 </div>
-                    ${!isRegistered ? `<span class="badge bg-warning-subtle text-warning border border-warning-subtle"><i class="mdi mdi-alert text-warning fs-6"></i> Chưa đăng ký</span>` : `<span>${registrationStatus}</span>`}
+                    ${renderStatusBadge(status)}
             </li>`;
     }
 
