@@ -287,7 +287,7 @@ def register_schedule():
                     # Map integers (1-7) to the corresponding day string in all_days_in_week
                     r_off = [
                         all_days_in_week[d - 1]
-                        for d in r_off_days
+                        for d in r_off_days 
                         if isinstance(d, int) and 1 <= d <= len(all_days_in_week)
                     ]
                     

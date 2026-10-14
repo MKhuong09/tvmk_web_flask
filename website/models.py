@@ -115,6 +115,9 @@ class Registration:
     self.selected_days = data.get("selected_days", [])
     self.session = data.get("session")
     self.week_number = data.get("week_number")
+    self.week = data.get("week")
+    self.year = data.get("year")
+    self.is_accepted = data.get("is_accepted")
     self.status_id = data.get("status_id")
     self.user_id = data.get("user_id")
     self.created_at = data.get("created_at")
@@ -126,6 +129,9 @@ class Registration:
         "selected_days": self.selected_days,
         "session": self.session,
         "week_number": self.week_number,
+        "week": self.week,
+        "year": self.year,
+        "is_accepted": self.is_accepted,
         "status_id": self.status_id,
         "user_id": self.user_id,
         "created_at": self.created_at
@@ -180,6 +186,7 @@ class Registration:
     docs = (
         db.collection("registrations")
         .where("week", "==", week)
+        .where("year", "==", year)
         .stream()
     )
     
