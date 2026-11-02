@@ -309,7 +309,7 @@ class Schedule:
       
       registrations = Registration.get_current_week()
       
-      agent = ScheduleAgent(all_role_2_users, registrations, NumOfSchedDays=7, NumOfUsersPerDay=3)
+      agent = ScheduleAgent(all_role_2_users, registrations, NumOfSchedDays=7, NumOfUsersPerDay=2)
       daily_schedule = agent.generate_schedule()  # Calls solver method below
 
       if not daily_schedule:

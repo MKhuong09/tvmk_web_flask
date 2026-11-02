@@ -64,10 +64,9 @@ class Registration:
     self.id = reg_id
     self.selected_days = data.get("selected_days", [])
     self.session = data.get("session")
-    self.week_number = data.get("week_number")
     self.week = data.get("week")
     self.year = data.get("year")
-    self.is_accepted = data.get("is_accepted")
+    self.is_accepted = data.get("is_accepted", False)
     self.status_id = data.get("status_id")
     self.user_id = data.get("user_id")
     self.created_at = data.get("created_at")
@@ -85,7 +84,7 @@ class ScheduleAgent:
         
     def to_json_dict(daily_schedule: Dict[str, List[Any]]) -> Dict[str, List[Dict[str, Any]]]:
         """
-        Converts a daily schedule dictionary (mapping day strings like 'monday' 
+        Converts a daily schedule dictionary (mapping day strings like 'monday'
         to lists of User objects) into a fully JSON-serializable dictionary.
         """
         formatted_schedule = {}
@@ -107,98 +106,185 @@ class ScheduleAgent:
             return self._create_schedule_greedy()
 
         model = cp_model.CpModel()
-        n_users = len(self.users)
         n_days = self.NumOfSchedDays
 
-        # Boolean decision vars x[u,d] == 1 if user u scheduled on day d
+        def get_user_id(user):
+            if isinstance(user, dict):
+                return user.get("id") or user.get("user_id")
+            return getattr(user, "id", None) or getattr(user, "user_id", None)
+
+        user_ids = [get_user_id(u) for u in self.users if get_user_id(u) is not None]
+
+        # 1. Build accepted registrations map
+        accepted_regs = {}
+        for r in (self.registrations or []):
+            is_acc = r.get("is_accepted")
+            if is_acc is True or is_acc == 1 or str(is_acc).lower() == "true":
+                u_id = r.get("user_id")
+                if u_id is not None:
+                    days = r.get("selected_days", []) or []
+                    norm_days = [int(d) for d in days if str(d).isdigit()]
+                    accepted_regs[u_id] = norm_days
+                    accepted_regs[str(u_id)] = norm_days
+                    if str(u_id).isdigit():
+                        accepted_regs[int(u_id)] = norm_days
+
+        # 2. Decision variables
         x = {}
-        for u in range(n_users):
+        for uid in user_ids:
             for d in range(n_days):
-                x[(u, d)] = model.NewBoolVar(f"x_{u}_{d}")
-                
-        user_days_map = {
-            r.user_id: getattr(r, "selected_days", []) or []
-            for r in (self.registrations or [])
-        }
-        for u in self.users:
-            u.selected_days = user_days_map.get(u.id, [])
-
-        # 1. Availability constraints
-        for u, user in enumerate(self.users):
-            for d in range(n_days):
-                daynum = d + 1
-                if daynum in user.selected_days:
-                    model.Add(x[(u, d)] == 0)
-
-        # 2. Hard day limits
-        for d in range(n_days):
-            model.Add(sum(x[(u, d)] for u in range(n_users)) <= self.NumOfUsersPerDay)
-            model.Add(sum(x[(u, d)] for u in range(n_users)) >= 1)  # Ensure at least 1 user
-
-        # 3. Max days per user
-        for u, user in enumerate(self.users):
-            model.Add(sum(x[(u, d)] for d in range(n_days)) <= 7 - user.allowed_off_days)
-
-        # 4. Daily Balancing Penalties (Smooth out daily counts)
-        TARGET_MIN = 2  # Target at least 2 users/day (e.g., Friday)
-        TARGET_MAX = self.NumOfUsersPerDay  # Target at most 3 users/day (e.g., Tuesday)
-        
-        WEEKEND_MIN_TARGET = self.NumOfUsersPerDay   # Aim for at least 3 users on Sat/Sun
-        WEEKDAY_MAX_TARGET = 2   # Aim for at most 2 users on Mon-Fri
-
-        UNDER_PENALTY = 500  # Penalty weight for having < min users
-        OVER_PENALTY = 300   # Penalty weight for having > max users
+                x[(uid, d)] = model.NewBoolVar(f"x_{uid}_{d}")
 
         penalty_terms = []
+        user_total_days = {}
+
+        # 3. Availability & Max bounds per user (WITH LIVE TRACING)
+        print("===== LIVE CONSTRAINT TRACE START =====")
+        actual_pool_size = len(user_ids)
+
+        for user in self.users:
+            uid = get_user_id(user)
+            if uid is None:
+                continue
+
+            selected_days = (
+                accepted_regs.get(uid) or 
+                accepted_regs.get(str(uid)) or 
+                (accepted_regs.get(int(uid)) if str(uid).isdigit() else None) or 
+                []
+            )
+
+            print(f"User UID: {uid} | Rest Days Found: {selected_days}")
+
+            # HARD CONSTRAINT: User CANNOT work on their accepted rest days
+            for d in range(n_days):
+                day_num = d + 1  # 1 = Mon, 7 = Sun
+                if day_num in selected_days:
+                    model.Add(x[(uid, d)] == 0)
+                    print(f"  -> FORBIDDEN: Added constraint x[({uid}, {d})] == 0 for Day {day_num}")
+
+            # FIX: If pool size is small (e.g., 1 or 2 users), ignore allowed_off_days 
+            # so they can work all remaining available days and prevent empty shifts.
+            max_available_days = 7 - len(selected_days)
+            
+            if actual_pool_size <= 2:
+                upper_bound = max_available_days  # Allow working all non-rest days!
+                print(f"  -> Small pool override: User {uid} upper_bound set to {upper_bound}")
+            else:
+                allowed_off = user.get("allowed_off_days") if isinstance(user, dict) else getattr(user, "allowed_off_days", 0)
+                allowed_off = allowed_off or 0
+                max_allowed = 7 - allowed_off
+                upper_bound = min(max_available_days, max_allowed)
+
+            u_days = model.NewIntVar(0, max(0, upper_bound), f"u_days_{uid}")
+            model.Add(u_days == sum(x[(uid, d)] for d in range(n_days)))
+            user_total_days[uid] = u_days
+
+        print("===== LIVE CONSTRAINT TRACE END =====")
+
+        # 4. Daily Capacity Limits
+        UNDER_STAFF_PENALTY = 2000
+        actual_pool_size = len(user_ids)
 
         for d in range(n_days):
-            daily_total = sum(x[(u, d)] for u in range(n_users))
+            daily_total = sum(x[(uid, d)] for uid in user_ids)
+            model.Add(daily_total <= self.NumOfUsersPerDay)
+            
             daynum = d + 1
+            is_weekend = daynum in (DayOfWeek.SATURDAY.value, DayOfWeek.SUNDAY.value)
             
-            if daynum in (DayOfWeek.SATURDAY.value, DayOfWeek.SUNDAY.value):
-            # Weekend: Penalize if fewer than 3 users
-                under_target = model.NewIntVar(0, self.NumOfUsersPerDay, f"under_{d}")
-                model.Add(under_target >= WEEKEND_MIN_TARGET - daily_total)
-                penalty_terms.append(UNDER_PENALTY * under_target)
-            else:
-                # Weekday: Penalize if more than 2 users
-                over_target = model.NewIntVar(0, self.NumOfUsersPerDay, f"over_{d}")
-                model.Add(over_target >= daily_total - WEEKDAY_MAX_TARGET)
-                penalty_terms.append(OVER_PENALTY * over_target)
+            # FIXED: Cap target_min by actual available pool size so 1 user doesn't trigger impossible targets
+            target_min = min(self.NumOfUsersPerDay, 2, actual_pool_size) if is_weekend else min(1, actual_pool_size)
             
-            # Track shortfall below TARGET_MIN
-            under_target = model.NewIntVar(0, TARGET_MIN, f"under_{d}")
-            model.Add(under_target >= TARGET_MIN - daily_total)
+            under_staff = model.NewIntVar(0, self.NumOfUsersPerDay, f"under_staff_{d}")
+            model.Add(under_staff >= target_min - daily_total)
+            penalty_terms.append(UNDER_STAFF_PENALTY * under_staff)
+
+        # 5. Workload Fairness Penalty (Only runs if multiple users exist)
+        load_vars = list(user_total_days.values())
+        if len(load_vars) > 1:
+            min_load = model.NewIntVar(0, 7, "min_load")
+            max_load = model.NewIntVar(0, 7, "max_load")
+            model.AddMinEquality(min_load, load_vars)
+            model.AddMaxEquality(max_load, load_vars)
             
-            # Track excess above TARGET_MAX
-            over_target = model.NewIntVar(0, self.NumOfUsersPerDay, f"over_{d}")
-            model.Add(over_target >= daily_total - TARGET_MAX)
-            
-            penalty_terms.append(UNDER_PENALTY * under_target + OVER_PENALTY * over_target)
+            fairness_spread = model.NewIntVar(0, 7, "fairness_spread")
+            model.Add(fairness_spread == max_load - min_load)
+            FAIRNESS_PENALTY = 400
+            penalty_terms.append(FAIRNESS_PENALTY * fairness_spread)
+
+        # 6. Objective (FIXED: Stable weights, removed random.random() to ensure deterministic scheduling)
+        WEEKEND_BONUS = 50  
+        preference_score = 0
         
-        # 5. Objective: Maximize random preferences MINUS balancing penalties + Random preferences + Weekend Bonus - Target Penalties
-        weights = {}
-        objective_terms = []
-        WEEKEND_BONUS = 100  # Extra reward per user assigned to weekend
-        
-        for u in range(n_users):
+        for uid in user_ids:
             for d in range(n_days):
                 daynum = d + 1
-                base_weight = int(random.random() * 100)
-                
-                weights[(u, d)] = int(random.random() * 100)  # Reduced range so penalties take priority
-                
-                # Add bonus score for Saturday and Sunday assignments
+                base_weight = 10  # Stable base weight per shift
                 if daynum in (DayOfWeek.SATURDAY.value, DayOfWeek.SUNDAY.value):
                     base_weight += WEEKEND_BONUS
-                    
-                objective_terms.append(base_weight * x[(u, d)])
+                preference_score += base_weight * x[(uid, d)]
 
-        preference_score = sum(weights[(u, d)] * x[(u, d)] for u in range(n_users) for d in range(n_days))
-
-        # model.Maximize(preference_score + sum(objective_terms) - sum(penalty_terms))
         model.Maximize(preference_score - sum(penalty_terms))
-        
+
+        # 7. Solve & Build a Multi-Keyed Safe Schedule Dictionary
+        solver = cp_model.CpSolver()
+        solver.parameters.max_time_in_seconds = float(solve_time_seconds)
+        solver.parameters.random_seed = random.randrange(1, 1_000_000)
+        solver.parameters.num_search_workers = 8
+
+        result = solver.Solve(model)
+
+        if result in (cp_model.OPTIMAL, cp_model.FEASIBLE):
+            daily_schedule = {}
+            
+            # Day name lookup helpers for maximum UI compatibility
+            day_names_map = {
+                1: ["monday", "mon", "1"],
+                2: ["tuesday", "tue", "2"],
+                3: ["wednesday", "wed", "3"],
+                4: ["thursday", "thu", "4"],
+                5: ["friday", "fri", "5"],
+                6: ["saturday", "sat", "6"],
+                7: ["sunday", "sun", "7"]
+            }
+
+            for d in range(n_days):
+                day_num = d + 1  # 1 to 7 (Mon to Sun)
+                
+                # Gather users working on this day index
+                scheduled = []
+                for user in self.users:
+                    uid = get_user_id(user)
+                    if uid is not None:
+                        is_working = solver.Value(x[(uid, d)]) == 1
+                        
+                        # Double-check validation
+                        selected_days = accepted_regs.get(uid, [])
+                        if is_working and (day_num in selected_days):
+                            print(f"🚨 WARNING: User {uid} tried to work on rest day {day_num}!")
+                        elif is_working:
+                            scheduled.append(user)
+
+                # Map to ALL possible key variations so your UI never experiences a lookup mismatch
+                daily_schedule[d] = scheduled         # 0-indexed (0 to 6)
+                daily_schedule[day_num] = scheduled     # 1-indexed integer (1 to 7)
+                
+                # Bind DayOfWeek Enum members and string names if applicable
+                try:
+                    for day_enum in DayOfWeek:
+                        if day_enum.value == day_num or day_enum.name.lower() in day_names_map.get(day_num, []):
+                            daily_schedule[day_enum] = scheduled
+                            daily_schedule[day_enum.name] = scheduled
+                            daily_schedule[day_enum.name.lower()] = scheduled
+                except Exception:
+                    pass
+
+            print(f"Schedule created using CP-SAT solver in {solver.WallTime()} seconds.")
+            return daily_schedule
+        else:
+            raise ValueError("Không thể tạo lịch tự động vì các ràng buộc quá khắt khe (Infeasible).")
+
         # Fairness: avoid scheduling users on weekend if they were scheduled on weekend last week
         # last_week_weekend_ids = set()
         # for daynum, users_on_day in (self.last_week_schedule or {}).items():
@@ -216,32 +302,6 @@ class ScheduleAgent:
         #                 daynum = d + 1
         #                 if daynum in (DayOfWeek.SATURDAY.value, DayOfWeek.SUNDAY.value):
         #                     model.Add(x[(u, d)] == 0)
-        solver = cp_model.CpSolver()
-        solver.parameters.max_time_in_seconds = float(solve_time_seconds)
-        solver.parameters.random_seed = random.randrange(1, 1_000_000)
-        solver.parameters.num_search_workers = 8
-
-        """Runs the CP-SAT solver and returns a daily_schedule dictionary mapped by day names."""
-        result = solver.Solve(model)
-
-        if result in (cp_model.OPTIMAL, cp_model.FEASIBLE):
-            daily_schedule = {day: [] for day in DayOfWeek}
-
-            for d in range(n_days):
-                daynum = d + 1
-                day_name = DAY_MAPPING.get(daynum)
-                
-                scheduled = []
-                for u in range(n_users):
-                    if solver.Value(x[(u, d)]) == 1:
-                        scheduled.append(self.users[u])
-
-                if day_name:
-                    daily_schedule[day_name] = scheduled
-
-            print(f"Schedule created using CP-SAT solver in {solver.WallTime()} seconds.")
-            return daily_schedule
-
         # Fallback to greedy if solver didn't find a solution
         print(f"CP-SAT solver failed to find a solution, falling back to greedy algorithm.\nReason: {solver.StatusName(result)}")
         print("Please try increasing Number of Users Per Day.")
