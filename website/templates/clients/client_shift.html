@@ -471,155 +471,339 @@
         color: #92400e;
         border: 1px solid #fde68a;
     }
+    .history-details {
+    margin-top: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+}
+
+.history-details summary {
+    padding: 16px 20px;
+    cursor: pointer;
+    font-weight: 700;
+    color: var(--text-main);
+    background: #f8fafc;
+}
+
+.history-details summary:hover {
+    background: #f1f5f9;
+}
+
+.history-content {
+    padding: 16px 20px;
+    border-top: 1px solid var(--border);
+}
+
+.readonly-note {
+    color: var(--text-muted);
+    font-size: 13px;
+}
+.filter-rule-row {
+    position: relative;
+    z-index: 30;
+}
+.week-tooltip-wrap {
+    position: relative;
+    display: inline-flex;
+    cursor: help;
+}
+
+.info-icon {
+    color: var(--primary);
+    font-size: 16px;
+}
+
+.week-tooltip {
+    position: absolute;
+    z-index: 20;
+    top: calc(100% + 8px);
+    left: 0;
+    width: max-content;
+    max-width: min(320px, 85vw);
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: #0f172a;
+    color: white;
+    font-size: 13px;
+    line-height: 1.6;
+    box-shadow: var(--shadow-md);
+
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-4px);
+    transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.week-tooltip-wrap:hover .week-tooltip,
+.week-tooltip-wrap:focus-within .week-tooltip,
+.filter-rule-row:hover .week-tooltip,
+.filter-rule-row:focus-within .week-tooltip {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.registration-card {
+    overflow: visible;
+}
+
+.day-checkbox-label {
+    z-index: 1;
+}
+
+.day-checkbox-label:hover,
+.day-checkbox-label:focus-within {
+    z-index: 20;
+}
+
+.day-hover-tooltip {
+    position: absolute;
+    z-index: 100;
+    top: calc(100% + 7px);
+    left: 50%;
+    width: max-content;
+    max-width: min(280px, 80vw);
+    padding: 9px 12px;
+    border-radius: 8px;
+    background: #0f172a;
+    color: #fff;
+    font-size: 12px;
+    line-height: 1.5;
+    text-align: left;
+    box-shadow: var(--shadow-md);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translate(-50%, -4px);
+    transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.day-checkbox-label:hover .day-hover-tooltip,
+.day-checkbox-label:focus-within .day-hover-tooltip {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(-50%, 0);
+}
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="schedule-container">
-    <!-- Header Section -->
     <div class="header-action">
         <div class="header-title-group">
             <h1>Lịch Đăng Ký Tuần</h1>
-            <p>Hệ thống đăng ký lịch trực & ngày nghỉ - Dân Quân Ấp 27</p>
+            <p>
+                Đăng ký ngày nghỉ cho tuần tới và xem lại lịch gần nhất.
+            </p>
         </div>
+
         <div class="alert-rule-banner">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="12" y1="16" x2="12" y2="12"></line>
-                <line x1="12" y1="8" x2="12.01" y2="8"></line>
-            </svg>
-            <span>Quy định: Bạn được chọn đúng <strong>{{ allowed_off_days }} ngày nghỉ</strong> trong tuần.</span>
-        </div>   
+            Quy định: Bạn được chọn đúng
+            <strong>{{ allowed_off_days }} ngày nghỉ</strong>
+            trong tuần.
+        </div>
     </div>
 
-    <!-- Filter & Deadline Row -->
     <div class="filter-rule-row">
+    <div class="week-tooltip-wrap" tabindex="0">
         <div class="dropdown-week-box">
-            <label for="select-week" style="font-size: 13px; font-weight: 600; color: var(--text-muted);">Tuần:</label>
-            <select id="select-week">
-                <option id="countdown-dropdown">Tuần 1 - Tháng 6 : (dd-dd)-(Đang tính toán...)</option>
-            </select>
+            <strong>Tuần đăng ký:</strong>
+            <span>{{ target_week_label }} ({{ target_week_range }})</span>
+            <span class="info-icon" aria-hidden="true">ⓘ</span>
         </div>
 
-        <div class="timer-pill" id="live-timer-pill">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <polyline points="12 6 12 12 16 14"></polyline>
-            </svg>
-            <span id="countdown-text">Đang tải hạn đăng ký...</span>
+        <div class="week-tooltip" role="tooltip">
+            <span>Thời gian mở đăng ký</span><br>
+            <strong>{{ registration_window_label }}</strong>
         </div>
     </div>
 
-    <!--  Days Selector Card  -->
+    <div class="timer-pill">
+        <span id="countdown-text">
+            {% if can_register %}
+                Đang tính hạn đăng ký...
+            {% else %}
+                Đã đăng ký — chỉ xem
+            {% endif %}
+        </span>
+    </div>
+</div>
+
+    {% if readonly_message %}
+    <div class="alert-rule-banner" style="margin-bottom: 16px;">
+        {{ readonly_message }}
+    </div>
+    {% endif %}
+
+    {% set days = [
+        ("T2", "Thứ 2"),
+        ("T3", "Thứ 3"),
+        ("T4", "Thứ 4"),
+        ("T5", "Thứ 5"),
+        ("T6", "Thứ 6"),
+        ("T7", "Thứ 7"),
+        ("CN", "Chủ Nhật")
+    ] %}
+
     <div class="registration-card">
         <div class="registration-card-header">
             <div class="week-badge">
-                <span id="badge-week-title">Tuần 1 - Tháng 6</span>
-                <span>Chọn ngày nghỉ của bạn</span>
+                <span>{{ target_week_label }} ({{ target_week_range }})</span>
+                <span>
+                    {% if can_register %}
+                        Chọn ngày nghỉ của bạn
+                    {% else %}
+                        Lịch đã đăng ký — chỉ xem
+                    {% endif %}
+                </span>
             </div>
-            <span style="font-size: 12px; color: var(--text-muted); font-weight: 500;">
-                Tối đa: <strong style="color: var(--primary);">{{ allowed_off_days }} ngày</strong>
+
+            <span>
+                Tối đa:
+                <strong>{{ allowed_off_days }} ngày</strong>
             </span>
         </div>
 
-        <!-- 7 Days  -->
         <div class="days-grid">
-            <label class="day-checkbox-label" id="label-T2">
-                <input type="checkbox" name="quick_day" value="T2">
-                <span class="day-title">Thứ 2</span>
-                <span class="day-sub">T2</span>
-                <span class="custom-check-indicator"></span>
-            </label>
-            <label class="day-checkbox-label" id="label-T3">
-                <input type="checkbox" name="quick_day" value="T3">
-                <span class="day-title">Thứ 3</span>
-                <span class="day-sub">T3</span>
-                <span class="custom-check-indicator"></span>
-            </label>
-            <label class="day-checkbox-label" id="label-T4">
-                <input type="checkbox" name="quick_day" value="T4">
-                <span class="day-title">Thứ 4</span>
-                <span class="day-sub">T4</span>
-                <span class="custom-check-indicator"></span>
-            </label>
-            <label class="day-checkbox-label" id="label-T5">
-                <input type="checkbox" name="quick_day" value="T5">
-                <span class="day-title">Thứ 5</span>
-                <span class="day-sub">T5</span>
-                <span class="custom-check-indicator"></span>
-            </label>
-            <label class="day-checkbox-label" id="label-T6">
-                <input type="checkbox" name="quick_day" value="T6">
-                <span class="day-title">Thứ 6</span>
-                <span class="day-sub">T6</span>
-                <span class="custom-check-indicator"></span>
-            </label>
-            <label class="day-checkbox-label" id="label-T7">
-                <input type="checkbox" name="quick_day" value="T7">
-                <span class="day-title">Thứ 7</span>
-                <span class="day-sub">T7</span>
-                <span class="custom-check-indicator"></span>
-            </label>
-            <label class="day-checkbox-label" id="label-CN">
-                <input type="checkbox" name="quick_day" value="CN">
-                <span class="day-title">Chủ Nhật</span>
-                <span class="day-sub">CN</span>
-                <span class="custom-check-indicator"></span>
-            </label>
+            {% for code, title in days %}
+            <label
+    class="day-checkbox-label
+        {% if code in selected_days %}is-checked{% endif %}
+        {% if not can_register %}is-disabled{% endif %}"
+    id="label-{{ code }}">
+
+    <input
+        type="checkbox"
+        name="quick_day"
+        value="{{ code }}"
+        {% if code in selected_days %}checked{% endif %}
+        {% if not can_register %}disabled{% endif %}>
+
+    <span class="day-title">{{ title }}</span>
+    <span class="day-sub">{{ code }}</span>
+    <span class="custom-check-indicator"></span>
+
+    <!-- Thêm tooltip tại đây, vẫn nằm trong label -->
+    <span class="day-hover-tooltip" role="tooltip">
+        {{ title }} — {{ target_day_dates[code] }}<br>
+        Mở đăng ký: {{ registration_window_label }}
+    </span>
+</label>
+            {% endfor %}
         </div>
 
-        <!-- Footer Action -->
         <div class="action-footer">
             <div class="selected-summary">
-                Đã chọn: <strong id="selected-count-display">0</strong> / {{ allowed_off_days }} ngày nghỉ
+                Đã chọn:
+                <strong id="selected-count-display">
+                    {{ selected_days|length }}
+                </strong>
+                / {{ allowed_off_days }} ngày nghỉ
             </div>
+
             <div class="btn-group">
-                <button type="button" class="btn-cancel" id="btn-quick-clear">Xóa chọn</button>
-                <button type="button" class="btn-submit" id="btn-quick-submit" disabled>Xác nhận đăng ký</button>
+                {% if can_register %}
+                <button
+                    type="button"
+                    class="btn-cancel"
+                    id="btn-quick-clear">
+                    Xóa chọn
+                </button>
+
+                <button
+                    type="button"
+                    class="btn-submit"
+                    id="btn-quick-submit"
+                    disabled>
+                    Xác nhận đăng ký
+                </button>
+                {% else %}
+                <span class="readonly-note">Tuần đã đăng ký chỉ được xem.</span>
+                {% endif %}
             </div>
         </div>
     </div>
 
-    <!-- Capacity Overview Table  -->
-    <div class="status-table-container">
-        <div id="countdown-table-header" class="table-header-banner">
-            <span>Bảng thống kê quân số trực tuần</span>
-            <span style="font-size: 11px; color: var(--text-muted); font-weight: normal;">(Chỉ tiêu tối thiểu: 4/ca)</span>
+    <details class="history-details">
+        <summary>
+            {% if nearest_registration %}
+                Lịch đăng ký gần nhất — {{ nearest_registration.week_label }}
+            {% else %}
+                Lịch đăng ký gần nhất
+            {% endif %}
+            (bấm để xem/ẩn)
+        </summary>
+
+        <div class="history-content">
+            {% if nearest_registration %}
+                <p>
+                    Tuần:
+                    <strong>{{ nearest_registration.week_label }}</strong>
+                </p>
+                <p class="readonly-note">
+                    Đây là lịch cũ, bạn chỉ có thể xem.
+                </p>
+
+                <div class="days-grid">
+                    {% for code, title in days %}
+                    <label
+                        class="day-checkbox-label
+                            {% if code in nearest_registration.selected_days %}
+                                is-checked
+                            {% endif %}
+                            is-disabled">
+                        <input
+                            type="checkbox"
+                            value="{{ code }}"
+                            {% if code in nearest_registration.selected_days %}
+                                checked
+                            {% endif %}
+                            disabled>
+                        <span class="day-title">{{ title }}</span>
+                        <span class="day-sub">{{ code }}</span>
+                        <span class="custom-check-indicator"></span>
+                    </label>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="readonly-note">
+                    Bạn chưa có lịch đăng ký trước tuần tới.
+                </p>
+            {% endif %}
         </div>
+    </details>
+
+    <div class="status-table-container" style="margin-top: 20px;">
+        <div class="table-header-banner">
+            <span>Quân số trực tuần tới</span>
+            <span class="readonly-note">
+                Tối đa {{ total_capacity }} người/ngày
+            </span>
+        </div>
+
         <div class="table-responsive-wrapper">
             <table class="status-table">
-                <colgroup>
-                    <col class="col-label">
-                    <col class="col-day">
-                    <col class="col-day">
-                    <col class="col-day">
-                    <col class="col-day">
-                    <col class="col-day">
-                    <col class="col-day">
-                    <col class="col-day">
-                </colgroup>
                 <thead>
                     <tr>
                         <th class="th-label">Trạng thái</th>
-                        <th>Thứ 2</th>
-                        <th>Thứ 3</th>
-                        <th>Thứ 4</th>
-                        <th>Thứ 5</th>
-                        <th>Thứ 6</th>
-                        <th>Thứ 7</th>
-                        <th>Chủ Nhật</th>
+                        {% for code, title in days %}
+                        <th>{{ title }}</th>
+                        {% endfor %}
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
                         <td class="cell-label">Số lượng đi làm</td>
-                        <td><span class="capacity-badge good">{{ working_counts.T2 }}/{{ total_capacity }}</span></td>
-                        <td><span class="capacity-badge good">{{ working_counts.T3 }}/{{ total_capacity }}</span></td>
-                        <td><span class="capacity-badge good">{{ working_counts.T4 }}/{{ total_capacity }}</span></td>
-                        <td><span class="capacity-badge good">{{ working_counts.T5 }}/{{ total_capacity }}</span></td>
-                        <td><span class="capacity-badge good">{{ working_counts.T6 }}/{{ total_capacity }}</span></td>
-                        <td><span class="capacity-badge low">{{ working_counts.T7 }}/{{ total_capacity }}</span></td>
-                        <td><span class="capacity-badge low">{{ working_counts.CN }}/{{ total_capacity }}</span></td>
+                        {% for code, title in days %}
+                        <td>
+                            <span class="capacity-badge good">
+                                {{ working_counts[code] }}/{{ total_capacity }}
+                            </span>
+                        </td>
+                        {% endfor %}
                     </tr>
                 </tbody>
             </table>
@@ -631,173 +815,179 @@
 {% block scripts %}
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-    const dropdownTimer = document.getElementById('countdown-dropdown');
-    const countdownText = document.getElementById('countdown-text');
-    const badgeWeekTitle = document.getElementById('badge-week-title');
-    const selectedCountDisplay = document.getElementById('selected-count-display');
-    
-    const btnQuickRegister = document.getElementById('btn-quick-submit');
-    const btnQuickCancel = document.getElementById('btn-quick-clear');
+    const config = document.getElementById("schedule-config");
 
-    const MAX_OFF_DAYS = parseInt("{{ allowed_off_days }}") || 2;
+    if (!config) {
+        console.error("Không tìm thấy phần tử #schedule-config.");
+        return;
+    }
 
-    function initRealTimeSchedule() {
-        const now = new Date();
-        const currentDay = now.getDay(); 
-        const distanceToMonday = currentDay === 0 ? 6 : currentDay - 1;
-        
-        const monday = new Date(now);
-        monday.setDate(now.getDate() - distanceToMonday);
-        monday.setHours(0, 0, 0, 0);
+    const canRegister = config.dataset.canRegister === "true";
+    const maxOffDays = Number(config.dataset.maxOffDays || "2");
+    const registerUrl = config.dataset.registerUrl;
 
-        const sundayDeadline = new Date(monday);
-        sundayDeadline.setDate(monday.getDate() + 6);
-        sundayDeadline.setHours(16, 0, 0, 0);
+    const dayInputs = Array.from(
+        document.querySelectorAll('input[name="quick_day"]')
+    );
+    const countDisplay = document.getElementById(
+        "selected-count-display"
+    );
+    const registerButton = document.getElementById(
+        "btn-quick-submit"
+    );
+    const clearButton = document.getElementById(
+        "btn-quick-clear"
+    );
+    const countdownText = document.getElementById(
+        "countdown-text"
+    );
 
-        const formatBtnDate = (date) => {
-            const dd = String(date.getDate()).padStart(2, '0');
-            const mm = String(date.getMonth() + 1).padStart(2, '0');
-            return `${dd}/${mm}`;
-        };
-        const dateRangeStr = `${formatBtnDate(monday)} - ${formatBtnDate(sundayDeadline)}`;
+    function updateSelectedCount() {
+        const count = dayInputs.filter(input => input.checked).length;
 
-        const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        const firstDayShift = firstDayOfMonth.getDay() === 0 ? 6 : firstDayOfMonth.getDay() - 1;
-        const weekOfMonth = Math.ceil((now.getDate() + firstDayShift) / 7);
-        const currentMonth = now.getMonth() + 1;
-
-        if (badgeWeekTitle) {
-            badgeWeekTitle.textContent = `Tuần ${weekOfMonth} - Tháng ${currentMonth}`;
+        if (countDisplay) {
+            countDisplay.textContent = count;
         }
 
-        function updateCountdown() {
-            const currentTime = new Date();
-            const timeDiff = sundayDeadline.getTime() - currentTime.getTime();
-            const totalSeconds = Math.floor(timeDiff / 1000);
-            
-            if (totalSeconds < 0) {
-                const openText = `Tuần ${weekOfMonth} - Tháng ${currentMonth} : (${dateRangeStr}) - Đang mở đăng ký tự do`;
-                if (dropdownTimer) dropdownTimer.textContent = openText;
-                if (countdownText) countdownText.textContent = 'Mở đăng ký tự do';
+        return count;
+    }
+
+    // Tuần đã đăng ký hoặc tuần cũ: chỉ xem, không cho sửa.
+    if (!canRegister) {
+        dayInputs.forEach(input => {
+            input.disabled = true;
+        });
+
+        updateSelectedCount();
+        return;
+    }
+
+    function updateValidation() {
+        const count = updateSelectedCount();
+
+        dayInputs.forEach(input => {
+            const label = input.closest(".day-checkbox-label");
+            if (!label) return;
+
+            label.classList.toggle("is-checked", input.checked);
+
+            if (!input.checked && count >= maxOffDays) {
+                input.disabled = true;
+                label.classList.add("is-disabled");
+            } else {
+                input.disabled = false;
+                label.classList.remove("is-disabled");
+            }
+        });
+
+        if (registerButton) {
+            registerButton.disabled = count !== maxOffDays;
+        }
+    }
+
+    dayInputs.forEach(input => {
+        input.addEventListener("change", updateValidation);
+    });
+
+    if (clearButton) {
+        clearButton.addEventListener("click", function () {
+            dayInputs.forEach(input => {
+                input.checked = false;
+                input.disabled = false;
+            });
+
+            updateValidation();
+        });
+    }
+
+    // Hạn đăng ký: Chủ Nhật tuần hiện tại lúc 16:00.
+    function updateCountdown() {
+        const now = new Date();
+        const day = now.getDay();
+        const daysSinceMonday = day === 0 ? 6 : day - 1;
+
+        const monday = new Date(now);
+        monday.setDate(now.getDate() - daysSinceMonday);
+        monday.setHours(0, 0, 0, 0);
+
+        const deadline = new Date(monday);
+        deadline.setDate(monday.getDate() + 6);
+        deadline.setHours(16, 0, 0, 0);
+
+        const secondsLeft = Math.floor(
+            (deadline.getTime() - now.getTime()) / 1000
+        );
+
+        if (secondsLeft <= 0) {
+            if (countdownText) {
+                countdownText.textContent = "Đang mở đăng ký tự do";
+            }
+            return;
+        }
+
+        const hours = Math.floor(secondsLeft / 3600);
+        const minutes = Math.floor((secondsLeft % 3600) / 60);
+        const seconds = secondsLeft % 60;
+
+        if (countdownText) {
+            countdownText.textContent =
+                `Hạn chót: ${hours}h:` +
+                `${String(minutes).padStart(2, "0")}m:` +
+                `${String(seconds).padStart(2, "0")}s`;
+        }
+    }
+
+    if (registerButton) {
+        registerButton.addEventListener("click", async function () {
+            const selectedDays = dayInputs
+                .filter(input => input.checked)
+                .map(input => input.value);
+
+            if (selectedDays.length !== maxOffDays) {
+                alert(`Vui lòng chọn đúng ${maxOffDays} ngày nghỉ.`);
                 return;
             }
 
-            const hours = Math.floor(totalSeconds / 3600);
-            const minutes = Math.floor((totalSeconds % 3600) / 60);
-            const seconds = totalSeconds % 60;
-
-            const timeFormatted = `${String(hours).padStart(2, '0')}h:${String(minutes).padStart(2, '0')}m:${String(seconds).padStart(2, '0')}s`;
-            const textResult = `Tuần ${weekOfMonth} - Tháng ${currentMonth} : (${dateRangeStr}) - (${timeFormatted})`;
-
-            if (dropdownTimer) dropdownTimer.textContent = textResult;
-            if (countdownText) countdownText.textContent = `Hạn chót: ${timeFormatted}`;
-        }
-
-        updateCountdown();
-        setInterval(updateCountdown, 1000);
-
-        // Validation & Interactive Styling
-        function checkValidationRules() {
-            const allDayInputs = document.querySelectorAll('input[name="quick_day"]');
-            const checkedDays = document.querySelectorAll('input[name="quick_day"]:checked');
-            const count = checkedDays.length;
-
-            if (selectedCountDisplay) {
-                selectedCountDisplay.textContent = count;
+            if (!registerUrl) {
+                alert("Không tìm thấy đường dẫn đăng ký.");
+                return;
             }
 
-            allDayInputs.forEach(cb => {
-                const label = cb.closest('.day-checkbox-label');
-                if (cb.checked) {
-                    label.classList.add('is-checked');
-                    label.classList.remove('is-disabled');
-                } else {
-                    label.classList.remove('is-checked');
-                    if (count >= MAX_OFF_DAYS) {
-                        cb.disabled = true;
-                        label.classList.add('is-disabled');
-                    } else {
-                        cb.disabled = false;
-                        label.classList.remove('is-disabled');
-                    }
-                }
-            });
+            registerButton.disabled = true;
+            registerButton.textContent = "Đang lưu...";
 
-            // Enable submit only when exactly MAX_OFF_DAYS are picked
-            if (btnQuickRegister) {
-                btnQuickRegister.disabled = (count !== MAX_OFF_DAYS);
-            }
-        }
-
-        // Change listeners
-        document.querySelectorAll('input[name="quick_day"]').forEach(cb => {
-            cb.addEventListener('change', function() {
-                const checkedDays = document.querySelectorAll('input[name="quick_day"]:checked');
-                if (checkedDays.length > MAX_OFF_DAYS) {
-                    this.checked = false;
-                    alert(`Tài khoản của bạn chỉ được phép chọn tối đa ${MAX_OFF_DAYS} ngày nghỉ!`);
-                }
-                checkValidationRules();
-            });
-        });
-
-        // Submit action
-        if (btnQuickRegister) {
-            btnQuickRegister.addEventListener('click', function() {
-                const selectedOffDays = Array.from(document.querySelectorAll('input[name="quick_day"]:checked')).map(cb => cb.value);
-
-                if (selectedOffDays.length !== MAX_OFF_DAYS) {
-                    alert(`Vui lòng chọn đúng ${MAX_OFF_DAYS} ngày nghỉ trước khi đăng ký!`);
-                    return;
-                }
-
-                btnQuickRegister.disabled = true;
-                btnQuickRegister.textContent = "Đang lưu...";
-
-                fetch('{{ url_for("client_views.register_schedule") }}', {
-                    method: 'POST',
+            try {
+                const response = await fetch(registerUrl, {
+                    method: "POST",
                     headers: {
-                        'Content-Type': 'application/json',
+                        "Content-Type": "application/json"
                     },
                     body: JSON.stringify({
-                        days: selectedOffDays
+                        days: selectedDays
                     })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        alert(`Đăng ký thành công! Đã ghi nhận ${MAX_OFF_DAYS} ngày nghỉ của bạn.`);
-                        window.location.reload();
-                    } else {
-                        alert("Đăng ký thất bại: " + data.message);
-                        btnQuickRegister.disabled = false;
-                        btnQuickRegister.textContent = "Xác nhận đăng ký";
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert("Có lỗi kết nối hệ thống!");
-                    btnQuickRegister.disabled = false;
-                    btnQuickRegister.textContent = "Xác nhận đăng ký";
                 });
-            });
-        }
 
-        // Clear action
-        if (btnQuickCancel) {
-            btnQuickCancel.addEventListener('click', function() {
-                document.querySelectorAll('input[name="quick_day"]').forEach(cb => {
-                    cb.checked = false;
-                    cb.disabled = false;
-                });
-                checkValidationRules();
-            });
-        }
+                const result = await response.json();
 
-        checkValidationRules();
+                if (!response.ok || result.status !== "success") {
+                    throw new Error(
+                        result.message || "Đăng ký thất bại."
+                    );
+                }
+
+                alert("Đăng ký lịch tuần tới thành công.");
+                window.location.reload();
+            } catch (error) {
+                alert(error.message || "Có lỗi kết nối hệ thống.");
+                registerButton.disabled = false;
+                registerButton.textContent = "Xác nhận đăng ký";
+            }
+        });
     }
 
-    initRealTimeSchedule();
+    updateValidation();
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
 });
 </script>
 {% endblock %}

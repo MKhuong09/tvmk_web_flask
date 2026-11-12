@@ -51,12 +51,44 @@ def get_users_from_db():
     return users_list
 
 
-def get_working_days(selected_days_str):
-    if not selected_days_str or selected_days_str == "--":
+def get_working_days(selected_days):
+    if selected_days is None or selected_days == "" or selected_days == "--":
         return "--"
+
     all_days = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"]
-    excluded_days = [d.strip().upper() for d in selected_days_str.split(",")]
-    working_days = [day for day in all_days if day not in excluded_days]
+
+    if isinstance(selected_days, str):
+        excluded_values = selected_days.split(",")
+    elif isinstance(selected_days, (list, tuple, set)):
+        excluded_values = selected_days
+    else:
+        return "--"
+
+    day_aliases = {
+        "THỨ HAI": "T2",
+        "THỨ BA": "T3",
+        "THỨ TƯ": "T4",
+        "THỨ NĂM": "T5",
+        "THỨ SÁU": "T6",
+        "THỨ BẢY": "T7",
+        "CHỦ NHẬT": "CN",
+    }
+
+    excluded_days = set()
+
+    for value in excluded_values:
+        if not isinstance(value, str):
+            continue
+
+        normalized = value.strip().upper()
+        normalized = day_aliases.get(normalized, normalized)
+        excluded_days.add(normalized)
+
+    working_days = [
+        day for day in all_days
+        if day not in excluded_days
+    ]
+
     return ", ".join(working_days) if working_days else "Không có ngày làm"
 
 def get_week_date_range(year, week_number):
@@ -265,47 +297,218 @@ def approve_schedule(reg_id):
             'message': str(e)
         }), 500
 
-@admin_views.route('/decline-schedule/<string:reg_id>', methods=['POST'])
+@admin_views.route(
+    "/decline-schedule/<string:reg_id>",
+    methods=["POST"],
+)
 @login_required
 def decline_schedule(reg_id):
     if current_user.role_id != 1:
-        return jsonify({'status': 'error', 'message': 'Bạn không có quyền thực hiện thao tác này!'}), 403
+        return jsonify({
+            "status": "error",
+            "message": "Bạn không có quyền thực hiện thao tác này!",
+        }), 403
 
     db = get_db()
+
     try:
-        registration_ref = db.collection('registrations').document(reg_id)
-        registration = registration_ref.get()
+        registration_ref = db.collection("registrations").document(reg_id)
+        registration = cast(DocumentSnapshot, registration_ref.get())
+
         if not registration.exists:
-            return jsonify({'status': 'error', 'message': 'Không tìm thấy thông tin đăng ký!'}), 404
+            return jsonify({
+                "status": "error",
+                "message": "Không tìm thấy thông tin đăng ký!",
+            }), 404
+
+        registration_data = registration.to_dict() or {}
 
         declined_statuses = list(
-            db.collection('statuses').where('name', '==', 'Đã từ chối').limit(1).stream()
+            db.collection("statuses")
+            .where("name", "==", "Đã từ chối")
+            .limit(1)
+            .stream()
         )
+
         if declined_statuses:
             declined_status_id = declined_statuses[0].id
         else:
-            declined_status_ref = db.collection('statuses').document()
-            declined_status_ref.set({'name': 'Đã từ chối'})
+            declined_status_ref = db.collection("statuses").document()
+            declined_status_ref.set({"name": "Đã từ chối"})
             declined_status_id = declined_status_ref.id
 
-        registration_data = registration.to_dict() or {}
-        registration_ref.update({'status_id': declined_status_id})
+        registration_ref.update({"status_id": declined_status_id})
+        clear_universal_cache()
 
-        user_id = registration_data.get('user_id')
-        user = db.collection('users').document(str(user_id)).get() if user_id else None
-        user_data = user.to_dict() or {} if user and user.exists else {}
-        if user_data.get('email'):
+        user_id = registration_data.get("user_id")
+        user_data = {}
+
+        if user_id:
+            user_ref = db.collection("users").document(str(user_id))
+            user_doc = cast(DocumentSnapshot, user_ref.get())
+
+            if user_doc.exists:
+                user_data = user_doc.to_dict() or {}
+
+        email = (user_data.get("email") or "").strip()
+
+        if email:
             subject = "Thông báo từ chối đăng ký"
-            body = f"Xin chào {user_data.get('user_name', '')},\n\nĐơn đăng ký của bạn đã bị từ chối. Vui lòng liên hệ Ấp Đội Trưởng để biết thêm chi tiết. \
-                Link đăng ký lịch: {url_for('client_views.register_schedule', _external=True)}\
-                \n\nTrân trọng."
-            send_mail_based_on_admin_config(subject, [user_data['email']], body)
-            
-        return jsonify({'status': 'success', 'message': 'Đã từ chối đơn thành công!'}), 200
+            body = (
+                f"Xin chào {user_data.get('user_name', '')},\n\n"
+                "Đơn đăng ký lịch trực của bạn đã bị từ chối. "
+                "Vui lòng liên hệ để biết thêm chi tiết.\n\n"
+                f"Link đăng ký lịch: "
+                f"{url_for('client_views.client_shift', _external=True)}\n\n"
+                "Trân trọng."
+            )
+
+            send_mail_based_on_admin_config(subject, [email], body)
+
+        return jsonify({
+            "status": "success",
+            "message": "Đã từ chối đơn thành công!",
+        }), 200
+
+    except Exception as exc:
+        return jsonify({
+            "status": "error",
+            "message": str(exc),
+        }), 500
+@admin_views.route('/approve-change/<string:reg_id>', methods=['POST'])
+@login_required
+def approve_change(reg_id):
+    if current_user.role_id != 1:
+        return jsonify({
+            'status': 'error',
+            'message': 'Bạn không có quyền thực hiện thao tác này!'
+        }), 403
+
+    try:
+        reg_ref = db.collection('registrations').document(reg_id)
+        reg_doc = cast(Any, reg_ref.get())
+
+        if not reg_doc.exists:
+            return jsonify({
+                'status': 'error',
+                'message': 'Không tìm thấy lịch trực!'
+            }), 404
+
+        reg = reg_doc.to_dict() or {}
+        new_days = reg.get('pending_selected_days')
+
+        if not reg.get('has_pending_change') or not new_days:
+            return jsonify({
+                'status': 'error',
+                'message': 'Lịch này không có yêu cầu đổi nào!'
+            }), 400
+
+        confirmed_statuses = list(
+            db.collection('statuses')
+            .where('name', '==', 'Đã xác nhận')
+            .limit(1)
+            .stream()
+        )
+
+        if not confirmed_statuses:
+            return jsonify({
+                'status': 'error',
+                'message': 'Không tìm thấy trạng thái "Đã xác nhận" trong CSDL!'
+            }), 400
+
+        reg_ref.update({
+            'selected_days': new_days,
+            'session': reg.get('pending_session') or reg.get('session'),
+            'status_id': confirmed_statuses[0].id,
+            'has_pending_change': False,
+            'pending_selected_days': None,
+            'pending_session': None,
+            'change_requested_at': None,
+            'confirmed_at': SERVER_TIMESTAMP,
+        })
+        clear_universal_cache()
+
+        db.collection('notifications').add({
+            'user_id': reg.get('user_id'),
+            'title': 'Yêu cầu đổi lịch đã được duyệt',
+            'message': (
+                f"Admin đã duyệt yêu cầu đổi lịch tuần "
+                f"{reg.get('week_number')} của bạn."
+            ),
+            'status': 'approved',
+            'is_read': False,
+            'created_at': datetime.now(),
+        })
+
+        return jsonify({
+            'status': 'success',
+            'message': 'Đã duyệt yêu cầu đổi lịch!'
+        })
+
     except Exception as e:
-        return jsonify({'status': 'error', 'message': str(e)}), 500
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
 
 
+@admin_views.route('/reject-change/<string:reg_id>', methods=['POST'])
+@login_required
+def reject_change(reg_id):
+    if current_user.role_id != 1:
+        return jsonify({
+            'status': 'error',
+            'message': 'Bạn không có quyền thực hiện thao tác này!'
+        }), 403
+
+    try:
+        reg_ref = db.collection('registrations').document(reg_id)
+        reg_doc = cast(Any, reg_ref.get())
+
+        if not reg_doc.exists:
+            return jsonify({
+                'status': 'error',
+                'message': 'Không tìm thấy lịch trực!'
+            }), 404
+
+        reg = reg_doc.to_dict() or {}
+
+        if not reg.get('has_pending_change'):
+            return jsonify({
+                'status': 'error',
+                'message': 'Lịch này không có yêu cầu đổi nào!'
+            }), 400
+
+        reg_ref.update({
+            'has_pending_change': False,
+            'pending_selected_days': None,
+            'pending_session': None,
+            'change_requested_at': None,
+        })
+        clear_universal_cache()
+
+        db.collection('notifications').add({
+            'user_id': reg.get('user_id'),
+            'title': 'Yêu cầu đổi lịch bị từ chối',
+            'message': (
+                f"Admin đã từ chối yêu cầu đổi lịch tuần "
+                f"{reg.get('week_number')} của bạn. Lịch cũ được giữ nguyên."
+            ),
+            'status': 'rejected',
+            'is_read': False,
+            'created_at': datetime.now(),
+        })
+
+        return jsonify({
+            'status': 'success',
+            'message': 'Đã từ chối yêu cầu đổi lịch!'
+        })
+
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
 @admin_views.route('/generate-schedule', methods=['POST'])
 @login_required
 def generate_schedule():
@@ -379,103 +582,113 @@ def admin_request():
         flash('Bạn không có quyền truy cập trang này!', 'danger')
         return redirect(url_for('admin_views.admin_home'))
 
-    current_year = request.args.get(
-        'year',
-        default=datetime.now().year,
-        type=int,
-    )
-    current_week = request.args.get(
-        'week',
-        default=datetime.now().isocalendar()[1],
-        type=int,
-    )
+    now = datetime.now()
+    selected_month = request.args.get('month', default=now.month, type=int)
+    selected_year = request.args.get('year', default=now.year, type=int)
 
-    start_date, end_date = get_week_date_range(current_year, current_week)
-    prev_week_date = start_date - timedelta(days=7)
-    next_week_date = start_date + timedelta(days=7)
+    if selected_month not in range(1, 13):
+        selected_month = now.month
+    if selected_year < 2000 or selected_year > 2100:
+        selected_year = now.year
 
-    prev_year, prev_week, _ = prev_week_date.isocalendar()
-    next_year, next_week, _ = next_week_date.isocalendar()
+    month_weeks = build_month_weeks_matrix(selected_year, selected_month)
+    allowed_keys = {(w['week_year'], w['week_number']) for w in month_weeks}
 
-    registrations = (
-        db.collection('registrations')
-        .where('week_number', '==', current_week)
-        .order_by('created_at', direction='DESCENDING')
-        .stream()
-    )
+    # Nạp trước user/status để không đọc Firestore lặp lại cho từng đơn
+    users_cache = {}
+    for u in get_users_from_db():
+        users_cache[str(u.get('id'))] = u
 
-    schedules_data = []
+    statuses_cache = {}
+    for s_doc in db.collection('statuses').stream():
+        statuses_cache[str(s_doc.id)] = (s_doc.to_dict() or {}).get('name', 'Chờ xác thực')
 
-    for reg_doc in registrations:
+    regs_by_week = {}
+
+    for reg_doc in db.collection('registrations').stream():
         reg = reg_doc.to_dict() or {}
-        selected_days = reg.get('selected_days', '')
+        selected_days = reg.get('selected_days')
 
-        if not selected_days or selected_days.strip() == '--':
+        if not selected_days:
+            continue
+        if isinstance(selected_days, str) and selected_days.strip() in ('', '--'):
+            continue
+        if not isinstance(selected_days, (str, list, tuple, set)):
             continue
 
-        user_id = reg.get('user_id')
-        user_info = None
+        week_key = _resolve_registration_week(reg)
+        if week_key not in allowed_keys:
+            continue
 
-        if user_id:
-            u_doc = cast(
-                Any,
-                db.collection('users').document(str(user_id)).get(),
-            )
-            if u_doc.exists:
-                user_info = u_doc.to_dict() or {}
+        user_info = users_cache.get(str(reg.get('user_id'))) or {}
+        raw_name = user_info.get('full_name') or user_info.get('user_name') or 'Không rõ'
 
-        raw_name = (
-            user_info.get('full_name') or user_info.get('user_name', 'Không rõ')
-            if user_info
-            else 'Không rõ'
-        )
-        short_name = raw_name.strip().split(' ')[-1] if raw_name else 'Thành viên'
-        actual_days = get_working_days(selected_days)
-
-        status_name = 'Chờ xác thực'
         status_id = reg.get('status_id')
-
-        if status_id:
-            s_doc = cast(
-                Any,
-                db.collection('statuses').document(str(status_id)).get(),
-            )
-            if s_doc.exists:
-                s_data = s_doc.to_dict() or {}
-                status_name = s_data.get('name', 'Chờ xác thực')
+        status_name = statuses_cache.get(str(status_id), 'Chờ xác thực') if status_id else 'Chờ xác thực'
 
         created_at_dt = reg.get('created_at')
-        created_at_str = (
-            created_at_dt.strftime('%d/%m/%Y %H:%M')
-            if isinstance(created_at_dt, datetime)
-            else '--'
-        )
+        if isinstance(created_at_dt, datetime):
+            created_at_str = created_at_dt.strftime('%d/%m/%Y %H:%M')
+            created_at_ts = created_at_dt.timestamp()
+        else:
+            created_at_str = '--'
+            created_at_ts = 0
 
-        schedules_data.append({
+        regs_by_week.setdefault(week_key, []).append({
             'id': reg_doc.id,
             'ho_ten': raw_name,
-            'ten_rut_gon': short_name,
-            'gmail': user_info.get('email') if user_info else 'Không rõ',
+            'gmail': user_info.get('email') or 'Không rõ',
             'created_at': created_at_str,
-            'selected_days': actual_days or '--',
-            'session': reg.get('session') or '--',
+            'created_at_ts': created_at_ts,
+            'selected_days': get_working_days(selected_days),
             'status_name': status_name,
         })
 
+    weeks_data = []
+    total_pending = 0
+    total_done = 0
+
+    for week in month_weeks:
+        key = (week['week_year'], week['week_number'])
+        schedules = regs_by_week.get(key)
+        if not schedules:
+            continue
+
+        schedules.sort(key=lambda item: item['created_at_ts'], reverse=True)
+        pending_count = sum(
+            1 for item in schedules if item['status_name'] in PENDING_STATUS_NAMES
+        )
+        total_pending += pending_count
+        total_done += len(schedules) - pending_count
+
+        weeks_data.append({
+            'week_number': week['week_number'],
+            'week_year': week['week_year'],
+            'start_date': week['start_date'],
+            'end_date': week['end_date'],
+            'schedules': schedules,
+            'pending_count': pending_count,
+            'is_open': False,
+        })
+
+    iso = now.isocalendar()
+    current_key = (iso[0], iso[1])
+    if weeks_data:
+        week_keys = [(w['week_year'], w['week_number']) for w in weeks_data]
+        if current_key in week_keys:
+            weeks_data[week_keys.index(current_key)]['is_open'] = True
+        else:
+            weeks_data[0]['is_open'] = True
+
     return render_template(
         'admin/admin_request.html',
-        schedules=schedules_data,
-        current_week=current_week,
-        current_year=current_year,
-        start_date=start_date,
-        end_date=end_date,
-        prev_week=prev_week,
-        prev_year=prev_year,
-        next_week=next_week,
-        next_year=next_year,
+        weeks_data=weeks_data,
+        selected_month=selected_month,
+        selected_year=selected_year,
+        total_pending=total_pending,
+        total_done=total_done,
         user=current_user,
     )
-
 @admin_views.route('/my-registration')
 @login_required
 def admin_registration():
@@ -496,8 +709,19 @@ def admin_registration():
     total_capacity = 4  
 
     for reg in registrations:
-        raw_off_days = reg.get('selected_days', '')
-        off_days_list = [d.strip().replace('Thứ ', 'T').replace('Chủ Nhật', 'CN') for d in raw_off_days.split(",")] if raw_off_days else []
+        raw_off_days = reg.get('selected_days')
+        if isinstance(raw_off_days, str):
+            raw_values = raw_off_days.split(",")
+        elif isinstance(raw_off_days, (list, tuple, set)):
+            raw_values = raw_off_days
+        else:
+            raw_values = []
+
+        off_days_list = [
+            str(d).strip().replace('Thứ ', 'T').replace('Chủ Nhật', 'CN')
+            for d in raw_values
+            if str(d).strip()
+        ]
         working_days = [d for d in all_days_in_week if d not in off_days_list]
 
         for day in working_days:
@@ -664,8 +888,8 @@ def build_month_weeks_matrix(year, month):
     for week_idx, week_dates in enumerate(month_days, start=1):
         monday = week_dates[0]
         sunday = week_dates[-1]
-        week_number = monday.isocalendar()[1]
-        
+        week_year, week_number, _ = monday.isocalendar()
+
         days_struct = []
         for i, d in enumerate(week_dates):
             days_struct.append({
@@ -679,6 +903,7 @@ def build_month_weeks_matrix(year, month):
             })
             
         weeks.append({
+            'week_year': week_year,
             'week_number': week_number,
             'week_index': week_idx,
             'date_range_label': f"Tuần {week_idx} (Tháng {month})",
@@ -692,6 +917,29 @@ def build_month_weeks_matrix(year, month):
     return weeks
 
 
+CONFIRMED_STATUS_NAME = 'Đã xác nhận'
+PENDING_STATUS_NAMES = {'Chờ xác nhận', 'Chờ xác thực'}
+WORKING_DAY_CODES = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN']
+
+
+def _resolve_registration_week(reg):
+    """Trả về (năm ISO, số tuần) của tuần làm việc mà đơn đăng ký hướng tới."""
+    created_at = reg.get('created_at')
+    week_year = reg.get('week_year')
+    week_number = reg.get('week_number')
+
+    # Đơn cũ có thể thiếu week_year/week_number; đơn luôn gửi trước 1 tuần.
+    if (week_year is None or week_number is None) and isinstance(created_at, datetime):
+        derived_year, derived_week, _ = (created_at + timedelta(days=7)).isocalendar()
+        week_year = derived_year if week_year is None else week_year
+        week_number = derived_week if week_number is None else week_number
+
+    try:
+        return int(week_year), int(week_number)
+    except (TypeError, ValueError):
+        return None
+
+
 @admin_views.route('/history', methods=['GET'])
 @login_required
 def admin_history():
@@ -702,6 +950,11 @@ def admin_history():
     now = datetime.now()
     selected_month = request.args.get('month', default=now.month, type=int)
     selected_year = request.args.get('year', default=now.year, type=int)
+
+    weeks_data = []
+    total_active_personnel = 0
+    total_registrations = 0
+    total_pending_changes = 0
 
     try:
         users_list = get_users_from_db()  # Dùng hàm có cache
@@ -721,103 +974,138 @@ def admin_history():
             s_data = s_doc.to_dict() or {}
             statuses_cache[s_doc.id] = s_data.get('name', 'Chưa xác thực')
 
-        weeks_data = build_month_weeks_matrix(selected_year, selected_month)
-        start_of_month = datetime(selected_year, selected_month, 1)
+        all_weeks = build_month_weeks_matrix(selected_year, selected_month)
+        week_lookup = {
+            (week['week_year'], week['week_number']): week
+            for week in all_weeks
+        }
 
-        if selected_month == 12:
-            start_of_next_month = datetime(selected_year + 1, 1, 1)
-        else:
-            start_of_next_month = datetime(selected_year, selected_month + 1, 1)
+        registrations = []
 
-        regs_stream = (
-            db.collection('registrations')
-            .where('created_at', '>=', start_of_month)
-            .where('created_at', '<', start_of_next_month)
-            .order_by('created_at', direction='DESCENDING')
-            .stream()
-        )
-
-        schedules_data = []
-        total_active_personnel = 0
-
-        for reg_doc in regs_stream:
+        for reg_doc in db.collection('registrations').stream():
             reg = reg_doc.to_dict() or {}
+            week_key = _resolve_registration_week(reg)
+
+            if week_key is None or week_key not in week_lookup:
+                continue
+
             created_at_dt = reg.get('created_at')
-            if isinstance(created_at_dt, datetime):           
+            if isinstance(created_at_dt, datetime):
                 created_at_str = created_at_dt.strftime('%d/%m/%Y %H:%M')
+                sort_ts = created_at_dt.timestamp()
             else:
                 created_at_str = "--"
+                sort_ts = 0.0
 
             user_id = str(reg.get('user_id', ''))
             user_info = users_cache.get(user_id, {'ho_ten': 'Không rõ', 'ten_rut_gon': 'Thành viên', 'gmail': 'Không rõ'})
 
-            selected_days = reg.get('selected_days', '')
-            actual_working_days = get_working_days(selected_days)
+            actual_working_days = get_working_days(reg.get('selected_days'))
 
             status_id = str(reg.get('status_id', ''))
             status_name = statuses_cache.get(status_id, "Chưa xác thực")
-            
+
+            # Gộp "Đã duyệt" vào "Đã xác nhận": chỉ còn một trạng thái chốt lịch.
+            if status_name == "Đã duyệt":
+                status_name = CONFIRMED_STATUS_NAME
+
+            pending_raw_days = reg.get('pending_selected_days')
+            has_pending_change = bool(reg.get('has_pending_change')) and bool(pending_raw_days)
+
             badge_class = "badge-status-warning"
-            if status_name == "Đã xác nhận":
+            if status_name == CONFIRMED_STATUS_NAME:
                 badge_class = "badge-status-success"
-            elif status_name == "Đã duyệt":
-                badge_class = "badge-status-primary"
+            elif status_name == "Đã từ chối":
+                badge_class = "badge-status-danger"
 
-            reg_item = {
-                "id": reg_doc.id,
-                "ho_ten": user_info['ho_ten'],
-                "ten_rut_gon": user_info['ten_rut_gon'],
-                "gmail": user_info['gmail'],
-                "created_at": created_at_str,
-                "ngay_chon": created_at_str,
-                "selected_days": actual_working_days or "--",
-                "session": reg.get('session') or "--",
-                "status_name": status_name,
-                "status_badge_class": badge_class
-            }
-            schedules_data.append(reg_item)
+            registrations.append({
+                'week_key': week_key,
+                'sort_ts': sort_ts,
+                'item': {
+                    "id": reg_doc.id,
+                    "ho_ten": user_info['ho_ten'],
+                    "ten_rut_gon": user_info['ten_rut_gon'],
+                    "gmail": user_info['gmail'],
+                    "created_at": created_at_str,
+                    "ngay_chon": created_at_str,
+                    "selected_days": actual_working_days or "--",
+                    "session": reg.get('session') or "--",
+                    "status_name": status_name,
+                    "status_badge_class": badge_class,
+                    "is_confirmed": status_name == CONFIRMED_STATUS_NAME,
+                    "is_pending": status_name in PENDING_STATUS_NAMES,
+                    "has_pending_change": has_pending_change,
+                    "pending_selected_days": get_working_days(pending_raw_days) if has_pending_change else "--",
+                    "pending_session": reg.get('pending_session') or "--",
+                },
+            })
 
-            working_day_codes = [d.strip() for d in actual_working_days.split(",") if d.strip() in ["T2", "T3", "T4", "T5", "T6", "T7", "CN"]]
-            target_week_num = reg.get('week_number')
+        registrations.sort(key=lambda entry: entry['sort_ts'], reverse=True)
+
+        for entry in registrations:
+            week = week_lookup[entry['week_key']]
+            item = entry['item']
+
+            week['raw_registrations'].append(item)
+
+            if not item['is_confirmed']:
+                continue
+
+            working_day_codes = [
+                d.strip() for d in item['selected_days'].split(",")
+                if d.strip() in WORKING_DAY_CODES
+            ]
 
             person_obj = {
-                'id': reg_doc.id,
-                'ho_ten': user_info['ho_ten'],
-                'ten_rut_gon': user_info['ten_rut_gon'],
-                'gmail': user_info['gmail'],
-                'status_name': status_name,
-                'status_badge_class': badge_class
+                'id': item['id'],
+                'ho_ten': item['ho_ten'],
+                'ten_rut_gon': item['ten_rut_gon'],
+                'gmail': item['gmail'],
+                'status_name': item['status_name'],
+                'status_badge_class': item['status_badge_class'],
+                'has_pending_change': item['has_pending_change'],
             }
 
-            for week in weeks_data:
-                if target_week_num and week['week_number'] != target_week_num:
-                    continue
+            for day in week['days']:
+                if day['day_code'] in working_day_codes:
+                    day['personnel'].append(person_obj)
+                    week['total_slots'] += 1
 
-                week['raw_registrations'].append(reg_item)
+        for week in all_weeks:
+            week['empty_days_count'] = sum(1 for d in week['days'] if not d['personnel'])
 
-                for day in week['days']:
-                    if day['day_code'] in working_day_codes:
-                        day['personnel'].append(person_obj)
-                        week['total_slots'] += 1
-                        total_active_personnel += 1
+        # Lịch sử chỉ hiện tuần đã generate (có ít nhất một lịch Đã xác nhận).
+        weeks_data = [week for week in all_weeks if week['total_slots'] > 0]
 
-        for week in weeks_data:
-            week['empty_days_count'] = sum(1 for d in week['days'] if len(d['personnel']) == 0)
+        total_active_personnel = sum(week['total_slots'] for week in weeks_data)
+        total_registrations = sum(
+            1
+            for week in weeks_data
+            for reg in week['raw_registrations']
+            if reg['is_confirmed']
+        )
+        total_pending_changes = sum(
+            1
+            for week in weeks_data
+            for reg in week['raw_registrations']
+          if reg['is_pending'] or reg['has_pending_change']
+        )
 
     except Exception as e:
         print(f"Lỗi tải lịch sử: {e}")
-        schedules_data = []
         weeks_data = []
         total_active_personnel = 0
+        total_registrations = 0
+        total_pending_changes = 0
 
     return render_template(
         'admin/admin_history.html',
-        weeks_data=weeks_data,                     
-        schedules=schedules_data,                    
+        weeks_data=weeks_data,
         selected_month=selected_month,
         selected_year=selected_year,
         total_active_personnel=total_active_personnel,
-        total_registrations=len(schedules_data),
+        total_registrations=total_registrations,
+        total_pending_changes=total_pending_changes,
         user=current_user
     )
 

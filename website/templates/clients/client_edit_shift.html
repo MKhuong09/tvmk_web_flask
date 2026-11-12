@@ -3,21 +3,22 @@
 {% block content %}
 <div class="container" style="padding-top: 100px; padding-bottom: 50px;">
     <h2 class="mb-4">Chỉnh sửa lịch trực (Tuần {{ reg.week_number }})</h2>
-
+        {% if reg.has_pending_change %}
+    <div class="alert alert-warning">
+        Đang chờ admin duyệt yêu cầu đổi lịch: {{ reg.pending_selected_days }} (ca {{ reg.pending_session }}). Lịch hiện tại vẫn giữ nguyên.
+    </div>
+    {% endif %}
     <div class="card shadow-sm p-4">
         <form method="POST">
             <!-- Chọn ca trực linh hoạt -->
             <div class="mb-3">
                 <label class="form-label fw-bold">Ca trực:</label>
-                <select class="form-select" name="session" required>
-                    <option value="Sáng" {% if reg.session == 'Sáng' %}selected{% endif %}>Sáng</option>
-                    <option value="Chiều" {% if reg.session == 'Chiều' %}selected{% endif %}>Chiều</option>
-                    <option value="Cả tuần" {% if reg.session == 'Cả tuần' %}selected{% endif %}>Cả tuần</option>
-                </select>
+                {% set current_session = reg.pending_session or reg.session %}                <select class="form-select" name="session" required>                    <option value="Sáng" {% if current_session == 'Sáng' %}selected{% endif %}>Sáng</option>                    <option value="Chiều" {% if current_session == 'Chiều' %}selected{% endif %}>Chiều</option>                    <option value="Cả tuần" {% if current_session == 'Cả tuần' %}selected{% endif %}>Cả tuần</option>                </select>
             </div>
 
             <!-- Tách chuỗi selected_days từ database thành danh sách -->
-            {% set saved_days = reg.selected_days.split(', ') if reg.selected_days else [] %}
+                        {% set source_days = reg.pending_selected_days if reg.pending_selected_days else reg.selected_days %}
+                        {% set saved_days = (source_days.split(',') | map('trim') | list) if source_days else [] %}
             {% set days_options = [('T2', 'Thứ 2'), ('T3', 'Thứ 3'), ('T4', 'Thứ 4'), ('T5', 'Thứ 5'), ('T6', 'Thứ 6'), ('T7', 'Thứ 7'), ('CN', 'Chủ nhật')] %}
 
             <!-- Lấy giới hạn số ngày nghỉ do Admin quy định -->

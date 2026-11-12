@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta,date
 from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 from google.cloud.firestore import Query  # Import trực tiếp Query từ google.cloud để tránh lỗi Pylance
@@ -120,296 +120,612 @@ def home():
 @login_required
 def client_shift():
     vietnam_tz = pytz.timezone("Asia/Ho_Chi_Minh")
-    iso_year, current_week, _ = current_date.isocalendar()
+    now = datetime.now(vietnam_tz)
+
+    # Lịch mặc định là tuần tới.
+    target_date = now + timedelta(days=7)
+    target_year, target_week, _ = target_date.isocalendar()
+    target_key = (target_year, target_week)
 
     db = get_db()
 
-    # Lấy hạn mức ngày nghỉ mới nhất của user từ Firestore
-    user_doc_ref = db.collection("users").document(str(current_user.id))
-    user_doc = cast(Any, user_doc_ref.get())
+    user_doc = cast(
+        Any,
+        db.collection("users")
+        .document(str(current_user.id))
+        .get(),
+    )
     user_data = user_doc.to_dict() or {}
 
-    if user_data:
-        allowed_off_days = user_data.get(
-            "allowed_off_days",
-            getattr(current_user, "allowed_off_days", 2),
+    try:
+        allowed_off_days = int(
+            user_data.get(
+                "allowed_off_days",
+                getattr(current_user, "allowed_off_days", 2),
+            )
         )
-    else:
-        allowed_off_days = getattr(current_user, "allowed_off_days", 2)
+    except (TypeError, ValueError):
+        allowed_off_days = 2
 
-    conf_ref = (
+    def parse_days(raw_days):
+        if isinstance(raw_days, str):
+            values = raw_days.split(",")
+        elif isinstance(raw_days, (list, tuple, set)):
+            values = raw_days
+        else:
+            values = []
+
+        return [
+            str(day).strip()
+            for day in values
+            if str(day).strip()
+        ]
+
+    # Đọc các lịch đã đăng ký của user.
+    user_regs = (
+        db.collection("registrations")
+        .where(filter=FieldFilter("user_id", "==", current_user.id))
+        .stream()
+    )
+
+    registrations_by_week = {}
+
+    for doc in user_regs:
+        reg_data = doc.to_dict() or {}
+        reg_year = reg_data.get("week_year")
+        reg_week = reg_data.get("week_number")
+
+        if reg_week is None:
+            continue
+
+        # Bổ sung week_year cho lịch cũ nếu thiếu.
+        if reg_year is None:
+            created_at = reg_data.get("created_at")
+
+            if not isinstance(created_at, datetime):
+                continue
+
+            reg_year = created_at.isocalendar().year
+            doc.reference.update({"week_year": reg_year})
+
+        try:
+            week_key = (int(reg_year), int(reg_week))
+        except (TypeError, ValueError):
+            continue
+
+        registrations_by_week[week_key] = {
+            **reg_data,
+            "id": doc.id,
+        }
+
+    target_registration = registrations_by_week.get(target_key)
+
+    # Chỉ cho đăng ký thứ Bảy và Chủ nhật đến 16:00.
+    registration_window_open = (
+        now.weekday() == 5
+        or (
+            now.weekday() == 6
+            and (now.hour, now.minute, now.second) <= (16, 0, 0)
+        )
+    )
+
+    can_register = (
+        target_registration is None
+        and registration_window_open
+    )
+
+    if target_registration:
+        selected_days = parse_days(
+            target_registration.get("selected_days")
+        )
+        readonly_message = "Bạn đã đăng ký tuần tới rồi. Lịch này chỉ xem."
+    else:
+        selected_days = []
+
+        if not registration_window_open and now.weekday() < 5:
+            readonly_message = "Đăng ký tuần tới sẽ mở từ thứ Bảy."
+        elif not registration_window_open:
+            readonly_message = "Đã hết hạn đăng ký tuần tới."
+        else:
+            readonly_message = ""
+
+    # Lấy lịch gần nhất trước tuần tới.
+    previous_week_keys = [
+        week_key
+        for week_key in registrations_by_week
+        if week_key < target_key
+    ]
+
+    nearest_registration = None
+
+    if previous_week_keys:
+        previous_year, previous_week = max(previous_week_keys)
+        previous_data = registrations_by_week[
+            (previous_year, previous_week)
+        ]
+
+        previous_monday = date.fromisocalendar(
+            previous_year,
+            previous_week,
+            1,
+        )
+        previous_sunday = previous_monday + timedelta(days=6)
+
+        nearest_registration = {
+            "week_label": (
+                f"Tuần {previous_week}/{previous_year} "
+                f"({previous_monday.strftime('%d/%m')} - "
+                f"{previous_sunday.strftime('%d/%m')})"
+            ),
+            "selected_days": parse_days(
+                previous_data.get("selected_days")
+            ),
+        }
+
+    # Ngày của tuần đăng ký và thời gian mở đăng ký.
+    target_monday = date.fromisocalendar(target_year, target_week, 1)
+    target_sunday = target_monday + timedelta(days=6)
+
+    day_codes = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"]
+    target_day_dates = {
+        code: (
+            target_monday + timedelta(days=index)
+        ).strftime("%d/%m/%Y")
+        for index, code in enumerate(day_codes)
+    }
+
+    registration_start = target_monday - timedelta(days=2)
+    registration_end = target_monday - timedelta(days=1)
+
+    registration_window_label = (
+        f"{registration_start.strftime('%d/%m/%Y')} "
+        f"đến {registration_end.strftime('%d/%m/%Y')} lúc 16:00"
+    )
+
+    target_week_label = f"Tuần {target_week}/{target_year}"
+    target_week_range = (
+        f"{target_monday.strftime('%d/%m')} - "
+        f"{target_sunday.strftime('%d/%m')}"
+    )
+
+    # Đếm số người đã được xác nhận trong tuần tới.
+    all_days = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"]
+    working_counts = {day: 0 for day in all_days}
+    total_capacity = 4
+
+    status_docs = list(
         db.collection("statuses")
         .where(filter=FieldFilter("name", "==", "Đã xác nhận"))
         .limit(1)
         .stream()
     )
-    conf_list = list(conf_ref)
 
-    registrations = []
-    if conf_list:
-        confirmed_status_id = conf_list[0].id
-        regs_stream = (
+    if status_docs:
+        confirmed_status_id = status_docs[0].id
+
+        confirmed_regs = (
             db.collection("registrations")
-            .where(filter=FieldFilter("week_number", "==", current_week))
-            .where(filter=FieldFilter("status_id", "==", confirmed_status_id))
+            .where(filter=FieldFilter("week_year", "==", target_year))
+            .where(filter=FieldFilter("week_number", "==", target_week))
+            .where(
+                filter=FieldFilter(
+                    "status_id",
+                    "==",
+                    confirmed_status_id,
+                )
+            )
             .stream()
         )
-        registrations = [doc.to_dict() or {} for doc in regs_stream]
 
-    all_days_in_week = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"]
-    working_counts = {day: 0 for day in all_days_in_week}
-    total_capacity = 4
+        day_aliases = {
+            "THỨ HAI": "T2",
+            "THỨ BA": "T3",
+            "THỨ TƯ": "T4",
+            "THỨ NĂM": "T5",
+            "THỨ SÁU": "T6",
+            "THỨ BẢY": "T7",
+            "CHỦ NHẬT": "CN",
+        }
 
-    for reg in registrations:
-        raw_off_days = reg.get("selected_days")
-        off_days_list = (
-            [
-                day.strip()
-                .replace("Thứ ", "T")
-                .replace("Chủ Nhật", "CN")
-                for day in raw_off_days.split(",")
-            ]
-            if raw_off_days
-            else []
-        )
-        working_days = [
-            day for day in all_days_in_week
-            if day not in off_days_list
-        ]
+        for doc in confirmed_regs:
+            reg_data = doc.to_dict() or {}
+            off_days = {
+                day_aliases.get(day.upper(), day.upper())
+                for day in parse_days(reg_data.get("selected_days"))
+            }
 
-        for day in working_days:
-            if day in working_counts:
-                working_counts[day] += 1
+            for day in all_days:
+                if day not in off_days:
+                    working_counts[day] += 1
 
     return render_template(
         "clients/client_shift.html",
         user=current_user,
+        allowed_off_days=allowed_off_days,
         working_counts=working_counts,
         total_capacity=total_capacity,
-        allowed_off_days=allowed_off_days,
+        target_year=target_year,
+        target_week=target_week,
+        target_week_label=target_week_label,
+        target_week_range=target_week_range,
+        target_day_dates=target_day_dates,
+        registration_window_label=registration_window_label,
+        selected_days=selected_days,
+        can_register=can_register,
+        readonly_message=readonly_message,
+        nearest_registration=nearest_registration,
     )
-
 @client_views.route("/register-schedule", methods=["POST"])
 @login_required
 def register_schedule():
+    vietnam_tz = pytz.timezone("Asia/Ho_Chi_Minh")
+    current_date = datetime.now(vietnam_tz)
+
+    # Mở đăng ký thứ Bảy và Chủ nhật đến 16:00.
+    is_saturday = current_date.weekday() == 5
+    is_sunday_before_deadline = (
+        current_date.weekday() == 6
+        and (
+            current_date.hour,
+            current_date.minute,
+            current_date.second,
+        ) <= (16, 0, 0)
+    )
+
+    if not (is_saturday or is_sunday_before_deadline):
+        return jsonify({
+            "status": "error",
+            "message": (
+                "Chỉ được đăng ký lịch tuần tới từ thứ Bảy "
+                "đến Chủ nhật lúc 16:00."
+            ),
+        }), 403
+
     try:
         db = get_db()
-        data = request.get_json() or {}
+
+        data = request.get_json(silent=True) or {}
         selected_off_days = data.get("days", [])
 
-        # [SỬA 1] Truy vấn trực tiếp Firestore để lấy hạn mức allowed_off_days mới nhất của user
+        if not isinstance(selected_off_days, list):
+            return jsonify({
+                "status": "error",
+                "message": "Danh sách ngày nghỉ không hợp lệ.",
+            }), 400
+
+        day_aliases = {
+            "T2": "T2",
+            "THỨ HAI": "T2",
+            "T3": "T3",
+            "THỨ BA": "T3",
+            "T4": "T4",
+            "THỨ TƯ": "T4",
+            "T5": "T5",
+            "THỨ NĂM": "T5",
+            "T6": "T6",
+            "THỨ SÁU": "T6",
+            "T7": "T7",
+            "THỨ BẢY": "T7",
+            "CN": "CN",
+            "CHỦ NHẬT": "CN",
+        }
+
+        normalized_days = []
+        for value in selected_off_days:
+            if not isinstance(value, str):
+                continue
+
+            normalized = day_aliases.get(value.strip().upper())
+            if normalized and normalized not in normalized_days:
+                normalized_days.append(normalized)
+
+        all_days = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"]
+
+        if len(normalized_days) != len(selected_off_days):
+            return jsonify({
+                "status": "error",
+                "message": "Có ngày nghỉ không hợp lệ hoặc bị trùng.",
+            }), 400
+
+        # Lấy hạn mức ngày nghỉ mới nhất của user.
         user_doc = cast(
             Any,
-              db.collection("users").document(str(current_user.id)).get(),
+            db.collection("users")
+            .document(str(current_user.id))
+            .get(),
         )
+        user_data = user_doc.to_dict() or {}
 
-        if user_doc.exists:
-            user_data = user_doc.to_dict() or {}
-        else:
-         user_data = {}
-
-        allowed_limit = user_data.get(
-            "allowed_off_days",
-            getattr(current_user, "allowed_off_days", 2),
-)
-
-        # [SỬA 2] So sánh với giới hạn động (allowed_limit) và hiển thị thông báo linh hoạt
-        if len(selected_off_days) != allowed_limit:
-            return (
-                jsonify(
-                    {
-                        "status": "error",
-                        "message": f"Vui lòng chọn chính xác {allowed_limit} ngày không trực!",
-                    }
-                ),
-                400,
+        try:
+            allowed_limit = int(
+                user_data.get(
+                    "allowed_off_days",
+                    getattr(current_user, "allowed_off_days", 2),
+                )
             )
+        except (TypeError, ValueError):
+            allowed_limit = 2
 
-        string_off_days = ",".join(selected_off_days)
-        string_shifts = "Cả tuần"
+        if len(normalized_days) != allowed_limit:
+            return jsonify({
+                "status": "error",
+                "message": (
+                    f"Vui lòng chọn chính xác {allowed_limit} "
+                    "ngày không trực."
+                ),
+            }), 400
 
-        vietnam_tz = pytz.timezone("Asia/Ho_Chi_Minh")
-        current_date = datetime.now(vietnam_tz)
-        current_week = current_date.isocalendar()[1]
+        # Chọn tuần tới, có cả năm ISO để phân biệt tuần qua năm mới.
+        target_date = current_date + timedelta(days=7)
+        target_year, target_week, _ = target_date.isocalendar()
 
-        existing_regs = list(
+        # Chặn đăng ký trùng cho user trong tuần mục tiêu,
+        # bất kể lịch cũ đang ở trạng thái nào.
+        user_regs = (
             db.collection("registrations")
-            .where(filter=FieldFilter("user_id", "==", current_user.id))
-            .where(filter=FieldFilter("week_number", "==", current_week))
-            .where(filter=FieldFilter("week_year", "==", iso_year))
-            .where(filter=FieldFilter("status_id", "in", ["STS_001", "STS_002", "STS_003","STS_004"]))  # Thêm điều kiện status_id để kiểm tra các trạng thái khác nhau
+            .where(
+                filter=FieldFilter(
+                    "user_id",
+                    "==",
+                    current_user.id,
+                )
+            )
+            .stream()
+        )
+
+        for reg_doc in user_regs:
+            reg_data = reg_doc.to_dict() or {}
+
+            try:
+                same_week = (
+                    int(reg_data.get("week_year")) == target_year
+                    and int(reg_data.get("week_number")) == target_week
+                )
+            except (TypeError, ValueError):
+                same_week = False
+
+            if same_week:
+                return jsonify({
+                    "status": "error",
+                    "message": "Bạn đã đăng ký lịch tuần này rồi!",
+                }), 400
+
+        user_working_days = [
+            day for day in all_days
+            if day not in normalized_days
+        ]
+
+        # Tìm trạng thái đã xác nhận để tính sức chứa tuần tới.
+        confirmed_statuses = list(
+            db.collection("statuses")
+            .where(
+                filter=FieldFilter(
+                    "name",
+                    "==",
+                    "Đã xác nhận",
+                )
+            )
             .limit(1)
             .stream()
         )
-        if existing_regs:
-            return (
-                jsonify(
-                    {
-                        "status": "error",
-                        "message": "Bạn đã đăng ký lịch tuần này rồi!",
-                    }
-                ),
-                400,
+
+        if confirmed_statuses:
+            confirmed_status_id = confirmed_statuses[0].id
+
+            confirmed_regs = (
+                db.collection("registrations")
+                .where(
+                    filter=FieldFilter(
+                        "week_year",
+                        "==",
+                        target_year,
+                    )
+                )
+                .where(
+                    filter=FieldFilter(
+                        "week_number",
+                        "==",
+                        target_week,
+                    )
+                )
+                .where(
+                    filter=FieldFilter(
+                        "status_id",
+                        "==",
+                        confirmed_status_id,
+                    )
+                )
+                .stream()
             )
 
-        all_days_in_week = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"]
-        off_days_normalized = [
-            d.strip().replace("Thứ ", "T").replace("Chủ Nhật", "CN")
-            for d in selected_off_days
-        ]
-        user_working_days = [
-            d for d in all_days_in_week if d not in off_days_normalized
-        ]
+            current_counts = {day: 0 for day in all_days}
 
-        conf_ref = (
-            db.collection("statuses")
-            .where(filter=FieldFilter("name", "==", "Đã xác nhận"))
-            .limit(1)
-            .stream()
-        )
-        conf_list = list(conf_ref)
-        if conf_list:
-            confirmed_status_id = conf_list[0].id
-            confirmed_regs = [
-                doc.to_dict()
-                for doc in db.collection("registrations")
-                .where(filter=FieldFilter("week_number", "==", current_week))
-                .where(filter=FieldFilter("status_id", "==", confirmed_status_id))
-                .stream()
-            ]
+            for reg_doc in confirmed_regs:
+                reg_data = reg_doc.to_dict() or {}
+                raw_off_days = reg_data.get("selected_days") or []
 
-            current_counts = {day: 0 for day in all_days_in_week}
-            for reg in confirmed_regs:
-                if not reg:
-                    continue
-                r_off_days = reg.get("selected_days")
-                if r_off_days:
-                    r_off = [
-                        d.strip()
-                        .replace("Thứ ", "T")
-                        .replace("Chủ Nhật", "CN")
-                        for d in r_off_days.split(",")
-                    ]
-                    r_work = [
-                        d for d in all_days_in_week if d not in r_off
-                    ]
-                    for d in r_work:
-                        if d in current_counts:
-                            current_counts[d] += 1
+                if isinstance(raw_off_days, str):
+                    off_values = raw_off_days.split(",")
+                elif isinstance(raw_off_days, (list, tuple, set)):
+                    off_values = raw_off_days
+                else:
+                    off_values = []
 
-            MAX_CAPACITY = 4
+                off_days = set()
+                for value in off_values:
+                    if isinstance(value, str):
+                        day = day_aliases.get(value.strip().upper())
+                        if day:
+                            off_days.add(day)
+
+                for day in all_days:
+                    if day not in off_days:
+                        current_counts[day] += 1
+
+            max_capacity = 4
+
             for day in user_working_days:
-                if current_counts.get(day, 0) >= MAX_CAPACITY:
-                    return (
-                        jsonify(
-                            {
-                                "status": "error",
-                                "message": f"Ngày {day} đã đủ số lượng tối đa ({MAX_CAPACITY} người). Vui lòng chọn ngày nghỉ khác!",
-                            }
+                if current_counts[day] >= max_capacity:
+                    return jsonify({
+                        "status": "error",
+                        "message": (
+                            f"Ngày {day} đã đủ số lượng tối đa "
+                            f"({max_capacity} người). "
+                            "Vui lòng chọn ngày nghỉ khác!"
                         ),
-                        400,
-                    )
+                    }), 400
 
-        pend_ref = (
+        # Tìm hoặc tạo trạng thái chờ xác nhận.
+        pending_statuses = list(
             db.collection("statuses")
-            .where(filter=FieldFilter("name", "==", "Chờ xác nhận"))
+            .where(
+                filter=FieldFilter(
+                    "name",
+                    "==",
+                    "Chờ xác nhận",
+                )
+            )
             .limit(1)
             .stream()
         )
-        pend_list = list(pend_ref)
-        if not pend_list:
-            new_s_ref = db.collection("statuses").document()
-            new_s_ref.set({"name": "Chờ xác nhận"})
-            pending_status_id = new_s_ref.id
+
+        if pending_statuses:
+            pending_status_id = pending_statuses[0].id
         else:
-            pending_status_id = pend_list[0].id
+            pending_status_ref = db.collection("statuses").document()
+            pending_status_ref.set({"name": "Chờ xác nhận"})
+            pending_status_id = pending_status_ref.id
 
-        db.collection("registrations").add(
-            {
-                "selected_days": string_off_days,
-                "session": string_shifts,
-                "week_number": current_week,
-                "created_at": current_date,
-                "user_id": current_user.id,
-                "status_id": pending_status_id,
-            }
-        )
+        db.collection("registrations").add({
+            "selected_days": ",".join(normalized_days),
+            "session": "Cả tuần",
+            "week_year": target_year,
+            "week_number": target_week,
+            "created_at": current_date,
+            "user_id": current_user.id,
+            "status_id": pending_status_id,
+        })
 
-        return (
-            jsonify({"status": "success", "message": "Đăng ký thành công!"}),
-            200,
-        )
+        return jsonify({
+            "status": "success",
+            "message": (
+                f"Đăng ký thành công cho tuần "
+                f"{target_week}/{target_year}!"
+            ),
+        }), 200
 
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
-
+    except Exception as exc:
+        return jsonify({
+            "status": "error",
+            "message": str(exc),
+        }), 500
 
 @client_views.route("/DetailShift")
 @login_required
 def client_detailshift():
     vietnam_tz = pytz.timezone("Asia/Ho_Chi_Minh")
     now = datetime.now(vietnam_tz)
-    current_week = now.isocalendar()[1]
+    current_iso_year, current_week, _ = now.isocalendar()
 
     db = get_db()
     regs_stream = (
         db.collection("registrations")
         .where(filter=FieldFilter("user_id", "==", current_user.id))
-        .order_by("week_number", direction=Query.DESCENDING)
         .stream()
     )
 
-    all_regs = []
     all_days_in_week = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"]
+    day_aliases = {
+        "THỨ HAI": "T2",
+        "THỨ BA": "T3",
+        "THỨ TƯ": "T4",
+        "THỨ NĂM": "T5",
+        "THỨ SÁU": "T6",
+        "THỨ BẢY": "T7",
+        "CHỦ NHẬT": "CN",
+    }
+
+    class StatusObj:
+        def __init__(self, name):
+            self.name = name
+
+    class RegObj:
+        def __init__(self, data):
+            self.__dict__.update(data)
+
+    all_regs = []
 
     for doc in regs_stream:
         r_data = doc.to_dict() or {}
         r_data["id"] = doc.id
 
-        raw_off = r_data.get("selected_days", "")
-        if raw_off:
-            off_days_list = [day.strip() for day in raw_off.split(",")]
-            r_data["working_days"] = [
-                day for day in all_days_in_week if day not in off_days_list
-            ]
+        # Hỗ trợ selected_days dạng "T3,T4,CN" hoặc ["T3", "T4", "CN"].
+        raw_off = r_data.get("selected_days") or ""
+        if isinstance(raw_off, str):
+            off_days = raw_off.split(",")
+        elif isinstance(raw_off, (list, tuple, set)):
+            off_days = raw_off
         else:
-            r_data["working_days"] = []
+            off_days = []
+
+        off_days_normalized = set()
+        for value in off_days:
+            if isinstance(value, str):
+                day = value.strip().upper()
+                off_days_normalized.add(day_aliases.get(day, day))
+
+        r_data["working_days"] = [
+            day for day in all_days_in_week
+            if day not in off_days_normalized
+        ]
 
         status_name = ""
         status_id = r_data.get("status_id")
 
         if status_id:
-            s_doc = cast(
+            status_doc = cast(
                 Any,
                 db.collection("statuses")
                 .document(str(status_id))
                 .get(),
             )
-            if s_doc.exists:
-                s_dict = s_doc.to_dict() or {}
-                status_name = s_dict.get("name", "")
 
-        class StatusObj:
-            def __init__(self, name):
-                self.name = name
+            if status_doc.exists:
+                status_data = status_doc.to_dict() or {}
+                status_name = status_data.get("name", "")
 
         r_data["status_obj"] = StatusObj(status_name)
 
-        class RegObj:
-            def __init__(self, data):
-                self.__dict__.update(data)
+        # Với lịch cũ chưa có week_year, suy ra từ created_at.
+        week_year = r_data.get("week_year")
+        if week_year is None:
+            created_at = r_data.get("created_at")
+            if isinstance(created_at, datetime):
+                week_year = created_at.isocalendar().year
+
+        try:
+            r_data["week_year"] = int(week_year)
+            r_data["week_number"] = int(r_data.get("week_number"))
+        except (TypeError, ValueError):
+            # Bỏ qua bản ghi thiếu năm hoặc số tuần hợp lệ.
+            continue
 
         all_regs.append(RegObj(r_data))
+
+    all_regs.sort(
+        key=lambda reg: (reg.week_year, reg.week_number),
+        reverse=True,
+    )
 
     upcoming_regs = []
     history_regs = []
 
     for reg in all_regs:
-        is_confirmed = (
-            reg.status_obj
-            and reg.status_obj.name == "Đã xác nhận"
+        is_confirmed = reg.status_obj.name == "Đã xác nhận"
+        is_past_week = (
+            (reg.week_year, reg.week_number)
+            < (current_iso_year, current_week)
         )
-        is_past_week = reg.week_number < current_week
 
         if is_confirmed or is_past_week:
             history_regs.append(reg)
@@ -488,20 +804,45 @@ def edit_shift(id: str):
         selected_days_str = ", ".join(days_list) if days_list else ""
         session_val = request.form.get("session", "Cả tuần")
 
-        pend_ref = (
-            db.collection("statuses")
-            .where(filter=FieldFilter("name", "==", "Chờ xác nhận"))
-            .limit(1)
-            .stream()
-        )
-        pend_list = list(pend_ref)
-        pending_status_id = pend_list[0].id if pend_list else None
+        current_status_name = ""
+        current_status_id = reg_data.get("status_id")
+        if current_status_id:
+            status_doc = cast(
+                Any,
+                db.collection("statuses").document(str(current_status_id)).get(),
+            )
+            if status_doc.exists:
+                current_status_name = (status_doc.to_dict() or {}).get("name", "")
 
-        reg_ref.update({
-            "selected_days": selected_days_str,
-            "session": session_val,
-            "status_id": pending_status_id,
-        })
+        if current_status_name == "Đã xác nhận":
+            # Lịch đã chốt: giữ nguyên lịch cũ, chỉ ghi yêu cầu đổi để admin duyệt.
+            reg_ref.update({
+                "pending_selected_days": selected_days_str,
+                "pending_session": session_val,
+                "has_pending_change": True,
+                "change_requested_at": datetime.now(),
+            })
+            action_label = "gửi yêu cầu đổi lịch"
+        else:
+            pend_ref = (
+                db.collection("statuses")
+                .where(filter=FieldFilter("name", "==", "Chờ xác nhận"))
+                .limit(1)
+                .stream()
+            )
+            pend_list = list(pend_ref)
+            pending_status_id = pend_list[0].id if pend_list else None
+
+            reg_ref.update({
+                "selected_days": selected_days_str,
+                "session": session_val,
+                "status_id": pending_status_id,
+                "has_pending_change": False,
+                "pending_selected_days": None,
+                "pending_session": None,
+                "change_requested_at": None,
+            })
+            action_label = "cập nhật lịch"
 
         current_time_str = datetime.now().strftime("%d/%m/%Y lúc %H:%M")
 
@@ -509,7 +850,7 @@ def edit_shift(id: str):
             "user_id": current_user.id,
             "title": "Yêu cầu sửa lịch trực (Chờ duyệt)",
             "message": (
-                f"Học viên {current_user.user_name} vừa thay đổi lịch trực "
+                f"{current_user.user_name} vừa thay đổi lịch trực "
                 f"tuần {reg_data.get('week_number')} vào lúc {current_time_str}."
             ),
             "status": "pending",
@@ -541,7 +882,7 @@ def edit_shift(id: str):
             print(f"Lỗi gửi email: {e}")
 
         flash(
-            "Cập nhật lịch thành công và đã gửi thông báo qua cả Web lẫn Gmail!",
+            f"Đã {action_label} và gửi thông báo đến admin!",
             "success",
         )
         return redirect(url_for("client_views.client_detailshift"))

@@ -30,6 +30,9 @@
                             {% if reg.status_obj %}
                                 {% if reg.status_obj.name == 'Đã xác nhận' %}
                                     <span class="badge bg-success">Đã xác nhận</span>
+                                                                        {% if reg.has_pending_change %}
+                                    <div><span class="badge bg-info text-dark">Chờ duyệt đổi lịch</span></div>
+                                    {% endif %}
                                 {% else %}
                                     <span class="badge bg-warning text-dark">{{ reg.status_obj.name }}</span>
                                 {% endif %}
@@ -74,14 +77,14 @@
     <td>{{ ", ".join(reg.working_days) }}</td>
     <td>Tuần {{ reg.week_number }}</td>            
     <td>{{ reg.session }}</td>
-    <td>
+        <td>
         <span class="badge bg-success">{{ reg.status_obj.name if reg.status_obj else 'Đã hoàn thành' }}</span>
+        {% if reg.has_pending_change %}
+        <div><span class="badge bg-info text-dark">Chờ duyệt đổi lịch</span></div>
+        {% endif %}
     </td>
     <td>
-       
-        <a href="{{ url_for('client_request.request_shift_change_form', id=reg.id) }}" class="btn btn-sm btn-outline-primary">
-            Gửi phiếu thay đổi
-        </a>
+        <a href="{{ url_for('client_views.edit_shift', id=reg.id) }}" class="btn btn-sm btn-warning">Sửa lịch</a>
     </td>
 </tr>
 {% else %}

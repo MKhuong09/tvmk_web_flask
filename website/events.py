@@ -18,10 +18,7 @@ from PIL import Image
 from . import socketio
 from .AI.ai_extractor import extract_emails_from_text
 
-
-# ---------------------------------------------------------
-# Gemini dự phòng khi EasyOCR không trả ra văn bản
-# ---------------------------------------------------------
+# Gemini dự phòng khi EasyOCR không hoạt động
 _presence_lock = Lock()
 _presence_by_user = {}
 _sid_to_user = {}
@@ -39,14 +36,14 @@ def publish_presence():
             for user_id, info in _presence_by_user.items()
         ]
 
-    # Admin nhận danh sách tất cả tài khoản đang online.
+    # danh sách tất cả tài khoản đang online.
     socketio.emit(
         "online_users_update",
         {"users": users},
         to="presence_admin",
     )
 
-    # Mỗi nhóm client chỉ nhận danh sách cùng role_id.
+    # client chỉ nhận danh sách cùng role_id.
     role_ids = {
         user["role_id"]
         for user in users
@@ -77,9 +74,7 @@ if gemini_key:
         print(f"⚠️ [Gemini AI] Không thể khởi tạo Client: {exc}")
 
 
-# ---------------------------------------------------------
-# EasyOCR: chỉ nạp mô hình khi cần đọc ảnh
-# ---------------------------------------------------------
+# EasyOCR: mô hình khi cần đọc ảnh
 class OCRAgent:
     def __init__(self):
         self.reader = None
@@ -89,11 +84,11 @@ class OCRAgent:
             try:
                 import easyocr
 
-                print("[OCRAgent] Đang khởi tạo mô hình...")
+                print("[OCRAgent] Đang khởi tạo mô hình")
                 self.reader = easyocr.Reader(["en", "vi"], gpu=False)
                 print("[OCRAgent] Mô hình Local OCR đã sẵn sàng!")
             except Exception as exc:
-                print(f"⚠️ [OCRAgent] Không thể nạp EasyOCR: {exc}")
+                print(f"[OCRAgent] Không thể nạp EasyOCR: {exc}")
                 self.reader = False
 
         return self.reader if self.reader is not False else None
@@ -164,12 +159,12 @@ def process_ocr_from_bytes(image_bytes: bytes) -> str:
 
             if retryable and attempt < max_retries:
                 print(
-                    f"⚠️ [Gemini] Lỗi tạm thời, thử lại "
+                    f"[Gemini] Lỗi tạm thời, thử lại "
                     f"({attempt}/{max_retries}) sau 2 giây..."
                 )
                 time.sleep(2)
             else:
-                print(f"❌ [Gemini Fallback] Lỗi: {exc}")
+                print(f"[Gemini Fallback] Lỗi: {exc}")
                 break
 
     return ""

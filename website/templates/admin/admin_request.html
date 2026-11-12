@@ -105,161 +105,221 @@
     .btn-action:hover {
         background-color: #2e59d9;
     }
-    /* Thanh điều hướng tuần */
-    .week-nav-bar {
+
+    /* Bộ lọc tháng / năm */
+    .filter-bar {
         background: #ffffff;
         border: 1px solid #e3e6f0;
         border-radius: 10px;
-        padding: 15px 20px;
-        margin-bottom: 25px;
+        padding: 14px 20px;
+        margin-bottom: 22px;
+        display: flex;
+        align-items: flex-end;
+        gap: 16px;
+        flex-wrap: wrap;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+    }
+    .filter-group label {
+        display: block;
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: #858796;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 4px;
+    }
+    .filter-group select {
+        border: 1px solid #d1d3e2;
+        border-radius: 6px;
+        padding: 7px 12px;
+        color: #3a3b45;
+        font-weight: 600;
+        background: #f8f9fc;
+    }
+    .stats-inline {
+        margin-left: auto;
+        display: flex;
+        gap: 8px;
+    }
+    .stat-pill {
+        font-size: 0.8rem;
+        font-weight: 700;
+        padding: 7px 14px;
+        border-radius: 20px;
+    }
+    .stat-pending {
+        background-color: #fef3c7;
+        color: #d97706;
+    }
+    .stat-done {
+        background-color: #d1fae5;
+        color: #069669;
+    }
+
+    /* Khối thu gọn theo tuần */
+    .week-acc {
+        background: #ffffff;
+        border: 1px solid #e3e6f0;
+        border-radius: 10px;
+        margin-bottom: 16px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+        overflow: hidden;
+    }
+    .week-acc > summary {
+        list-style: none;
+        cursor: pointer;
+        padding: 16px 20px;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+        gap: 12px;
+        flex-wrap: wrap;
+        background: #f8fafc;
+        border-bottom: 1px solid transparent;
     }
-    .week-nav-btn {
-        background-color: #f8f9fc;
-        border: 1px solid #d1d3e2;
-        color: #4e73df;
-        padding: 6px 14px;
-        border-radius: 6px;
-        font-weight: 600;
-        font-size: 0.85rem;
-        text-decoration: none;
-        transition: all 0.2s;
-        cursor: pointer;
+    .week-acc[open] > summary {
+        border-bottom-color: #eaecf4;
     }
-    .week-nav-btn:hover {
-        background-color: #4e73df;
-        color: white;
-        border-color: #4e73df;
-        text-decoration: none;
+    .week-acc > summary::-webkit-details-marker {
+        display: none;
     }
-    .week-info-text {
+    .week-acc-title {
         font-weight: 700;
         color: #3a3b45;
-        font-size: 1.05rem;
+        font-size: 1rem;
     }
-    .week-date-range {
-        font-size: 0.85rem;
-        color: #858796;
-        margin-top: 2px;
+    .week-acc-title::before {
+        content: '\25B8';
+        display: inline-block;
+        margin-right: 8px;
+        color: #4e73df;
+        transition: transform 0.15s ease;
+    }
+    .week-acc[open] .week-acc-title::before {
+        transform: rotate(90deg);
+    }
+    .week-acc-meta {
+        display: flex;
+        gap: 8px;
+    }
+    .meta-chip {
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 4px 12px;
+        border-radius: 20px;
+        background-color: #eef1f8;
+        color: #5a5c69;
+    }
+    .chip-pending {
+        background-color: #fef3c7;
+        color: #d97706;
+    }
+    .chip-done {
+        background-color: #d1fae5;
+        color: #069669;
     }
 </style>
 
 <div class="page-header mb-3">
     <h3 class="page-title">Chi tiết lịch đăng ký (Yêu cầu)</h3>
-    <p class="text-muted" style="font-size: 0.9rem; color: #6c757d; margin-top: -15px; margin-bottom: 20px;">Danh sách lịch đăng ký cần xử lý của dân quân trong hệ thống</p>
+    <p class="text-muted" style="font-size: 0.9rem; color: #6c757d; margin-top: -15px; margin-bottom: 20px;">Danh sách lịch đăng ký của dân quân, gom theo từng tuần trong tháng</p>
 </div>
 
-<!-- Thanh điều hướng tuần -->
-<div class="week-nav-bar">
-    <button type="button" class="week-nav-btn" onclick="changeWeek(-1)">
-        <i class="fa fa-chevron-left"></i> Tuần trước
-    </button>
-    <div class="text-center">
-        <div class="week-info-text" id="week-display-title">Tuần {{ current_week }} - Năm {{ current_year }}</div>
-        <div class="week-date-range" id="week-display-range">
-            Từ {{ start_date.strftime('%d/%m/%Y') if start_date else '--' }} đến {{ end_date.strftime('%d/%m/%Y') if end_date else '--' }}
-        </div>
+<form class="filter-bar" method="get" action="{{ url_for('admin_views.admin_request') }}">
+    <div class="filter-group">
+        <label for="filter-month">Tháng</label>
+        <select id="filter-month" name="month">
+            {% for m in range(1, 13) %}
+            <option value="{{ m }}" {% if m == selected_month %}selected{% endif %}>Tháng {{ m }}</option>
+            {% endfor %}
+        </select>
     </div>
-    <button type="button" class="week-nav-btn" onclick="changeWeek(1)">
-        Tuần sau <i class="fa fa-chevron-right"></i>
-    </button>
-</div>
+    <div class="filter-group">
+        <label for="filter-year">Năm</label>
+        <select id="filter-year" name="year">
+            {% for y in range(selected_year - 2, selected_year + 3) %}
+            <option value="{{ y }}" {% if y == selected_year %}selected{% endif %}>{{ y }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <button type="submit" class="btn-action">Xem</button>
+    <div class="stats-inline">
+        <span class="stat-pill stat-pending">Chờ xử lý: {{ total_pending }}</span>
+        <span class="stat-pill stat-done">Đã xử lý: {{ total_done }}</span>
+    </div>
+</form>
 
-<div class="row">
-    <div class="col-lg-12 grid-margin stretch-card">
-        <div class="card custom-card">
-            <div class="card-body p-4">
-                <div class="table-responsive custom-table-container">
-                    <table class="table custom-table">
-                        <thead>
-                            <tr>
-                                <th>Họ và Tên</th>
-                                <th>Gmail</th>
-                                <th>Ngày đăng ký</th>
-                                <th>Thứ đăng ký / nghỉ</th>
-                                <th>Ca trực</th>
-                                <th class="text-center-col">Trạng thái</th>
-                                <th class="text-center-col">Thao tác</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% if schedules and schedules|length > 0 %}
-                                {% for item in schedules %}
-                                <tr id="row-req-{{ item.id }}">
-                                    <td class="font-weight-bold" style="color: #3a3b45 !important;">{{ item.ho_ten }}</td>
-                                    <td>
-                                        <a href="mailto:{{ item.gmail }}">{{ item.gmail }}</a>
-                                    </td>
-                                    <td>{{ item.created_at }}</td>
-                                    <td>{{ item.selected_days }}</td>
-                                    <td><strong>{{ item.session }}</strong></td>
-                                    <td class="text-center-col">
-                                        {% if item.status_name == 'Đã xác nhận' or item.status_name == 'Đã duyệt' %}
-                                            <span class="badge-custom badge-status-success">{{ item.status_name }}</span>
-                                        {% else %}
-                                            <span class="badge-custom badge-status-warning">{{ item.status_name }}</span>
-                                        {% endif %}
-                                    </td>
-                                    <td class="text-center-col">
-                                        {% if item.selected_days and (item.status_name == 'Chờ xác thực' or item.status_name == 'Chờ xác nhận') %}
-                                            <button class="btn-action" onclick="approveSchedule('{{ item.id }}')">Xác nhận</button>
-                                            <button class="btn-action btn-danger" onclick="declineSchedule('{{ item.id }}')">Từ chối</button>
-                                        {% elif item.status_name == 'Đã xác nhận' or item.status_name == 'Đã duyệt' %}
-                                            <button class="btn-action" style="background-color: #f6c23e;" onclick="editSchedule('{{ item.id }}')">Điều chỉnh</button>
-                                        {% elif item.status_name == 'Đã xác nhận' %}
-                                            <span style="color: #069669; font-weight: 600; font-size: 0.85rem;">Đang thực hiện</span>
-                                        {% else %}
-                                            <span style="color: #6c757d; font-style: italic; font-size: 0.85rem;">Chưa có lịch</span>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                {% endfor %}
+{% if weeks_data and weeks_data|length > 0 %}
+    {% for week in weeks_data %}
+    <details class="week-acc" {% if week.is_open %}open{% endif %}>
+        <summary>
+            <span class="week-acc-title">Tuần {{ week.week_number }} ({{ week.start_date }} - {{ week.end_date }})</span>
+            <span class="week-acc-meta">
+                <span class="meta-chip">{{ week.schedules|length }} đơn</span>
+                {% if week.pending_count > 0 %}
+                <span class="meta-chip chip-pending">{{ week.pending_count }} chờ xử lý</span>
+                {% else %}
+                <span class="meta-chip chip-done">Đã xử lý hết</span>
+                {% endif %}
+            </span>
+        </summary>
+        <div class="table-responsive custom-table-container">
+            <table class="table custom-table">
+                <thead>
+                    <tr>
+                        <th>Họ và Tên</th>
+                        <th>Gmail</th>
+                        <th>Ngày đăng ký</th>
+                        <th>Thứ đăng ký / nghỉ</th>
+                        <th class="text-center-col">Trạng thái</th>
+                        <th class="text-center-col">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in week.schedules %}
+                    <tr id="row-req-{{ item.id }}">
+                        <td class="font-weight-bold" style="color: #3a3b45 !important;">{{ item.ho_ten }}</td>
+                        <td><a href="mailto:{{ item.gmail }}">{{ item.gmail }}</a></td>
+                        <td>{{ item.created_at }}</td>
+                        <td>{{ item.selected_days }}</td>
+                        <td class="text-center-col">
+                            {% if item.status_name == 'Đã xác nhận' or item.status_name == 'Đã duyệt' %}
+                            <span class="badge-custom badge-status-success">{{ item.status_name }}</span>
                             {% else %}
-                                <!-- 📌 DỮ LIỆU THẬT HOÀN TOÀN: Hiển thị thông báo khi không có dữ liệu thực tế -->
-                                <tr>
-                                    <td colspan="7" class="text-center" style="padding: 40px; color: #858796; font-style: italic;">
-                                        Không có dữ liệu đăng ký nào trong tuần này.
-                                    </td>
-                                </tr>
+                            <span class="badge-custom badge-status-warning">{{ item.status_name }}</span>
                             {% endif %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+                        </td>
+                        <td class="text-center-col">
+                            {% if item.status_name == 'Chờ xác thực' or item.status_name == 'Chờ xác nhận' %}
+                            <button class="btn-action" onclick="approveSchedule('{{ item.id }}')">Xác nhận</button>
+                            <button class="btn-action btn-danger" onclick="declineSchedule('{{ item.id }}')">Từ chối</button>
+                            {% elif item.status_name == 'Đã xác nhận' or item.status_name == 'Đã duyệt' %}
+                            <button class="btn-action" style="background-color: #f6c23e;" onclick="editSchedule('{{ item.id }}')">Điều chỉnh</button>
+                            {% else %}
+                            <span style="color: #6c757d; font-style: italic; font-size: 0.85rem;">Chưa có lịch</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
+    </details>
+    {% endfor %}
+{% else %}
+<div class="card custom-card">
+    <div class="card-body p-5 text-center" style="color: #858796; font-style: italic;">
+        Không có dữ liệu đăng ký nào trong tháng {{ selected_month }}/{{ selected_year }}.
     </div>
 </div>
+{% endif %}
 {% endblock %}
 
 {% block scripts %}
 <script>
-let currentWeek = parseInt("{{ current_week }}", 10);
-let currentYear = parseInt("{{ current_year }}", 10);
-
-function changeWeek(delta) {
-    currentWeek += delta;
-    if (currentWeek < 1) {
-        currentWeek = 52;
-        currentYear -= 1;
-    } else if (currentWeek > 52) {
-        currentWeek = 1;
-        currentYear += 1;
-    }
-
-    // Gửi request chuyển tuần thông qua URL backend thật
-    const newUrl = new URL(window.location.href);
-    newUrl.searchParams.set('week', currentWeek);
-    newUrl.searchParams.set('year', currentYear);
-    window.location.href = newUrl.toString();
-}
-
 function approveSchedule(regId) {
     if (!confirm("Bạn có chắc chắn muốn xác nhận lịch này không?")) return;
 
-    // 📌 SỬA LẠI ĐƯỜNG DẪN CHO KHỚP VỚI ROUTE PYTHON CỦA THẦY
     fetch(`/admin/approve-schedule/${regId}`, {
         method: 'POST',
         headers: {
@@ -268,9 +328,9 @@ function approveSchedule(regId) {
     })
     .then(response => response.json())
     .then(data => {
-        if (data.status === 'success') { 
+        if (data.status === 'success') {
             alert(data.message);
-            location.reload(); 
+            location.reload();
         } else {
             alert('Lỗi: ' + (data.message || 'Không thể cập nhật trạng thái.'));
         }

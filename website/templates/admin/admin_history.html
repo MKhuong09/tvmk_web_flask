@@ -424,6 +424,42 @@
     .week-raw-table tr:hover td {
         background-color: #f8fafc;
     }
+        /* Đơn chờ duyệt: làm mờ để lịch sử chỉ nổi bật đơn đã duyệt */
+    .week-raw-table tr.row-pending td {
+        opacity: 0.45;
+        background-color: #fbfcfe;
+    }
+    .week-raw-table tr.row-pending:hover td {
+        opacity: 0.85;
+    }
+
+    /* Người đang chờ duyệt đổi ca: khác hẳn người đã xác nhận */
+    .personnel-card.is-pending-change {
+        background: #fffbeb;
+        border: 1px solid #f59e0b;
+        box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.12);
+    }
+    .personnel-card.is-pending-change:hover {
+        border-color: #d97706;
+    }
+    .badge-pending-change {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        background-color: #fef3c7;
+        color: #92400e;
+        font-size: 9.5px;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 12px;
+        white-space: nowrap;
+    }
+    .week-raw-table tr.row-pending-change td {
+        background-color: #fffbeb;
+    }
+    .week-raw-table tr.row-pending-change td:first-child {
+        box-shadow: inset 3px 0 0 #f59e0b;
+    }
 </style>
 
 <div class="admin-history-wrapper">
@@ -434,7 +470,7 @@
             Lịch sử đăng ký trực
         </h2>
         <div class="admin-history-desc">
-            Tra cứu và theo dõi lịch trực của nhân sự theo từng tuần trong tháng từ Thứ 2 đến Chủ Nhật.
+            Tra cứu lịch trực đã tạo và xác nhận của nhân sự theo từng tuần trong tháng, từ Thứ 2 đến Chủ Nhật.
         </div>
     </div>
 
@@ -497,8 +533,14 @@
         </div>
         <div class="stat-pill">
             <i class="mdi mdi-file-document-check text-info" style="font-size: 18px;"></i>
-            <div>Bản ghi đăng ký: <strong>{{ total_registrations }} hồ sơ</strong></div>
+            <div>Lịch đã chốt: <strong>{{ total_registrations }} hồ sơ</strong></div>
         </div>
+        {% if total_pending_changes > 0 %}
+        <div class="stat-pill">
+            <i class="mdi mdi-account-clock text-warning" style="font-size: 18px;"></i>
+            <div>Chờ duyệt đổi: <strong>{{ total_pending_changes }} yêu cầu</strong></div>
+        </div>
+        {% endif %}
     </div>
 
     {% if weeks_data %}
@@ -550,7 +592,7 @@
                                 {% if day.personnel and day.personnel|length > 0 %}
                                     <div class="personnel-list">
                                         {% for person in day.personnel %}
-                                        <div class="personnel-card">
+                                       <div class="personnel-card{% if person.has_pending_change %} is-pending-change{% endif %}">
                                             <div class="personnel-name" title="Tên: {{ person.ten_rut_gon or person.ho_ten }}">
                                                 {{ person.ten_rut_gon or person.ho_ten }}
                                             </div>                               
@@ -561,7 +603,14 @@
                                                 <span class="badge-status {{ person.status_badge_class }}">
                                                     {{ person.status_name }}
                                                 </span>
+                                            </div>           
+                                                {% if person.has_pending_change %}
+                                            <div style="margin-top: 4px;">
+                                                <span class="badge-pending-change">
+                                                    <i class="mdi mdi-account-clock"></i> Chờ đổi ca
+                                                </span>
                                             </div>
+                                            {% endif %}
                                         </div>
                                         {% endfor %}
                                     </div>
@@ -585,7 +634,7 @@
                         <span>Đăng ký tuần {{ week.week_number }}</span>
                         <span class="week-raw-count-badge">{{ week.raw_registrations|length }} lượt đăng ký</span>
                     </div>
-                    <span class="text-muted" style="font-size: 11px;">Hồ sơ đăng ký gốc của nhân sự trong tuần</span>
+                    <span class="text-muted" style="font-size: 11px;">Hồ sơ gốc của tuần, gồm cả yêu cầu đổi đang chờ duyệt</span>
                 </div>
 
                 {% if week.raw_registrations and week.raw_registrations|length > 0 %}
@@ -602,7 +651,7 @@
                         </thead>
                         <tbody>
                             {% for reg in week.raw_registrations %}
-                            <tr>
+                            <tr class="{% if reg.has_pending_change %}row-pending-change{% elif reg.is_pending %}row-pending{% endif %}">
                                 <td style="text-align: center; color: #94a3b8; font-weight: 600;">{{ loop.index }}</td>
                                 <td>
                                     <div style="font-weight: 700; color: #0f172a;">{{ reg.ho_ten }}</div>
@@ -615,11 +664,24 @@
                                     <span style="font-weight: 600; color: #2563eb; background-color: #eff6ff; padding: 2px 8px; border-radius: 4px; border: 1px solid #dbeafe;">
                                         {{ reg.selected_days }}
                                     </span>
+                                                                        {% if reg.has_pending_change %}
+                                    <div style="font-size: 11px; color: #b45309; margin-top: 3px;">
+                                        Yêu cầu đổi (ngày trực): {{ reg.pending_selected_days }} (ca {{ reg.pending_session }})
+                                    </div>
+                                    {% endif %}
                                 </td>
                                 <td style="text-align: center;">
                                     <span class="badge-status {{ reg.status_badge_class }}">
                                         {{ reg.status_name }}
                                     </span>
+                                    {% if reg.is_pending %}
+                                    <div style="font-size: 10px; color: #b45309; margin-top: 3px;">Chờ admin duyệt</div>
+                                    {% endif %}
+                                                                                      {% if reg.has_pending_change %}
+                                    <div style="font-size: 11px; color: #b45309; margin-top: 3px; font-weight: 600;">
+                                        Đổi sang: {{ reg.pending_selected_days }}
+                                    </div>
+                                    {% endif %}
                                 </td>
                             </tr>
                             {% endfor %}
@@ -637,8 +699,8 @@
     {% else %}
         <div class="filter-card text-center py-5">
             <i class="mdi mdi-calendar-remove" style="font-size: 44px; color: #94a3b8;"></i>
-            <h5 class="mt-3 text-muted">Không tìm thấy dữ liệu trực trong tháng {{ selected_month }}/{{ selected_year }}</h5>
-            <p class="text-secondary" style="font-size: 13px;">Hãy chọn tháng khác hoặc tiến hành phân lịch trực cho nhân sự.</p>
+            <h5 class="mt-3 text-muted">Chưa có lịch nào được tạo trong tháng {{ selected_month }}/{{ selected_year }}</h5>
+            <p class="text-secondary" style="font-size: 13px;">Lịch sử chỉ hiển thị sau khi admin tạo và xác nhận lịch trực. Vào mục Đăng ký trực để duyệt và tạo lịch.</p>
         </div>
     {% endif %}
 
@@ -687,6 +749,19 @@ function exportExcelScheduleMatrix() {
     link.href = URL.createObjectURL(blob);
     link.download = `Lich_truc_ma_tran_T${month}_${year}.csv`;
     link.click();
+}
+async function reviewChange(regId, action) {
+    try {
+        const response = await fetch(`/admin/${action}-change/${regId}`, { method: 'POST' });
+        const data = await response.json();
+        if (data.status === 'success') {
+            window.location.reload();
+        } else {
+            alert(data.message || 'Không thực hiện được thao tác.');
+        }
+    } catch (error) {
+        alert('Lỗi kết nối: ' + error);
+    }
 }
 </script>
 {% endblock %}
