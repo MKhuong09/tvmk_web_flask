@@ -446,11 +446,11 @@ def register_schedule():
         except (TypeError, ValueError):
             allowed_limit = 2
 
-        if len(normalized_days) != allowed_limit:
+        if len(normalized_days) > allowed_limit:
             return jsonify({
                 "status": "error",
                 "message": (
-                    f"Vui lòng chọn chính xác {allowed_limit} "
+                    f"Vui lòng chọn không quá {allowed_limit} "
                     "ngày không trực."
                 ),
             }), 400
