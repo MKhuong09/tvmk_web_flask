@@ -1,52 +1,95 @@
-from flask import Blueprint, render_template, request, flash, redirect, url_for
-from flask_login import login_required, current_user
-from website.models import Registration, Notification, db
+from datetime import datetime
+from typing import cast,Any
 
-client_request = Blueprint('client_request', __name__)
+from firebase_admin import firestore
+from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask_login import current_user, login_required
+from google.cloud.firestore_v1.client import Client as FirestoreClient
 
-# Route GET: Hiển thị giao diện trang form gửi phiếu yêu cầu
-@client_request.route('/request-shift-change/<int:id>', methods=['GET'])
+from .models import Registration
+
+
+
+
+client_request = Blueprint("client_request", __name__)
+
+
+def get_db() -> FirestoreClient:
+    return cast(FirestoreClient, firestore.client())
+
+
+@client_request.route(
+    '/request-shift-change/<string:id>',
+    methods=['GET'],
+)
 @login_required
-def request_shift_change_form(id):
-    reg = Registration.query.get_or_404(id)
-    
-    # Kiểm tra bảo mật
+def request_shift_change_form(id: str):
+    db = get_db()
+
+    reg_ref = db.collection('registrations').document(id)
+    reg_doc = cast(Any, reg_ref.get())
+
+    if not reg_doc.exists:
+        flash('Không tìm thấy lịch trực này.', 'danger')
+        return redirect(url_for('client_views.client_detailshift'))
+
+    reg = Registration(reg_doc.id, reg_doc.to_dict() or {})
+
     if reg.user_id != current_user.id:
         flash('Bạn không có quyền thao tác trên lịch này.', 'danger')
         return redirect(url_for('client_views.client_detailshift'))
-        
-    # Trả về trang file HTML client_request_form.html nằm trong thư mục clients của em
+
     return render_template('clients/client_request_form.html', reg=reg)
-
-
-# Route POST: Xử lý logic khi người dùng điền xong và bấm "Gửi phiếu yêu cầu"
-@client_request.route('/submit-shift-adjustment/<int:id>', methods=['POST'])
+@client_request.route(
+    "/submit-shift-adjustment/<string:id>",
+    methods=["POST"],
+)
+@client_request.route(
+    '/submit-shift-adjustment/<string:id>',
+    methods=['POST'],
+)
 @login_required
-def submit_shift_adjustment(id):
-    reg = Registration.query.get_or_404(id)
-    
+def submit_shift_adjustment(id: str):
+    db = get_db()
+
+    reg_ref = db.collection('registrations').document(id)
+    reg_doc = cast(Any, reg_ref.get())
+
+    if not reg_doc.exists:
+        flash('Không tìm thấy lịch trực này.', 'danger')
+        return redirect(url_for('client_views.client_detailshift'))
+
+    reg = Registration(reg_doc.id, reg_doc.to_dict() or {})
+
     if reg.user_id != current_user.id:
         flash('Bạn không có quyền thao tác trên lịch này.', 'danger')
         return redirect(url_for('client_views.client_detailshift'))
-        
+
     reason = request.form.get('reason')
-    new_session = request.form.get('new_session') # Lấy thêm giá trị ca mới nếu form của em có ô select
-    
+    new_session = request.form.get('new_session')
+
     if not reason or not reason.strip():
         flash('Vui lòng nhập lý do muốn thay đổi lịch.', 'warning')
-        return redirect(url_for('client_request.request_shift_change_form', id=reg.id))
-        
-    # Tạo thông báo gửi cho Admin
-    new_request_notif = Notification(
-        user_id=current_user.id,
-        registration_id=reg.id,
-        title="Yêu cầu thay đổi lịch trực",
-        message=f"Học viên {current_user.user_name} gửi yêu cầu đổi lịch (Tuần {reg.week_number}). Đổi sang: {new_session}. Lý do: '{reason}'.",
-        status='pending'
-    )
-    
-    db.session.add(new_request_notif)
-    db.session.commit()
-    
+        return redirect(
+            url_for('client_request.request_shift_change_form', id=reg.id)
+        )
+
+    notif_data = {
+        'user_id': current_user.id,
+        'registration_id': reg.id,
+        'title': 'Yêu cầu thay đổi lịch trực',
+        'message': (
+            f"Học viên {getattr(current_user, 'user_name', 'Học viên')} "
+            f"gửi yêu cầu đổi lịch "
+            f"(Tuần {getattr(reg, 'week_number', '')}). "
+            f"Đổi sang: {new_session}. Lý do: '{reason}'."
+        ),
+        'status': 'pending',
+        'is_read': False,
+        'created_at': datetime.utcnow(),
+    }
+
+    db.collection('notifications').add(notif_data)
+
     flash('Gửi phiếu yêu cầu thay đổi lịch thành công!', 'success')
     return redirect(url_for('client_views.client_detailshift'))

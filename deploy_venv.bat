@@ -16,8 +16,13 @@ echo ===================================================
 echo [2/3] Creating virtual environment: %VENV_NAME%...
 echo ===================================================
 if exist %VENV_NAME% (
-    echo [INFO] '%VENV_NAME%' folder already exists. Skipping creation.
-) else (
+    rmdir /s /q %VENV_NAME% 2>nul
+    if %errorlevel% neq 0 (
+        echo [ERROR] Failed to remove existing virtual environment. Please check permissions.
+        pause
+        exit /b
+    )
+
     python -m venv %VENV_NAME%
     if %errorlevel% neq 0 (
         echo [ERROR] Failed to create virtual environment.
@@ -26,7 +31,6 @@ if exist %VENV_NAME% (
     )
     echo [SUCCESS] Virtual environment created.
 )
-
 echo ===================================================
 echo [3/3] Installing requirements from requirements.txt...
 echo ===================================================

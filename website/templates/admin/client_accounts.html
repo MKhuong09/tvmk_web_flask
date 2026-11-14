@@ -1,0 +1,196 @@
+{% extends 'Shared/admin_layout.html' %}
+
+{% block title %}Quản lý tài khoản client{% endblock %}
+
+{% block content %}
+<style>
+    .admin-shift-wrapper {
+        padding: 20px;
+        font-family: Arial, sans-serif;
+    }
+
+    .admin-shift-title {
+        margin: 0 0 5px;
+        padding-bottom: 4px;
+        display: inline-block;
+        border-bottom: 2px solid #4e73df;
+        color: #333;
+        font-size: 22px;
+        font-weight: bold;
+    }
+
+    .admin-shift-desc {
+        margin-bottom: 20px;
+        color: #666;
+        font-size: 14px;
+    }
+
+    .account-count {
+        display: inline-block;
+        margin-bottom: 16px;
+        padding: 6px 12px;
+        border-radius: 20px;
+        background: #e8f0fe;
+        color: #2454c6;
+        font-size: 13px;
+        font-weight: bold;
+    }
+
+    .shift-table {
+        width: 100%;
+        border-collapse: collapse;
+        overflow: hidden;
+        border-radius: 8px;
+        background: #fff;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .shift-table th {
+        padding: 12px 16px;
+        border-bottom: 2px solid #dee2e6;
+        background: #f8f9fa;
+        color: #4e73df;
+        font-size: 13px;
+        font-weight: bold;
+        text-align: left;
+        text-transform: uppercase;
+    }
+
+    .shift-table td {
+        padding: 14px 16px;
+        border-bottom: 1px solid #eee;
+        color: #333;
+        font-size: 14px;
+        vertical-align: middle;
+    }
+
+    .shift-table tr:hover {
+        background: #f8f9fc;
+    }
+
+    .account-email {
+        color: #52627a;
+    }
+
+    .btn-delete {
+        padding: 7px 13px;
+        border: 0;
+        border-radius: 20px;
+        background: #e74a3b;
+        color: #fff;
+        font-size: 12px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .btn-delete:hover {
+        background: #c0392b;
+    }
+
+    .empty-row {
+        padding: 24px !important;
+        color: #777 !important;
+        text-align: center;
+    }
+
+    .account-alert {
+        margin-bottom: 15px;
+        padding: 10px 14px;
+        border: 1px solid transparent;
+        border-radius: 6px;
+    }
+
+    .account-alert.success {
+        border-color: #c3e6cb;
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .account-alert.danger,
+    .account-alert.error {
+        border-color: #f5c6cb;
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    @media (max-width: 700px) {
+        .admin-shift-wrapper {
+            padding: 14px;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        .shift-table {
+            min-width: 650px;
+        }
+    }
+</style>
+
+<div class="admin-shift-wrapper">
+    <div>
+        <h2 class="admin-shift-title">Quản lý tài khoản client</h2>
+        <div class="admin-shift-desc">
+            Danh sách tài khoản client đã đăng ký trong hệ thống.
+        </div>
+    </div>
+
+    <div class="account-count">
+        Tổng số: {{ clients|length }} tài khoản
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            <div class="account-alert {{ category }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endwith %}
+
+    <div class="table-container">
+        <table class="shift-table">
+            <thead>
+                <tr>
+                    <th>Họ và tên</th>
+                    <th>Tên tài khoản</th>
+                    <th>Email</th>
+                    <th style="text-align: center;">Thao tác</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for client in clients %}
+                    <tr>
+                        <td>
+                            <strong>{{ client.get('full_name') or 'Chưa cập nhật' }}</strong>
+                        </td>
+                        <td>{{ client.get('user_name') or '—' }}</td>
+                        <td class="account-email">{{ client.get('email') or '—' }}</td>
+                        <td style="text-align: center;">
+                            <form
+                                method="POST"
+                                action="{{ url_for(
+                                    'admin_views.delete_client_account',
+                                    user_id=client.get('id')
+                                ) }}"
+                                onsubmit="return confirm('Bạn có chắc muốn xóa tài khoản client này?');"
+                            >
+                                <button type="submit" class="btn-delete">
+                                    Xóa tài khoản
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="4" class="empty-row">
+                            Chưa có tài khoản client nào.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

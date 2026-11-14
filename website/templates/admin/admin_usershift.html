@@ -102,6 +102,17 @@
         <div class="admin-shift-desc">Danh sách lịch đã đăng ký của dân quân trong hệ thống</div>
     </div>
 
+    <!-- Hiển thị thông báo flash nếu có -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}" style="padding: 10px; margin-bottom: 15px; border-radius: 4px; background: #d4edda; color: #155724; border: 1px solid #c3e6cb;">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
     <table class="shift-table">
         <thead>
             <tr>
@@ -111,39 +122,41 @@
             </tr>
         </thead>
         <tbody>
-            {% for u in users %}
-            <tr>
-                <td><strong>{{ u.user_name }}</strong></td>
-                <td><span style="background: #e2e8f0; padding: 3px 10px; border-radius: 12px; font-weight: bold;">{{ u.allowed_off_days }}</span></td>
-                <td style="text-align: center;">
-                    <button class="btn-edit" type="button" onclick="toggleEdit('{{ u.id }}')">Điều chỉnh</button>
-                </td>
-            </tr>
-            <!-- Dòng form ẩn/hiện điều chỉnh -->
-            <tr id="edit-row-{{ u.id }}" class="edit-row" style="display: none;">
-                <td colspan="3">
-                    <form action="{{ url_for('admin_views.update_off_days', user_id=u.id) }}" method="POST">
-                        <div class="edit-form-box">
-                            <span>Cập nhật số ngày nghỉ cho <strong>{{ u.user_name }}</strong>:</span>
-                            <input type="number" name="allowed_off_days" value="{{ u.allowed_off_days }}" class="edit-input" min="0" required>
-                            <button type="submit" class="btn-save">Lưu</button>
-                            <button type="button" class="btn-cancel" onclick="toggleEdit('{{ u.id }}')">Hủy</button>
-                        </div>
-                    </form>
-                </td>
-            </tr>
-            {% else %}
-            <tr>
-                <td colspan="3" style="text-align: center; color: #777; padding: 30px;">Chưa có dữ liệu người dùng nào trong hệ thống.</td>
-            </tr>
-            {% endfor %}
+            {% if users %}
+                {% for u in users %}
+                <tr>
+                    <td><strong>{{ u.user_name }}</strong></td>
+                    <td><span id="val-off-{{ u.id }}" style="background: #e2e8f0; padding: 3px 10px; border-radius: 12px; font-weight: bold;">{{ u.allowed_off_days }}</span></td>
+                    <td style="text-align: center;">
+                        <button class="btn-edit" type="button" onclick="toggleEdit('{{ u.id }}')">Điều chỉnh</button>
+                    </td>
+                </tr>
+                <!-- Dòng form ẩn/hiện điều chỉnh -->
+                <tr id="edit-row-{{ u.id }}" class="edit-row" style="display: none;">
+                    <td colspan="3">
+                        <!-- Form submit POST chuẩn về server, không dùng onsubmit JS chặn nữa -->
+                        <form action="{{ url_for('admin_views.update_off_days', user_id=u.id) }}" method="POST">
+                            <div class="edit-form-box">
+                                <span>Cập nhật số ngày nghỉ cho <strong>{{ u.user_name }}</strong>:</span>
+                                <input type="number" id="input-off-{{ u.id }}" name="allowed_off_days" value="{{ u.allowed_off_days }}" class="edit-input" min="0" required>
+                                <button type="submit" class="btn-save">Lưu</button>
+                                <button type="button" class="btn-cancel" onclick="toggleEdit('{{ u.id }}')">Hủy</button>
+                            </div>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            {% endif %}
         </tbody>
     </table>
 </div>
+{% endblock %}
 
+{% block scripts %}
 <script>
     function toggleEdit(userId) {
         var row = document.getElementById('edit-row-' + userId);
+        if (!row) return;
         if (row.style.display === 'none' || row.style.display === '') {
             row.style.display = 'table-row';
         } else {

@@ -1,216 +1,548 @@
 {% extends "Shared/client_layout.html" %}
 
+{% block title %}Bảng Phân Lịch Trực Tuần - Dân Quân Ấp 27{% endblock %}
+
 {% block styles %}
 <style>
-    /* Tổng thể khối lịch tuần */
-    .schedule-container {
-        background-color: #ffffff;
-        border: 1px solid #e5e5e5;
-        border-radius: 8px;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
-        overflow: hidden;
-        margin-top: 25px;
-        margin-bottom: 25px;
+    :root {
+        --brand-green: #A5C422;
+        --brand-green-hover: #92ae1b;
+        --brand-green-dark: #6f8615;
+        --brand-green-light: #f5f9e8;
+        --brand-green-badge: #eef6d3;
+        --surface: #ffffff;
+        --surface-subtle: #f8fafc;
+        --border-color: #e2e8f0;
+        --text-primary: #1e293b;
+        --text-secondary: #64748b;
+        --text-muted: #94a3b8;
+        --radius-lg: 14px;
+        --radius-md: 10px;
+        --radius-sm: 6px;
     }
 
-    /* Bảng hiển thị các Thứ */
-    .schedule-table {
-        width: 100%;
-        border-collapse: collapse;
-        background: #fdfdfd;
-    }
-    .schedule-table th {
-        width: 14.28%;
-        text-align: center;
-        padding: 16px 10px;
-        font-size: 1.2rem;
-        font-weight: 700;
-        color: #333;
-        border-bottom: 3px solid #A5C422; /* Đồng bộ màu xanh thương hiệu */
-        border-right: 1px solid #e5e5e5;
-    }
-    .schedule-table th:last-child {
-        border-right: none;
-    }
-    
-    /* Thanh phân tách Buổi (Sáng / Chiều) */
-    .session-header {
-        background-color: #ffe082;
-        font-weight: bold;
-        font-size: 1.15rem;
-        padding: 12px 20px;
-        color: #d89714;
-        border-top: 1px solid #e5e5e5;
-        border-bottom: 1px solid #e5e5e5;
-        margin-top: 0;
+    .schedule-wrapper {
+        margin-top: 28px;
+        margin-bottom: 40px;
     }
 
-    /* Hộp cuộn chứa danh sách tên của mỗi buổi */
-    .scroll-container {
-        height: 170px; /* Giới hạn độ cao hiển thị khoảng 3 hàng */
-        overflow-y: auto; /* Tạo con lăn kéo độc lập */
-        scroll-behavior: smooth; /* Hiệu ứng cuộn trượt êm ái */
-    }
-    
-    /* Thiết lập khoảng cách cho từng dòng tên */
-    .name-row {
+    .page-header-row {
         display: flex;
-        border-bottom: 1px solid #f2f2f2;
-        background-color: #ffffff;
-    }
-    .name-row:hover {
-        background-color: #f9fbf2; /* Đổi màu nhẹ khi di chuột vào */
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-bottom: 24px;
     }
 
-    /* Định dạng ô chứa tên */
-    .name-cell {
-        width: 14.28%;
-        padding: 15px 12px;
-        font-weight: 600;
-        color: #444;
-        border-right: 1px solid #eee;
-        min-height: 55px; /* Chiều cao tối thiểu cố định cho 1 dòng */
+    .page-title {
+        font-weight: 800;
+        color: var(--text-primary);
+        font-size: 1.95rem;
+        letter-spacing: -0.025em;
+        margin: 0;
         display: flex;
         align-items: center;
-        word-break: break-word;
+        gap: 10px;
     }
-    .name-cell:last-child {
+
+    .page-subtitle {
+        color: var(--text-secondary);
+        font-size: 14px;
+        margin: 5px 0 0 0;
+    }
+
+    .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .btn-register-shift {
+        background-color: var(--brand-green);
+        color: #ffffff !important;
+        font-weight: 700;
+        font-size: 14px;
+        padding: 11px 22px;
+        border-radius: 50px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 4px 14px rgba(165, 196, 34, 0.35);
+        transition: all 0.2s ease;
+        border: none;
+    }
+
+    .btn-register-shift:hover {
+        background-color: var(--brand-green-hover);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 18px rgba(165, 196, 34, 0.45);
+        color: #ffffff !important;
+    }
+
+    .schedule-control-bar {
+        background: #ffffff;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        padding: 12px 18px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 14px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+    }
+
+    .week-nav {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .week-btn {
+        background: #f1f5f9;
+        color: #475569;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        padding: 6px 12px;
+        font-size: 12.5px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+    .week-btn:hover {
+        background: #e2e8f0;
+        color: #1e293b;
+    }
+
+    .current-week-label {
+        font-weight: 700;
+        font-size: 14px;
+        color: #1e293b;
+        padding: 0 8px;
+    }
+
+    .schedule-stats {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        font-size: 13px;
+        color: var(--text-secondary);
+    }
+
+    .stat-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #f8fafc;
+        padding: 4px 10px;
+        border-radius: 6px;
+        border: 1px solid #e2e8f0;
+    }
+
+    .stat-pill strong {
+        color: #1e293b;
+    }
+
+    .schedule-card {
+        background-color: var(--surface);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+    }
+
+    .schedule-scroll-wrapper {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .schedule-table-container {
+        min-width: 900px;
+        width: 100%;
+    }
+
+
+    .grid-7-days {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        width: 100%;
+    }
+
+   
+    .schedule-days-header {
+        background: #f8fafc;
+        border-bottom: 2.5px solid var(--brand-green);
+    }
+
+    .day-header-box {
+        padding: 16px 10px;
+        text-align: center;
+        border-right: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+        position: relative;
+    }
+
+    .day-header-box:last-child {
         border-right: none;
     }
-    
-    /* Làm đẹp con lăn trình duyệt */
-    .scroll-container::-webkit-scrollbar {
-        width: 6px;
+
+    .day-header-box.is-today {
+        background: var(--brand-green-light);
     }
-    .scroll-container::-webkit-scrollbar-thumb {
-        background-color: #cbd5e1;
+
+    .day-header-box.is-today::before {
+        content: 'Hôm nay';
+        position: absolute;
+        top: 4px;
+        background: var(--brand-green);
+        color: #ffffff;
+        font-size: 9.5px;
+        font-weight: 700;
+        padding: 1px 6px;
         border-radius: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    .day-name {
+        font-size: 15px;
+        font-weight: 800;
+        color: #1e293b;
+    }
+
+    .day-code-tag {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-secondary);
+    }
+
+    .schedule-columns-body {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        background: #ffffff;
+        min-height: 280px;
+    }
+
+    .day-column-content {
+        border-right: 1px solid #f1f5f9;
+        padding: 12px 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        background-color: #ffffff;
+        transition: background-color 0.2s;
+    }
+
+    .day-column-content:last-child {
+        border-right: none;
+    }
+
+    .day-column-content:hover {
+        background-color: #fdfdfd;
+    }
+
+    .day-column-content.is-today-col {
+        background-color: #fafdf3;
+    }
+
+    /* Thẻ quân số trực trong ngày */
+    .guard-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 10px 10px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+        transition: all 0.2s ease;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        position: relative;
+    }
+
+    .guard-card:hover {
+        border-color: var(--brand-green);
+        box-shadow: 0 4px 10px rgba(165, 196, 34, 0.2);
+        transform: translateY(-2px);
+    }
+
+    .guard-card-top {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .guard-avatar-circle {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: var(--brand-green);
+        color: white;
+        font-weight: 800;
+        font-size: 11px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .guard-name {
+        font-weight: 700;
+        font-size: 13px;
+        color: #1e293b;
+        line-height: 1.25;
+        word-break: break-word;
+    }
+
+    .guard-meta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 11px;
+        color: var(--text-secondary);
+        padding-top: 4px;
+        border-top: 1px dashed #f1f5f9;
+    }
+
+    .duty-time-tag {
+        font-size: 10.5px;
+        color: #64748b;
+        display: flex;
+        align-items: center;
+        gap: 3px;
+    }
+
+    .empty-day-state {
+        height: 100%;
+        min-height: 140px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        border: 1.5px dashed #e2e8f0;
+        border-radius: 8px;
+        padding: 16px 8px;
+        text-align: center;
+        color: #94a3b8;
+        font-size: 11.5px;
+        gap: 6px;
+        background: #fbfcfe;
+    }
+
+    .empty-day-state i {
+        font-size: 20px;
+        color: #cbd5e1;
+    }
+
+    
+    .schedule-legend {
+        padding: 14px 20px;
+        background: #f8fafc;
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+        font-size: 12.5px;
+        color: var(--text-secondary);
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container" style="margin-top: 40px; margin-bottom: 40px;">
-    <div class="row mb-3">
-        <div class="col-md-12 d-flex justify-content-between align-items-center flex-wrap">
-            <div>
-                <h2 class="wow fadeInUp" data-wow-delay="0.1s" style="font-weight: 800; color: #222; font-size: 2.6rem;">
-                    Bảng Phân Lịch Trực Tuần
-                </h2>
-                <p class="text-muted m-0">Kế hoạch công tác ứng trực - Ban chỉ huy Dân quân tự vệ Ấp 27</p>
-            </div>
-            <div>
-                <a href="{{ url_for('client_views.client_shift') }}" class="btn btn-default smoothScroll" style="background-color: #A5C422; color: #fff; font-weight: bold; padding: 12px 25px; border-radius: 50px;">
-                    Đăng ký trực ngay
-                </a>
+<div class="container schedule-wrapper">
+
+    <!-- Tiêu đề và Nút Đăng ký -->
+    <div class="page-header-row">
+        <div>
+            <h2 class="page-title">
+                <span>Bảng Phân Lịch Trực Tuần</span>
+            </h2>
+            <p class="page-subtitle">Kế hoạch công tác ứng trực - Dân quân tự vệ Ấp 27 (Gộp chung theo ngày)</p>
+        </div>
+        <div class="header-actions">
+            <a href="{{ url_for('client_views.client_shift') }}" class="btn-register-shift">
+                <i class="fas fa-calendar-plus"></i>
+                <span>Đăng ký trực ngay</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Điều hướng tuần và trạng thái quân số -->
+    {%- set mock_schedule = {
+        'T2': ['Nguyễn Văn A', 'Trần Văn B'],
+        'T3': ['Lê Văn C'],
+        'T4': ['Phạm Văn D', 'Hoàng Văn E', 'Đỗ Văn F'],
+        'T5': ['Vũ Văn G'],
+        'T6': ['Bùi Văn H', 'Ngô Văn I'],
+        'T7': ['Dương Văn K'],
+        'CN': ['Lý Văn L', 'Hồ Văn M']
+    } -%}
+
+    {%- set total_count = namespace(value=0) -%}
+    {%- for d, lst in mock_schedule.items() -%}
+        {%- set total_count.value = total_count.value + lst|length -%}
+    {%- endfor -%}
+
+    <div class="schedule-control-bar">
+        <div class="week-nav">
+            <a href="?week=prev" class="week-btn" title="Tuần trước">
+                <i class="fas fa-chevron-left"></i> Tuần trước
+            </a>
+            <span class="current-week-label">
+                <i class="far fa-calendar-alt" style="color: var(--brand-green); margin-right: 5px;"></i>
+                Tuần Hiện Tại: Thứ Hai - Chủ Nhật
+            </span>
+            <a href="?week=next" class="week-btn" title="Tuần sau">
+                Tuần sau <i class="fas fa-chevron-right"></i>
+            </a>
+        </div>
+
+        <div class="schedule-stats">
+            <div class="stat-pill">
+                <i class="fas fa-users" style="color: var(--brand-green);"></i>
+                <span>Quân số tuần: <strong>{{ total_personnel if total_personnel is defined else total_count.value }} đồng chí</strong></span>
             </div>
         </div>
     </div>
 
-    <div class="schedule-container wow fadeInUp" data-wow-delay="0.2s">
-        <table class="schedule-table">
-            <thead>
-                <tr>
-                    <th>Thứ 2</th>
-                    <th>Thứ 3</th>
-                    <th>Thứ 4</th>
-                    <th>Thứ 5</th>
-                    <th>Thứ 6</th>
-                    <th>Thứ 7</th>
-                    <th>Chủ Nhật</th>
-                </tr>
-            </thead>
-        </table>
+    <!-- LỊCH GỘP CHUNG 1 NGÀY -->
+    <div class="schedule-card">
+        <div class="schedule-scroll-wrapper">
+            <div class="schedule-table-container">
 
-        <!-- ================= BUỔI SÁNG ================= -->
-        <div class="session-header"><i class="fas fa-sun mr-2"></i> Buổi Sáng</div>
-        <div class="scroll-container auto-scroll">
-            {% set max_sang = [
-                schedule_data['Sáng']['T2']|length,
-                schedule_data['Sáng']['T3']|length,
-                schedule_data['Sáng']['T4']|length,
-                schedule_data['Sáng']['T5']|length,
-                schedule_data['Sáng']['T6']|length,
-                schedule_data['Sáng']['T7']|length,
-                schedule_data['Sáng']['CN']|length
-            ]|max %}
-            
-            {% if max_sang == 0 %}
-                <div class="name-row">
-                    <div class="name-cell" style="width: 100%; justify-content: center; color: #888;">
-                        Chưa có lịch trực buổi sáng (Đang chờ Admin phê duyệt và generate)
+                <!-- 1. HEADER 7 NGÀY TRONG TUẦN -->
+                <div class="schedule-days-header grid-7-days">
+                    <div class="day-header-box">
+                        <span class="day-name">Thứ 2</span>
+                        <span class="day-code-tag">T2</span>
+                    </div>
+                    <div class="day-header-box">
+                        <span class="day-name">Thứ 3</span>
+                        <span class="day-code-tag">T3</span>
+                    </div>
+                    <div class="day-header-box is-today">
+                        <span class="day-name">Thứ 4</span>
+                        <span class="day-code-tag">T4</span>
+                    </div>
+                    <div class="day-header-box">
+                        <span class="day-name">Thứ 5</span>
+                        <span class="day-code-tag">T5</span>
+                    </div>
+                    <div class="day-header-box">
+                        <span class="day-name">Thứ 6</span>
+                        <span class="day-code-tag">T6</span>
+                    </div>
+                    <div class="day-header-box">
+                        <span class="day-name">Thứ 7</span>
+                        <span class="day-code-tag">T7</span>
+                    </div>
+                    <div class="day-header-box">
+                        <span class="day-name" style="color: #dc2626;">Chủ Nhật</span>
+                        <span class="day-code-tag">CN</span>
                     </div>
                 </div>
-            {% else %}
-                {% for i in range(max_sang) %}
-                <div class="name-row">
-                    <div class="name-cell">{{ schedule_data['Sáng']['T2'][i] if schedule_data['Sáng']['T2'][i] is defined else '' }}</div>
-                    <div class="name-cell">{{ schedule_data['Sáng']['T3'][i] if schedule_data['Sáng']['T3'][i] is defined else '' }}</div>
-                    <div class="name-cell">{{ schedule_data['Sáng']['T4'][i] if schedule_data['Sáng']['T4'][i] is defined else '' }}</div>
-                    <div class="name-cell">{{ schedule_data['Sáng']['T5'][i] if schedule_data['Sáng']['T5'][i] is defined else '' }}</div>
-                    <div class="name-cell">{{ schedule_data['Sáng']['T6'][i] if schedule_data['Sáng']['T6'][i] is defined else '' }}</div>
-                    <div class="name-cell">{{ schedule_data['Sáng']['T7'][i] if schedule_data['Sáng']['T7'][i] is defined else '' }}</div>
-                    <div class="name-cell">{{ schedule_data['Sáng']['CN'][i] if schedule_data['Sáng']['CN'][i] is defined else '' }}</div>
-                </div>
-                {% endfor %}
-            {% endif %}
-        </div>
 
-        <!-- ================= BUỔI CHIỀU ================= -->
-        <div class="session-header"><i class="fas fa-moon mr-2"></i> Buổi Chiều</div>
-        <div class="scroll-container auto-scroll">
-            {% set max_chieu = [
-                schedule_data['Chiều']['T2']|length,
-                schedule_data['Chiều']['T3']|length,
-                schedule_data['Chiều']['T4']|length,
-                schedule_data['Chiều']['T5']|length,
-                schedule_data['Chiều']['T6']|length,
-                schedule_data['Chiều']['T7']|length,
-                schedule_data['Chiều']['CN']|length
-            ]|max %}
-            
-            {% if max_chieu == 0 %}
-                <div class="name-row">
-                    <div class="name-cell" style="width: 100%; justify-content: center; color: #888;">
-                        Chưa có lịch trực buổi chiều (Đang chờ Admin phê duyệt và generate)
+                <!-- LỊCH TRỰC THEO NGÀY -->
+                <div class="schedule-columns-body">
+                    {% set days_list = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'] %}
+
+                    {% for day in days_list %}
+                    <div class="day-column-content {{ 'is-today-col' if day == 'T4' else '' }}">
+                        
+                        {% set current_day_list = [] %}
+                        {% if schedule_by_day is defined and day in schedule_by_day %}
+                            {% set current_day_list = schedule_by_day[day] %}
+                        {% elif schedule_data is defined %}
+                            {% if schedule_data[day] is defined %}
+                                {% set current_day_list = schedule_data[day] %}
+                            {% elif schedule_data['Sáng'] is defined and schedule_data['Chiều'] is defined %}
+                                {% set sang_list = schedule_data['Sáng'][day] if (schedule_data['Sáng'][day] is defined and schedule_data['Sáng'][day]) else [] %}
+                                {% set chieu_list = schedule_data['Chiều'][day] if (schedule_data['Chiều'][day] is defined and schedule_data['Chiều'][day]) else [] %}
+                                {% set current_day_list = sang_list + chieu_list %}
+                            {% endif %}
+                        {% else %}
+                            {# DỮ LIỆU GIẢ LẬP ĐỂ TEST GIAO DIỆN #}
+                            {% set current_day_list = mock_schedule[day] %}
+                        {% endif %}
+
+                        {% if current_day_list and current_day_list|length > 0 %}
+                            {% for person in current_day_list %}
+                                {% if person and person != '-' %}
+                                <div class="guard-card">
+                                    <div class="guard-card-top">
+                                        <div class="guard-avatar-circle">
+                                            {{ person[:1] if person is string else (person.name[:1] if person.name is defined else 'DQ') }}
+                                        </div>
+                                        <div class="guard-name">
+                                            {{ person if person is string else person.name }}
+                                        </div>
+                                    </div>
+                                    <div class="guard-meta">
+                                        <span class="duty-time-tag">
+                                            <i class="far fa-clock"></i> 24h
+                                        </span>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            <div class="empty-day-state">
+                                <i class="fas fa-user-clock"></i>
+                                <span>Chưa có nhân sự trực</span>
+                            </div>
+                        {% endif %}
+
+                    </div>
+                    {% endfor %}
+
+                </div>
+
+                <!--THÔNG TIN BẢNG LỊCH -->
+                <div class="schedule-legend">
+                    <div>
+                        <i class="fas fa-users" style="color: var(--brand-green); margin-right: 6px;"></i>
+                        <span>Bảng phân công lịch trực ban dân quân (Dữ liệu thử nghiệm giao diện)</span>
+                    </div>
+                    <div>
+                        <i class="fas fa-info-circle" style="color: var(--brand-green); margin-right: 4px;"></i>
+                        <span>Lịch trực 24h thống nhất theo ngày</span>
                     </div>
                 </div>
-            {% else %}
-                {% for i in range(max_chieu) %}
-                <div class="name-row">
-                    <div class="name-cell">{{ schedule_data['Chiều']['T2'][i] if schedule_data['Chiều']['T2'][i] is defined else '' }}</div>
-                    <div class="name-cell">{{ schedule_data['Chiều']['T3'][i] if schedule_data['Chiều']['T3'][i] is defined else '' }}</div>
-                    <div class="name-cell">{{ schedule_data['Chiều']['T4'][i] if schedule_data['Chiều']['T4'][i] is defined else '' }}</div>
-                    <div class="name-cell">{{ schedule_data['Chiều']['T5'][i] if schedule_data['Chiều']['T5'][i] is defined else '' }}</div>
-                    <div class="name-cell">{{ schedule_data['Chiều']['T6'][i] if schedule_data['Chiều']['T6'][i] is defined else '' }}</div>
-                    <div class="name-cell">{{ schedule_data['Chiều']['T7'][i] if schedule_data['Chiều']['T7'][i] is defined else '' }}</div>
-                    <div class="name-cell">{{ schedule_data['Chiều']['CN'][i] if schedule_data['Chiều']['CN'][i] is defined else '' }}</div>
-                </div>
-                {% endfor %}
-            {% endif %}
+
+            </div>
         </div>
     </div>
+
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-    // Logic JavaScript tự động lăn xuống sau mỗi 5 giây độc lập cho từng buổi
-    document.querySelectorAll('.auto-scroll').forEach(container => {
-        const rowHeight = 55; // Chiều cao khớp hoàn toàn với min-height bên CSS
+    document.addEventListener("DOMContentLoaded", function() {
+        const todayColumn = document.querySelector('.day-column-content.is-today-col');
+        const scrollWrapper = document.querySelector('.schedule-scroll-wrapper');
         
-        setInterval(() => {
-            let currentScroll = container.scrollTop;
-            let maxScroll = container.scrollHeight - container.clientHeight;
-            
-            // Nếu cuộn chạm đáy, tự động quay ngược về đầu dòng mượt mà
-            if (currentScroll >= maxScroll - 5) {
-                container.scrollTo({ top: 0, behavior: 'smooth' });
-            } else {
-                // Di chuyển tịnh tiến xuống dưới 1 dòng
-                container.scrollBy({ top: rowHeight, behavior: 'smooth' });
-            }
-        }, 5000); /* 5000ms = 5 giây */
+        if (todayColumn && scrollWrapper && window.innerWidth < 768) {
+            scrollWrapper.scrollTo({
+                left: todayColumn.offsetLeft - 40,
+                behavior: 'smooth'
+            });
+        }
     });
 </script>
 {% endblock %}

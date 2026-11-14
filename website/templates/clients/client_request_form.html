@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Phiếu điều chỉnh lịch trực</title>
-    <!-- Sử dụng Bootstrap 5 cho giao diện hiện đại -->
+    <title>Phiếu điều chỉnh lịch trực - Dân Quân Ấp 27</title>
+    <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="bg-light">
@@ -18,15 +19,16 @@
                 <small class="text-light">Hệ thống quản lý dân quân Ấp 27</small>
             </div>
 
-            <!-- Nội dung Form -->
+            <!-- Form -->
             <div class="card-body p-4">
+                {% if reg %}
                 <form action="{{ url_for('client_request.submit_shift_adjustment', id=reg.id) }}" method="POST">
                     
-                    <!-- Thông tin người gửi (Readonly) -->
+                    <!-- Thông tin người gửi  -->
                     <div class="mb-3 row">
                         <label class="col-sm-4 col-form-label fw-bold">Họ và tên:</label>
                         <div class="col-sm-8">
-                            <input type="text" readonly class="form-control-plaintext" value="{{ current_user.user_name }}">
+                            <input type="text" readonly class="form-control-plaintext" value="{{ current_user.user_name if current_user and current_user.user_name else 'Không rõ' }}">
                         </div>
                     </div>
 
@@ -34,29 +36,32 @@
                     <div class="mb-3 row">
                         <label class="col-sm-4 col-form-label fw-bold">Lịch trực hiện tại:</label>
                         <div class="col-sm-8">
-                            <input type="text" readonly class="form-control-plaintext text-secondary" value="Tuần {{ reg.week_number }} - Buổi: {{ reg.session }} (Thứ: {{ ', '.join(reg.working_days) }})">
+                            <input type="text" readonly class="form-control-plaintext text-secondary" 
+                                   value="Tuần {{ reg.week_number }} - Buổi: {{ reg.session }} (Thứ: {{ reg.working_days | join(', ') if reg.working_days is iterable and reg.working_days is not string else reg.working_days }})">
                         </div>
                     </div>
 
                     <hr>
 
-                    <!-- Phần điều chỉnh (Adjust session) -->
+                    <!-- Phần điều chỉnh buổi (chưa hoàn thiện)-->
                     <div class="mb-3">
                         <label for="new_session" class="form-label fw-bold">Đăng ký đổi thành buổi/ca mới:</label>
                         <select class="form-select" id="new_session" name="new_session" required>
-                            <option value="" selected disabled>-- Chọn buổi trực thay thế --</option>
-                            <option value="Buổi sáng">Buổi sáng</option>
-                            <option value="Buổi chiều">Buổi chiều</option>
-                            <option value="Buổi tối">Buổi tối</option>
+                            <option value="" disabled {% if not request.form.get('new_session') %}selected{% endif %}>-- Chọn buổi trực thay thế --</option>
+                            <option value="Buổi sáng" {% if request.form.get('new_session') == 'Buổi sáng' %}selected{% endif %}>Buổi sáng</option>
+                            <option value="Buổi chiều" {% if request.form.get('new_session') == 'Buổi chiều' %}selected{% endif %}>Buổi chiều</option>
+                            <option value="Buổi tối" {% if request.form.get('new_session') == 'Buổi tối' %}selected{% endif %}>Buổi tối</option>
                         </select>
                     </div>
 
+                    <!-- Lý do điều chỉnh -->
                     <div class="mb-4">
                         <label for="reason" class="form-label fw-bold">Lý do xin điều chỉnh:</label>
-                        <textarea class="form-control" id="reason" name="reason" rows="4" placeholder="Nhập chi tiết lý do muốn thay đổi lịch (Ví dụ: Bận công việc gia đình, đi học đột xuất...)" required></textarea>
+                        <textarea class="form-control" id="reason" name="reason" rows="4" 
+                                  placeholder="Nhập chi tiết lý do muốn thay đổi lịch (Ví dụ: Bận công việc gia đình, đi học đột xuất...)" required>{{ request.form.get('reason', '') }}</textarea>
                     </div>
 
-                    <!-- Các nút thao tác -->
+                    <!-- nút thao tác -->
                     <div class="d-flex justify-content-end gap-2">
                         <a href="{{ url_for('client_views.client_detailshift') }}" class="btn btn-secondary">
                             <i class="fas fa-arrow-left me-1"></i> Quay lại
@@ -67,6 +72,16 @@
                     </div>
 
                 </form>
+                {% else %}
+                    <div class="alert alert-danger text-center mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i> Không tìm thấy thông tin lịch trực cần điều chỉnh hoặc dữ liệu đã bị xoá.
+                        <div class="mt-3">
+                            <a href="{{ url_for('client_views.client_detailshift') }}" class="btn btn-secondary btn-sm">
+                                <i class="fas fa-arrow-left me-1"></i> Quay lại danh sách
+                            </a>
+                        </div>
+                    </div>
+                {% endif %}
             </div>
         </div>
     </div>

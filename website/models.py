@@ -1,55 +1,96 @@
-from datetime import datetime
-from flask_login import UserMixin
-from sqlalchemy.sql import func
-from . import db  # Hoặc cách import db tương ứng của dự án
+from firebase_admin import firestore
 
-class Role(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), unique=True, nullable=False)
-    users = db.relationship('User', backref='role', lazy=True)
 
-class User(db.Model, UserMixin):
-    id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(150), unique=True)
-    password = db.Column(db.String(150))
-    user_name = db.Column(db.String(150), unique=True)
-    notes = db.relationship('Note')
-    registrations = db.relationship('Registration', backref='user_account', lazy=True)
-    role_id = db.Column(db.Integer, db.ForeignKey('role.id'), nullable=False, default=2)
-    allowed_off_days = db.Column(db.Integer, default=2)
+db = firestore.client()
 
-class Note(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    data = db.Column(db.String(10000))
-    date = db.Column(db.DateTime(timezone=True), default=func.now())
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
-class Registration(db.Model):
-    __tablename__ = 'registration'
-    id = db.Column(db.Integer, primary_key=True)
-    selected_days = db.Column(db.String(200), nullable=False)
-    session = db.Column(db.String(50), nullable=False)
-    week_number = db.Column(db.Integer)   
-    status_id = db.Column(db.Integer, db.ForeignKey('status.id'), nullable=False)
-    created_at = db.Column(db.DateTime(timezone=True), default=func.now())
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+class User:
 
-class Status(db.Model):
-    __tablename__ = 'status'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), unique=True, nullable=False) 
-    registrations = db.relationship('Registration', backref='status_obj', lazy=True)
+  def __init__(self, user_id, data):
+    self.id = user_id  
+    self.email = data.get("email")
+    self.password = data.get("password")
+    self.user_name = data.get("user_name")
+    self.full_name = data.get("full_name")
+    self.role_id = data.get("role_id", 2)  
+    self.allowed_off_days = data.get("allowed_off_days", 2)
+    self.is_verified = data.get("is_verified", False)
 
-class Notification(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
-    title = db.Column(db.String(200), nullable=False)
-    message = db.Column(db.Text, nullable=False)
-    status = db.Column(db.String(50), default='pending')
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    is_read = db.Column(db.Boolean, default=False)
-    
-class ScheduleOutput(db.Model):
-    date = db.Column(db.String(20), primary_key=True)
-    userlist = db.Column(db.String(500), nullable=False)
-    created_at = db.Column(db.DateTime(timezone=True), default=func.now())
+  #  hỗ trợ Flask-Login tìm user theo ID
+  @staticmethod
+  def get(user_id):
+    doc_ref = db.collection("users").document(user_id).get()
+    if doc_ref.exists:
+      return User(doc_ref.id, doc_ref.to_dict())
+    return None
+
+  # Htìm user theo email (dùng khi đăng nhập)
+  @staticmethod
+  def get_by_email(email):
+    users_ref = (
+        db.collection("users").where("email", "==", email).limit(1).stream()
+    )
+    for doc in users_ref:
+      return User(doc.id, doc.to_dict())
+    return None
+
+  # Flask-Login để quản lý session (chưa làm)
+  @property
+  def is_authenticated(self):
+    return True
+
+  @property
+  def is_active(self):
+    return self.is_verified
+
+  @property
+  def is_anonymous(self):
+    return False
+
+  def get_id(self):
+    return str(self.id)
+
+
+class Status:
+
+  def __init__(self, status_id, data):
+    self.id = status_id
+    self.name = data.get("name")
+
+  @staticmethod
+  def get_all():
+    statuses = []
+    docs = db.collection("statuses").stream()
+    for doc in docs:
+      statuses.append(Status(doc.id, doc.to_dict()))
+    return statuses
+
+
+class Registration:
+
+  def __init__(self, reg_id, data):
+    self.id = reg_id
+    self.selected_days = data.get("selected_days")
+    self.session = data.get("session")
+    self.week_number = data.get("week_number")
+    self.status_id = data.get("status_id")
+    self.user_id = data.get("user_id")
+    self.created_at = data.get("created_at")
+
+
+class SystemConfig:
+
+  def __init__(self, config_id, data):
+    self.id = config_id
+    self.smtp_email = data.get("smtp_email")
+    self.smtp_password = data.get("smtp_password")
+
+
+class Notification:
+
+  def __init__(self, notif_id, data):
+    self.id = notif_id
+    self.user_id = data.get('user_id')
+    self.message = data.get('message')
+    self.is_read = data.get('is_read', False)
+    self.created_at = data.get('created_at')
