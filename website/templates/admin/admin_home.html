@@ -302,11 +302,13 @@
     /* ===== lịch trực Trong Tuần — board ngang / dọc ===== */
     .week-schedule-block.board-disabled {
         opacity: 0.4;
-        pointer-events: none; /* Blocks all clicks, drags, and interactions */
+        pointer-events: none;
+        /* Blocks all clicks, drags, and interactions */
         filter: grayscale(50%);
         user-select: none;
         transition: opacity 0.2s ease;
-        }
+    }
+
     .schedule-section-title {
         font-size: 1rem;
         color: #1a202c;
@@ -342,205 +344,320 @@
     .schedule-board {
         display: flex;
         flex-direction: row;
-        gap: 16px;
+        gap: 10px;
         overflow-x: auto;
-        padding-bottom: 8px;
+    }
+
+    /* Outer container: a soft panel, so the white week cards inside stand out */
+    .schedule-dashboard-card {
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 24px;
+        margin-bottom: 24px;
+    }
+
+    /* Main header */
+    .schedule-dashboard-head {
+        padding-bottom: 16px;
+        margin-bottom: 20px;
+        border-bottom: 1px solid #dbe3ec;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .schedule-section-title {
+        color: #1e293b;
+        font-size: 1.4rem;
+        letter-spacing: -0.2px;
+    }
+
+    .schedule-section-title i {
+        color: #3b82f6;
+        vertical-align: -2px;
+    }
+
+    /* Hint as a callout */
+    .schedule-hint {
+        display: inline-flex;
+        align-self: flex-start;
+        font-size: 0.875rem;
+        color: #1e40af;
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        border-radius: 8px;
+        padding: 6px 12px;
+    }
+
+    .schedule-hint i {
+        font-size: 1.1rem;
+        color: #2563eb;
+    }
+
+    /* Divider between the weeks on the new background */
+    .schedule-dashboard-card .week-divider {
+        border-top-color: #cbd5e1;
+    }
+
+    /* The board area was light gray, make it white-ish inside the cards */
+    .schedule-dashboard-card .schedule-board-wrapper {
+        background: #f8fafc;
     }
 
     .day-card {
-        background: #ffffff;
+        background: #fff;
         border: 1px solid #e2e8f0;
-        border-radius: 4px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.01);
-        padding: 18px 18px 16px;
+        border-radius: 10px;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+        padding: 16px;
         flex: 1 1 0;
-        min-width: 190px;
+        min-width: 200px;
         display: flex;
         flex-direction: column;
+        gap: 10px;
         transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease;
     }
 
-    /* Highlighted as a valid drop target while a staff member is selected */
+    .day-card:hover {
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+    }
+
+    /* Today */
+    .day-card.is-today {
+        border-color: #22c55e;
+        box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
+    }
+
+    /* Valid drop target */
     .day-card.drop-target {
-        border-color: #3b82f6;
-        border-style: dashed;
-        background: #f7faff;
+        border: 2px dashed #3b82f6;
+        background: #f0f7ff;
         cursor: pointer;
     }
 
     .day-card.drop-target:hover {
-        background: #ebf4ff;
-        box-shadow: 0 4px 10px rgba(59, 130, 246, 0.15);
+        background: #e0efff;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
     }
 
+    /* Day off: soft red, readable, clearly disabled */
     .day-card.off-day {
-        background: rgb(252, 185, 185);
-        border-color: #ff4242;
+        background: repeating-linear-gradient(135deg, #fef2f2, #fef2f2 10px, #fee2e2 10px, #fee2e2 20px);
+        border-color: #f87171;
     }
+
     .day-card.off-day:hover {
-        background: rgb(255, 129, 129);
+        background: repeating-linear-gradient(135deg, #fecaca, #fecaca 10px, #fca5a5 10px, #fca5a5 20px);
+        border-color: #ef4444;
     }
+
     .day-card.off-day .day-add-btn {
-        opacity: 0.4;
-        pointer-events: none;
-        cursor: not-allowed;
-    }
-    .day-card.off-day .staff-box,
-    .day-card.drop-target .staff-box {
-        opacity: 0.8;
+        opacity: 0.35;
         pointer-events: none;
         cursor: not-allowed;
     }
 
+    .day-card.off-day .staff-,
+    .day-card.drop-target .staff-box {
+        opacity: 0.85;
+        pointer-events: none;
+        cursor: not-allowed;
+    }
+
+    /* Header */
     .day-head {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-bottom: 12px;
+        gap: 8px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #edf2f7;
     }
 
-    .day-name {
-        font-size: 0.75rem;
-        font-weight: 600;
-        letter-spacing: 0.5px;
-        color: #718096;
-        text-transform: uppercase;
+    .day-head-left {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
     }
 
     .day-sublabel {
-        padding: 5px 15px;
-        border-radius: 10px;
+        padding: 4px 12px;
+        border-radius: 999px;
         font-size: 0.9rem;
-        color: #a0aec0;
+        font-weight: 600;
+        color: #475569;
+        /* was #a0aec0: too faint */
+        background: #f1f5f9;
     }
 
     .day-sublabel.cur-day {
         color: #fff;
-        background: #11cc00fd;
+        background: #16a34a;
     }
 
     .day-head-right {
         display: flex;
         align-items: center;
-        gap: 6px;
+        gap: 8px;
     }
 
-    .day-icon i {
+    .day-icon {
         font-size: 1.3rem;
-        color: #3b82f6;
+        color: #64748b;
     }
 
     .day-add-btn {
-        width: 26px;
-        height: 26px;
-        border-radius: 4px;
-        border: 1px solid #cbd5e0;
-        background: #f8fafc;
-        color: #3b82f6;
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        border: 1px solid #bfdbfe;
+        background: #eff6ff;
+        color: #2563eb;
         display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        font-size: 0.9rem;
-        transition: background-color .12s ease, border-color .12s ease;
+        font-size: 1.1rem;
+        transition: background-color .12s ease, border-color .12s ease, transform .12s ease;
     }
 
     .day-add-btn:hover {
-        background: #ebf4ff;
+        background: #dbeafe;
         border-color: #3b82f6;
     }
 
+    .day-add-btn:active {
+        transform: scale(0.95);
+    }
+
+    .day-add-btn:focus-visible {
+        outline: 2px solid #3b82f6;
+        outline-offset: 2px;
+    }
+
+    /* Count */
+    .day-count-row {
+        display: flex;
+        align-items: baseline;
+        gap: 6px;
+    }
+
     .day-count {
-        font-size: 1.5rem;
+        font-size: 0.8rem;
         font-weight: 700;
-        color: #2d3748;
-        margin-bottom: 8px;
+        line-height: 1;
+        color: #000000;
+        opacity: 0.5;
     }
 
-    .weekend-flag {
-        font-size: 0.62rem;
-        font-weight: 700;
-        color: #b7791f;
-        background: #fefcbf;
-        padding: 2px 8px;
-        border-radius: 20px;
-        display: inline-block;
-        margin-bottom: 10px;
-        width: fit-content;
+    .day-count-label {
+        font-size: 0.85rem;
+        color: #64748b;
     }
 
+    /* Staff list spacing */
     .staff-list {
         list-style: none;
         margin: 0;
         padding: 0;
         display: flex;
         flex-direction: column;
-        gap: 8px;
-        min-height: 40px;
+        gap: 6px;
     }
 
     .staff-box {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 0.87rem;
-        color: #2d3748;
-        background: #f8fafc;
+        background: #fff;
         border: 1px solid #e2e8f0;
-        border-radius: 4px;
-        padding: 7px 10px;
+        border-left: 3px solid #cbd5e1;
+        border-radius: 8px;
+        padding: 8px 10px;
         cursor: pointer;
-        transition: box-shadow .15s ease, border-color .15s ease, background-color .15s ease, transform .1s ease;
-        user-select: none;
+        list-style: none;
+        transition: background-color .12s ease, border-color .12s ease, box-shadow .12s ease;
     }
 
     .staff-box:hover {
-        border-color: #bcd4f7;
-        box-shadow: 0 3px 8px rgba(59, 130, 246, 0.12);
+        background: #f8fafc;
+        border-color: #bfdbfe;
+        border-left-color: #3b82f6;
+        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
     }
 
-    /* Currently picked staff member, waiting for a destination day */
+    /* Selected staff member (waiting for a target day) */
     .staff-box.selected {
-        background: #3b82f6;
+        background: #eff6ff;
         border-color: #3b82f6;
-        color: #fff;
-        box-shadow: 0 4px 10px rgba(59, 130, 246, 0.35);
-        transform: scale(1.02);
+        border-left-color: #2563eb;
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+    }
+
+    /* Name row */
+    .staff-row {
+        min-width: 0;
+    }
+
+    .staff-name {
+        flex: 1 1 auto;
+        min-width: 0;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #1e293b;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    /* Avatar */
+    .avatar-dot {
+        flex: 0 0 auto;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: #1d4ed8;
+        background: #dbeafe;
     }
 
     .staff-box.selected .avatar-dot {
-        background: #fff;
-        color: #3b82f6;
-    }
-
-    .staff-box.selected .remove-x {
         color: #fff;
+        background: #2563eb;
     }
 
-    .avatar-dot {
-        width: 24px;
-        height: 24px;
+    /* Remove button: faint until you hover the row */
+    .remove-x {
+        flex: 0 0 auto;
+        width: 22px;
+        height: 22px;
         border-radius: 50%;
-        background: #3b82f6;
-        color: #fff;
-        font-size: 0.65rem;
-        font-weight: 700;
-        display: flex;
+        display: inline-flex;
         align-items: center;
         justify-content: center;
-        flex-shrink: 0;
+        font-size: 0.95rem;
+        color: #94a3b8;
+        opacity: 0.6;
+        transition: background-color .12s ease, color .12s ease, opacity .12s ease;
     }
 
-    .remove-x {
-        margin-left: auto;
-        color: #cbd5e0;
-        font-size: 0.85rem;
-        cursor: pointer;
-        padding: 2px 4px;
+    .staff-box:hover .remove-x {
+        opacity: 1;
     }
 
     .remove-x:hover {
-        color: #e53e3e;
+        color: #fff;
+        background: #ef4444;
+    }
+
+    /* Status line under the name */
+    .staff-status {
+        padding-left: 36px;
+        /* lines up under the name, past the avatar */
+        font-size: 0.75rem;
+        flex-wrap: wrap;
     }
 
     .empty-note {
@@ -838,37 +955,35 @@
     </div>
 </div>
 <!-- ===== SECTION LỊCH TRỰC (2 TUẦN) ===== -->
-<section class="schedule-dashboard-card p-4 mb-4 rounded border bg-white shadow-sm">
+<section class="schedule-dashboard-card">
 
     <!-- Header Section chính -->
-    <div class="d-flex align-items-center justify-content-between pb-3 mb-4 border-bottom">
-        <div class="d-flex flex-column gap-1">
-            <h2 class="schedule-section-title m-0 h4 fw-bold text-primary">
+    <div class="schedule-dashboard-head d-flex align-items-center justify-content-between">
+        <div class="d-flex flex-column gap-2">
+            <h2 class="schedule-section-title m-0 h4 fw-bold">
                 <i class="mdi mdi-calendar-clock me-2"></i>Quản Lý Lịch Trực
             </h2>
-            <div class="schedule-hint text-muted fs-7 d-flex align-items-center gap-1" id="scheduleHint">
+            <div class="schedule-hint d-flex align-items-center gap-2" id="scheduleHint">
                 <i class="mdi mdi-cursor-default-click-outline"></i>
                 <span>Bấm chọn một người, rồi bấm vào ngày muốn chuyển tới.</span>
             </div>
         </div>
-
     </div>
 
     <!-- ===== TUẦN HIỆN TẠI ===== -->
-    <div class="week-schedule-block mb-4">
-        <div class="week-header d-flex justify-content-between mb-3 px-2">
-            <h3 class="h5 m-0 fw-bold text-dark d-flex align-items-center gap-2">
-                <span class="badge bg-primary">
+    <div class="week-schedule-block week-current mb-4">
+        <div class="week-header d-flex justify-content-between align-items-center mb-3">
+            <h3 class="week-title h5 m-0 fw-bold d-flex align-items-center gap-2">
+                <span class="badge week-badge bg-primary">
                     Tuần {{ current_schedule.week }} Năm {{ current_schedule.year if current_schedule else 0 }}
                 </span>
-                Lịch Trực Tuần Hiện Tại
+                <span class="week-title-text">Lịch Trực Tuần Hiện Tại</span>
             </h3>
-
 
             <!-- Nút Tạo lại lịch (Chỉ hiển thị khi đã có ít nhất 1 tuần) -->
             {% if current_schedule %}
             <div class="mr-auto d-flex gap-2">
-                <button type="button" class="btn btn-outline-danger btn-sm"
+                <button type="button" class="btn btn-outline-danger btn-sm week-regen-btn"
                     onclick="regenerateSchedule('scheduleBoardCurrent')">
                     <i class="mdi mdi-refresh me-1"></i> Tạo lại lịch
                 </button>
@@ -883,20 +998,20 @@
 
     <!-- HÀNG PHÂN CÁCH (Chỉ hiện khi đã có tuần hiện tại) -->
     {% if current_schedule %}
-    <hr class="my-4 text-muted opacity-25" />
+    <hr class="week-divider" />
 
     <!-- ===== TUẦN KẾ TIẾP ===== -->
-    <div class="week-schedule-block">
-        <div class="week-header d-flex  justify-content-between mb-3 px-2">
-            <h3 class="h5 m-0 fw-bold text-dark d-flex align-items-center gap-2">
-                <span class="badge bg-secondary">
+    <div class="week-schedule-block week-next">
+        <div class="week-header d-flex justify-content-between align-items-center mb-3">
+            <h3 class="week-title h5 m-0 fw-bold d-flex align-items-center gap-2">
+                <span class="badge week-badge bg-secondary">
                     Tuần {{ next_schedule.week }} Năm {{ next_schedule.year if next_schedule else 0 }}
                 </span>
-                Lịch Trực Tuần Tiếp Theo
+                <span class="week-title-text">Lịch Trực Tuần Tiếp Theo</span>
             </h3>
             {% if current_schedule %}
             <div class="mr-auto d-flex gap-2">
-                <button type="button" class="btn btn-outline-danger btn-sm"
+                <button type="button" class="btn btn-outline-danger btn-sm week-regen-btn"
                     onclick="regenerateSchedule('scheduleBoardNext')">
                     <i class="mdi mdi-refresh me-1"></i> Tạo lại lịch
                 </button>
@@ -1381,13 +1496,13 @@
             <li class="d-flex flex-column staff-box${isSelected ? ' selected' : ''}"
                 onclick="onStaffClick(event, ${day}, ${schedule.week}, ${schedule.year}, '${user.id}', [${userReg?.selected_days}], '${containerId}')">
                 <div
-                class="d-flex align-items-center gap-2"
+                class="d-flex align-items-center gap-2 staff-row"
                 data-name="${name}">
                     <span class="avatar-dot">${initials(name)}</span>
-                    <span>${name}</span>
+                    <span class="staff-name">${name}</span>
                     <i class="mdi mdi-close remove-x" onclick="onRemoveClick(event, ${day}, '${user.id}', '${containerId}')" title="Xoá khỏi ngày này"></i>
                 </div>
-                <div class="d-flex align-items-center gap-2 mt-1">
+                <div class="d-flex align-items-center gap-2 mt-1 staff-status">
                     ${renderStatusBadge(status, selectedDays, day)}
                 </div>
             </li>`;
@@ -1440,23 +1555,20 @@
             // Pass containerId/week context if onDayClick needs to differentiate between weeks
             col.onclick = (e) => onDayClick(e, d, containerId);
 
-
             col.innerHTML = `
-                <div class="day-head">
-                    <div class="day-sublabel ${d.day === getCurrentDayNum() && schedule.week === getCurrentWeekNum() ? 'cur-day' : ''}">${d.label}</div>
-                    <div class="day-head-right">
-                        <div class="day-icon"><i class="mdi ${d.icon}"></i></div>
-                        <div class="day-add-btn" title="Thêm người cho ngày này" onclick="openUserSelectModal(${d.day}, '${containerId}')">
-                            <i class="mdi mdi-plus"></i>
-                        </div>
+            <div class="day-head">
+                <div class="day-sublabel ${d.day === getCurrentDayNum() && schedule.week === getCurrentWeekNum() ? 'cur-day' : ''}">${d.label}</div>
+                <div class="day-head-right">
+                    <div class="day-icon"><i class="mdi ${d.icon}"></i></div>
+                    <div class="day-add-btn" title="Thêm người cho ngày này" onclick="openUserSelectModal(${d.day}, '${containerId}')">
+                        <i class="mdi mdi-plus"></i>
                     </div>
                 </div>
-                <div class="day-count" data-count="${d.day}">${staff.length}</div>
-                ${d.weekend ? `<span class="weekend-flag">CUỐI TUẦN</span>` : ''}
-                <ul class="staff-list" data-day="${d.day}"></ul>
-                <div class="add-panel" id="add-panel-${d.day}"></div>
-                
-                <!-- User Selection Modal -->
+            </div>
+            <div class="day-count" data-count="${d.day}">Số lượng: ${staff.length}</div>
+            <ul class="staff-list" data-day="${d.day}"></ul>
+            <div class="add-panel" id="add-panel-${d.day}"></div>
+        <!-- User Selection Modal -->
                 <div id="user-select-modal-${containerId}" class="modal-overlay" style="display: none;">
                 <div class="modal-content modal-content-lg">
                     <div class="modal-header">
@@ -1527,7 +1639,7 @@
             }
         });
 
-        
+
         // 0. Clear any existing off-day highlights specifically inside this board first
         const cards = board.getElementsByClassName("day-card");
         for (const card of cards) {
@@ -1832,7 +1944,7 @@
         // if (modal) modal.style.display = 'flex';
 
         activeTargetDay = day;
-    // Use provided roster/users or fallback to global roster/users array
+        // Use provided roster/users or fallback to global roster/users array
 
         const modal = document.getElementById(`user-select-modal-${containerId}`);
         const searchInput = document.getElementById(`user-search-input-${containerId}`);
@@ -1874,32 +1986,32 @@
      * Render user cards inside modal container
      */
     function renderModalUserList(userList, containerId, day = activeTargetDay) {
-    const container = document.getElementById(`user-list-container-${containerId}`);
-    const schedule = getScheduleFromContainerId(containerId);
-    if (!container) return;
+        const container = document.getElementById(`user-list-container-${containerId}`);
+        const schedule = getScheduleFromContainerId(containerId);
+        if (!container) return;
 
-    if (!userList || userList.length === 0) {
-        container.innerHTML = '<div style="padding: 16px; text-align: center; color: #888;">Không tìm thấy dân quân</div>';
-        return;
-    }
+        if (!userList || userList.length === 0) {
+            container.innerHTML = '<div style="padding: 16px; text-align: center; color: #888;">Không tìm thấy dân quân</div>';
+            return;
+        }
 
-    // Use the passed day or fallback correctly
-    const targetDay = day !== undefined && day !== null ? day : activeTargetDay;
-    const dayKey = dayKeyMap[targetDay] || String(targetDay).toLowerCase();
+        // Use the passed day or fallback correctly
+        const targetDay = day !== undefined && day !== null ? day : activeTargetDay;
+        const dayKey = dayKeyMap[targetDay] || String(targetDay).toLowerCase();
 
-    const existingDayStaff = schedule.daily_schedule[dayKey] || [];
+        const existingDayStaff = schedule.daily_schedule[dayKey] || [];
 
-    const html = userList.map(user => {
-        const userIdStr = String(user.id);
-        const isAlreadyAdded = existingDayStaff.some(
-            u => u === userIdStr
-        );
+        const html = userList.map(user => {
+            const userIdStr = String(user.id);
+            const isAlreadyAdded = existingDayStaff.some(
+                u => u === userIdStr
+            );
 
-        const name = user.full_name || user.user_name || user.name || `User #${user.id}`;
-        const role = user.role_name || user.position || '';
+            const name = user.full_name || user.user_name || user.name || `User #${user.id}`;
+            const role = user.role_name || user.position || '';
 
-        if (isAlreadyAdded) {
-            return `
+            if (isAlreadyAdded) {
+                return `
                 <div class="user-item disabled" style="opacity: 0.5; cursor: not-allowed; display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-bottom: 1px solid #f0f0f0;">
                     <div style="display: flex; align-items: center; gap: 10px;">
                         <input type="checkbox" disabled checked />
@@ -1911,9 +2023,9 @@
                     <span class="add-action-badge" style="color: #6c757d; font-size: 0.85rem;">Đã có trong lịch</span>
                 </div>
             `;
-        }
+            }
 
-        return `
+            return `
             <label class="user-item" style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-bottom: 1px solid #f0f0f0; cursor: pointer;">
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <input type="checkbox" class="user-select-checkbox-${containerId}" value="${user.id}" onchange="updateSelectedUserCount('${containerId}')" />
@@ -1924,12 +2036,12 @@
                 </div>
             </label>
         `;
-    }).join('');
+        }).join('');
 
-    container.innerHTML = html;
-    updateSelectedUserCount(containerId);
-}
-    
+        container.innerHTML = html;
+        updateSelectedUserCount(containerId);
+    }
+
     function renderModalGenerateUserList(userList, containerId) {
         const container = document.getElementById(`generate-user-list-container-${containerId}`);
         const schedule = getScheduleFromContainerId(containerId);
